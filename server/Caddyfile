@@ -1,0 +1,7 @@
+# app.knocky.ru -> this server (A record in Cloudflare, DNS only).
+# Caddy gets the HTTPS certificate automatically.
+app.knocky.ru {
+	root * /opt/knocky/www
+	rewrite / /status.html
+	file_server
+}
