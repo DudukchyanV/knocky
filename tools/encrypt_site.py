@@ -85,9 +85,14 @@ async function derive(pw){{const base=await crypto.subtle.importKey('raw',new Te
   for(const w of P.k){{const wk=await crypto.subtle.deriveKey({{name:'PBKDF2',salt:b(w.s),iterations:P.n,hash:'SHA-256'}},base,{{name:'AES-GCM',length:256}},false,['decrypt']);
     try{{const raw=await crypto.subtle.decrypt({{name:'AES-GCM',iv:b(w.i)}},wk,b(w.w));return crypto.subtle.importKey('raw',raw,'AES-GCM',true,['decrypt']);}}catch(_){{}}}}
   throw new Error('bad');}}
+/* wait until the password page has fully loaded, otherwise document.write appends the site below it instead of replacing it */
+const ready=()=>document.readyState==='loading'?new Promise(r=>document.addEventListener('DOMContentLoaded',()=>setTimeout(r,0),{{once:true}})):Promise.resolve();
+const shade=v=>{{document.documentElement.style.visibility=v?'hidden':'';}};
 async function open_(key){{const pt=await crypto.subtle.decrypt({{name:'AES-GCM',iv:b(P.i)}},key,b(P.c));
-  const html=new TextDecoder().decode(pt);document.open();document.write(html);document.close();}}
-(async()=>{{try{{const raw=localStorage.getItem(KEY);if(raw){{const k=await crypto.subtle.importKey('raw',b(raw),'AES-GCM',true,['decrypt']);await open_(k);}}}}catch(e){{try{{localStorage.removeItem(KEY)}}catch(_){{}}}}}})();
+  const html=new TextDecoder().decode(pt);await ready();document.open();document.write(html);document.close();}}
+(async()=>{{let raw=null;try{{raw=localStorage.getItem(KEY);}}catch(_){{}}if(!raw)return;shade(true);
+  try{{const k=await crypto.subtle.importKey('raw',b(raw),'AES-GCM',true,['decrypt']);await open_(k);}}
+  catch(e){{try{{localStorage.removeItem(KEY)}}catch(_){{}};await ready();shade(false);}}}})();
 document.getElementById('f').addEventListener('submit',async e=>{{e.preventDefault();
   if(!window.crypto||!crypto.subtle){{if(location.protocol==='http:'){{location.replace('https://'+location.host+location.pathname+location.search+location.hash);return;}}document.getElementById('err').textContent='Браузер не поддерживает защищённый вход. Откройте сайт по https://';return;}}
   const btn=document.getElementById('go'),err=document.getElementById('err');btn.disabled=true;btn.textContent='Проверяем…';err.textContent='';
