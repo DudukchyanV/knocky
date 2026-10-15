@@ -1,0 +1,41 @@
+@font-face{font-family:'Bad Script';src:url('/assets/f/BadScript-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Caveat';src:url('/assets/f/Caveat-VF.woff') format('woff');font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:'Cormorant Garamond';src:url('/assets/f/CormorantGaramond-VF.woff') format('woff');font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:'Cormorant Garamond';src:url('/assets/f/CormorantGaramond-Italic-VF.woff') format('woff');font-weight:300 700;font-style:italic;font-display:swap}
+@font-face{font-family:'Cormorant Unicase';src:url('/assets/f/CormorantUnicase-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Cormorant Unicase';src:url('/assets/f/CormorantUnicase-SemiBold.woff') format('woff');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Dela Gothic One';src:url('/assets/f/DelaGothicOne-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Forum';src:url('/assets/f/Forum-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Great Vibes';src:url('/assets/f/GreatVibes-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Lora';src:url('/assets/f/Lora-VF.woff') format('woff');font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:'Lora';src:url('/assets/f/Lora-Italic-VF.woff') format('woff');font-weight:400 700;font-style:italic;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/assets/f/Manrope-VF.woff') format('woff');font-weight:200 800;font-style:normal;font-display:swap}
+@font-face{font-family:'Old Standard TT';src:url('/assets/f/OldStandard-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Old Standard TT';src:url('/assets/f/OldStandard-Bold.woff') format('woff');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Old Standard TT';src:url('/assets/f/OldStandard-Italic.woff') format('woff');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:'Oranienbaum';src:url('/assets/f/Oranienbaum-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Playfair Display';src:url('/assets/f/PlayfairDisplay-VF.woff') format('woff');font-weight:400 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Playfair Display';src:url('/assets/f/PlayfairDisplay-Italic-VF.woff') format('woff');font-weight:400 900;font-style:italic;font-display:swap}
+@font-face{font-family:'Poiret One';src:url('/assets/f/PoiretOne-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Spectral';src:url('/assets/f/Spectral-Light.woff') format('woff');font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:'Spectral';src:url('/assets/f/Spectral-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Spectral';src:url('/assets/f/Spectral-SemiBold.woff') format('woff');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Tenor Sans';src:url('/assets/f/TenorSans-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Unbounded';src:url('/assets/f/Unbounded-VF.woff') format('woff');font-weight:200 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Yeseva One';src:url('/assets/f/YesevaOne-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Prata';src:url('/assets/f/Prata-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Alice';src:url('/assets/f/Alice-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Ruslan Display';src:url('/assets/f/RuslanDisplay-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Marck Script';src:url('/assets/f/MarckScript-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Comfortaa';src:url('/assets/f/Comfortaa-VF.woff') format('woff');font-weight:300 700;font-style:normal;font-display:swap}
+@font-face{font-family:'Neucha';src:url('/assets/f/Neucha.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Amatic SC';src:url('/assets/f/AmaticSC-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Amatic SC';src:url('/assets/f/AmaticSC-Bold.woff') format('woff');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Philosopher';src:url('/assets/f/Philosopher-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Philosopher';src:url('/assets/f/Philosopher-Italic.woff') format('woff');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:'Montserrat Alternates';src:url('/assets/f/MontserratAlternates-SemiBold.woff') format('woff');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Montserrat Alternates';src:url('/assets/f/MontserratAlternates-Medium.woff') format('woff');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Kurale';src:url('/assets/f/Kurale-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Rubik Mono One';src:url('/assets/f/RubikMonoOne-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Bellota';src:url('/assets/f/Bellota-Regular.woff') format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Bellota';src:url('/assets/f/Bellota-Bold.woff') format('woff');font-weight:700;font-style:normal;font-display:swap}
