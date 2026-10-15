@@ -51,13 +51,34 @@ function loginView(){
         <label class="check" id="agreeRow"><input type="checkbox" id="agree"><span>Согласен(на) с <a href="${SITE}/#doc-privacy" target="_blank" rel="noopener">политикой обработки персональных данных</a> и даю <a href="${SITE}/#doc-consent" target="_blank" rel="noopener">согласие на обработку</a></span></label>
         <p class="err" id="er" role="alert" hidden></p>
         <button class="btn btn-seal btn-xl" id="sb">Получить код</button>
+        <button type="button" class="lnk" id="toPw" style="justify-self:center">Вход для администратора по паролю</button>
       </form></section>`;
+      $('#toPw').onclick=()=>{email=$('#em').value.trim().toLowerCase();step='pw';draw();};
       const f=$('#f'),em=$('#em'),er=$('#er');em.focus();
       f.onsubmit=async e=>{e.preventDefault();er.hidden=true;email=em.value.trim().toLowerCase();
         if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){er.hidden=false;er.textContent='Введите почту, например anna@mail.ru';em.focus();return;}
         const b=$('#sb');b.disabled=true;b.textContent='Отправляем код…';
         try{await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:$('#agree').checked})});step='code';timer=60;draw();}
         catch(x){if(x.data&&x.data.already){step='code';timer=Math.max(1,x.data.wait||50);draw();return;}b.disabled=false;b.textContent='Получить код';er.hidden=false;er.textContent=x.data&&x.data.need_agree?'Отметьте согласие на обработку персональных данных':x.message;}};
+    }else if(step==='pw'){
+      app.innerHTML=`<section class="auth"><form class="auth-card" id="f" novalidate>
+        <h1>Вход по паролю</h1>
+        <p class="note">Для администраторов. Пароль задается на странице настройки сервера.</p>
+        <label class="field"><span>Почта</span><input class="inp" id="em" type="email" autocomplete="username" value="${esc(email||'me@dudukchyan.ru')}"></label>
+        <label class="field"><span>Пароль</span><input class="inp" id="pw" type="password" autocomplete="current-password"></label>
+        <p class="err" id="er" role="alert" hidden></p>
+        <button class="btn btn-seal btn-xl" id="sb">Войти</button>
+        <button type="button" class="lnk" id="toMail" style="justify-self:center">Войти по коду из письма</button>
+      </form></section>`;
+      const er=$('#er');$('#pw').focus();
+      $('#toMail').onclick=()=>{step='mail';draw();};
+      $('#f').onsubmit=async e=>{e.preventDefault();er.hidden=true;const b=$('#sb');email=$('#em').value.trim().toLowerCase();
+        if(!$('#pw').value){er.hidden=false;er.textContent='Введите пароль';return;}
+        b.disabled=true;b.textContent='Проверяем…';
+        try{const j=await api('/auth/password',{method:'POST',body:JSON.stringify({email,password:$('#pw').value})});ME=j.user;showWho();
+          if(claim){try{const c=await api('/drafts/claim',{method:'POST',body:JSON.stringify({claim})});return go('/inv/'+c.id,true);}catch(_){}}
+          go('/',true);}
+        catch(x){b.disabled=false;b.textContent='Войти';er.hidden=false;er.textContent=x.message;}};
     }else{
       app.innerHTML=`<section class="auth"><form class="auth-card" id="f" novalidate>
         <h1>Введите код</h1>

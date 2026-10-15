@@ -405,6 +405,35 @@ async def auth_verify(req: Request):
     return res
 
 
+def new_session(c, uid: int) -> str:
+    tok = secrets.token_urlsafe(32)
+    c.execute("INSERT INTO sessions VALUES(?,?,?,?)", (sha(tok), uid, now(), now() + SESSION_DAYS * 86400))
+    return tok
+
+
+async def auth_password(req: Request):
+    """Administrators can sign in with a password set on the /setup page (no email needed)."""
+    try:
+        d = await body(req)
+    except ValueError as e:
+        return err(str(e))
+    email = str(d.get("email", "")).strip().lower()
+    pw = str(d.get("password", ""))
+    if not rate("pwip:" + client_ip(req), 10, 3600) or not rate("pw:" + email, 10, 3600):
+        return err("Слишком много попыток. Попробуйте через час", 429)
+    stored = load_secrets().get("admin_pw", {}).get(email)
+    if not stored or email not in ADMINS or not pw_ok(pw, stored):
+        return err("Неверная почта или пароль")
+    with db() as c:
+        c.execute("INSERT INTO users(email,created) VALUES(?,?) ON CONFLICT(email) DO NOTHING", (email, now()))
+        u = c.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        c.execute("UPDATE users SET last_login=? WHERE id=?", (now(), u["id"]))
+        tok = new_session(c, u["id"])
+    res = JSONResponse({"ok": True, "user": {"email": email, "admin": True}})
+    res.set_cookie("kn", tok, max_age=SESSION_DAYS * 86400, httponly=True, secure=not DEV, samesite="lax", path="/")
+    return res
+
+
 async def auth_logout(req: Request):
     tok = req.cookies.get("kn")
     if tok:
@@ -800,16 +829,33 @@ async def page_cabinet(req: Request):
 SETUP_FORM = """<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Knocky: настройка сервера</title><meta name="robots" content="noindex">
 <style>body{margin:0;background:#F3EEEE;color:#241B20;font:16px/1.5 system-ui,-apple-system,sans-serif;padding:24px}
-.c{max-width:460px;margin:8vh auto;background:#fff;border-radius:16px;padding:28px}h1{font-size:22px;margin:0 0 6px}
-label{display:block;font-weight:600;margin:18px 0 6px}input{width:100%;box-sizing:border-box;font:inherit;padding:12px 14px;border:1px solid #E6D6D6;border-radius:12px;background:#F7F4F4}
+.c{max-width:460px;margin:6vh auto;background:#fff;border-radius:16px;padding:28px}h1{font-size:22px;margin:0 0 6px}h2{font-size:17px;margin:26px 0 0}
+label{display:block;font-weight:600;margin:16px 0 6px}input{width:100%;box-sizing:border-box;font:inherit;padding:12px 14px;border:0;border-radius:12px;background:#F3EEEE}
 button{margin-top:22px;width:100%;font:inherit;font-weight:700;padding:14px;border:0;border-radius:999px;background:#C62828;color:#fff;cursor:pointer}
-.n{color:#6F6068;font-size:14px}.m{margin-top:16px;padding:12px 14px;border-radius:12px;background:#F3EEEE}</style>
-<div class="c"><h1>Настройка сервера Knocky</h1><p class="n">Пароль сохранится только на сервере. Его не видно ни в коде, ни в документах.</p>
-<form method="post"><input type="hidden" name="t" value="__T__">
-<label for="l">Почта, с которой уходят письма</label><input id="l" name="login" value="hello@knocky.ru" autocomplete="username">
-<label for="p">Пароль приложения Яндекса для этой почты</label><input id="p" name="pw" type="password" autocomplete="new-password" required>
+.n{color:#6F6068;font-size:14px;margin:6px 0 0}.m{margin-top:16px;padding:12px 14px;border-radius:12px;background:#F3EEEE}</style>
+<div class="c"><h1>Настройка сервера Knocky</h1><p class="n">Пароли сохранятся только на сервере. Их не видно ни в коде, ни в документах. Заполните одну часть или обе.</p>
+__MSG__<form method="post"><input type="hidden" name="t" value="__T__">
+<h2>Вход администратора без письма</h2>
+<label for="ae">Почта администратора</label><input id="ae" name="admin_email" value="me@dudukchyan.ru" autocomplete="username">
+<label for="ap">Придумайте пароль для входа</label><input id="ap" name="admin_pw" type="password" autocomplete="new-password" minlength="8" placeholder="не короче 8 символов">
+<h2>Почта для писем с кодом</h2>
+<label for="l">Почта, с которой уходят письма</label><input id="l" name="login" value="hello@knocky.ru">
+<label for="p">Пароль приложения Яндекса для этой почты</label><input id="p" name="pw" type="password" autocomplete="off">
 <label for="to">Куда отправить проверочное письмо</label><input id="to" name="to" value="me@dudukchyan.ru">
-<button>Сохранить и проверить</button></form>__MSG__</div></html>"""
+<button>Сохранить</button></form></div></html>"""
+
+
+def pw_hash(pw: str, salt: bytes | None = None) -> str:
+    salt = salt or os.urandom(16)
+    return salt.hex() + ":" + hashlib.pbkdf2_hmac("sha256", pw.encode(), salt, 300_000).hex()
+
+
+def pw_ok(pw: str, stored: str) -> bool:
+    try:
+        salt, _ = stored.split(":")
+        return hmac.compare_digest(pw_hash(pw, bytes.fromhex(salt)), stored)
+    except Exception:
+        return False
 
 
 def setup_token_ok(t: str) -> bool:
@@ -829,23 +875,34 @@ async def page_setup(req: Request):
     if not setup_token_ok(t):
         return HTMLResponse("Ссылка недействительна", status_code=404)
     s = load_secrets()
-    s["smtp_login"] = str(form.get("login") or MAIL_FROM).strip()
-    s["smtp_password"] = re.sub(r"\s+", "", str(form.get("pw") or ""))
     s["render_key"] = hashlib.sha256(("knocky-render:" + t).encode()).hexdigest()
-    to = str(form.get("to") or "me@dudukchyan.ru").strip()
-    try:
-        await asyncio.to_thread(send_mail, to, "Knocky: почта сервера работает",
-                                "Это проверочное письмо: сервер Knocky умеет отправлять письма.",
-                                mail_html("Почта работает", "Это проверочное письмо: сервер Knocky умеет отправлять письма. Можно входить в кабинет."), s)
-        save_secrets(s)
-        _GUEST["html"] = None
-        msg = f'<div class="m"><b>Готово.</b> Проверочное письмо ушло на {to}. Можно закрыть страницу.</div>'
-    except Exception as e:
-        s2 = load_secrets()
-        s2["render_key"] = s["render_key"]
-        save_secrets(s2)
-        _GUEST["html"] = None
-        msg = f'<div class="m" style="background:#FBE6E6"><b>Письмо не ушло.</b> Проверьте пароль приложения и что в настройках почты включен доступ для почтовых программ. ({type(e).__name__})</div>'
+    msgs = []
+    ae, ap = str(form.get("admin_email") or "").strip().lower(), str(form.get("admin_pw") or "")
+    if ap:
+        if ae not in ADMINS:
+            msgs.append(("bad", f"{h_esc(ae)} - не администратор. Администраторы: " + ", ".join(sorted(ADMINS))))
+        elif len(ap) < 8:
+            msgs.append(("bad", "Пароль администратора короче 8 символов, не сохранен"))
+        else:
+            s.setdefault("admin_pw", {})[ae] = pw_hash(ap)
+            msgs.append(("ok", f"Пароль для входа {h_esc(ae)} сохранен. Входите на app.knocky.ru: «Вход для администратора по паролю»."))
+    smtp = re.sub(r"\s+", "", str(form.get("pw") or ""))
+    if smtp:
+        trial = dict(s, smtp_login=str(form.get("login") or MAIL_FROM).strip(), smtp_password=smtp)
+        to = str(form.get("to") or "me@dudukchyan.ru").strip()
+        try:
+            await asyncio.to_thread(send_mail, to, "Knocky: почта сервера работает",
+                                    "Это проверочное письмо: сервер Knocky умеет отправлять письма.",
+                                    mail_html("Почта работает", "Это проверочное письмо: сервер Knocky умеет отправлять письма. Можно входить в кабинет."), trial)
+            s = trial
+            msgs.append(("ok", f"Почта работает: проверочное письмо ушло на {h_esc(to)}."))
+        except Exception as e:
+            msgs.append(("bad", f"Письмо не ушло. Проверьте пароль приложения и что в настройках почты включен доступ для почтовых программ. ({type(e).__name__})"))
+    save_secrets(s)
+    _GUEST["html"] = None
+    if not msgs:
+        msgs.append(("ok", "Сохранено."))
+    msg = "".join(f'<div class="m"{" style=\"background:#FBE6E6\"" if k == "bad" else ""}>{m}</div>' for k, m in msgs)
     return HTMLResponse(SETUP_FORM.replace("__T__", t).replace("__MSG__", msg), headers={"Cache-Control": "no-store"})
 
 
@@ -898,6 +955,7 @@ routes = [
     Route("/api/auth/request", auth_request, methods=["POST"]),
     Route("/api/auth/verify", auth_verify, methods=["POST"]),
     Route("/api/auth/logout", auth_logout, methods=["POST"]),
+    Route("/api/auth/password", auth_password, methods=["POST"]),
     Route("/api/me", me),
     Route("/api/drafts", draft_create, methods=["POST"]),
     Route("/api/drafts/claim", draft_claim, methods=["POST"]),
