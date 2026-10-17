@@ -150,11 +150,15 @@ dialog .acts{justify-content:flex-end;margin-top:18px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:1ms!important}}
 
 /* seating */
-.seat-top{display:flex;gap:12px 24px;align-items:center;flex-wrap:wrap}
-.stepper{display:flex;align-items:center;gap:10px;font-weight:600}
-.stepper b{min-width:2ch;text-align:center;font-size:18px}
-.stepper .btn{width:38px;height:38px;padding:0;justify-content:center;font-size:18px}
+.seat-tabs{display:grid;gap:8px}
+.stb{display:grid;grid-template-columns:minmax(0,1fr) auto auto 38px;gap:8px;align-items:center}
+.stb label{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.stb label .inp{width:70px}
+.stb b{font-variant-numeric:tabular-nums;min-width:48px;text-align:right;color:var(--muted)}
+.stb b.over{color:var(--seal)}
+.stb .btn{width:38px;height:38px;padding:0}
 .seat-sum{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-bottom:16px}
+.seat-sum:empty{display:none}
 .seat-sum div{background:var(--soft);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
 .seat-sum span{grid-column:1;font-size:14px;color:var(--muted)}
 .seat-sum i{grid-row:1/3;grid-column:2;font-style:normal;font-weight:800;color:var(--seal);align-self:center}

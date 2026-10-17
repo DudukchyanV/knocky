@@ -31,7 +31,7 @@ MAIL_FROM = "hello@knocky.ru"
 DOC_VERSION = "15.10.2026"
 # sha256 of the one-time setup token (the token itself is given to the owner, never stored here)
 SETUP_HASH = "36ece8f75ae5ca9817d22ef79eca21563bf3bd48314e6615f1623b9184150b26"
-BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year"}
+BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year", "seating", "print"}
 SESSION_DAYS = 30
 MAX_TABLES = 100
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
@@ -84,13 +84,6 @@ def init_db():
     MEDIA.mkdir(parents=True, exist_ok=True)
     with db() as c:
         c.executescript(SCHEMA)
-        # seating: table number per named guest, table count and "show to guests" per invitation
-        cols = {r[1] for r in c.execute("PRAGMA table_info(guests)")}
-        if "tbl" not in cols:
-            c.execute("ALTER TABLE guests ADD COLUMN tbl INTEGER")
-        cols = {r[1] for r in c.execute("PRAGMA table_info(invitations)")}
-        if "seating" not in cols:
-            c.execute("ALTER TABLE invitations ADD COLUMN seating TEXT")
 
 
 def load_secrets() -> dict:
@@ -241,6 +234,8 @@ def clean_data(d: dict) -> dict:
     if isinstance(v.get("dear"), list):
         # greeting per guest line: pl «Дорогие», m «Дорогой», f «Дорогая»; empty = guessed from the name
         out["dear"] = [d if d in ("pl", "m", "f") else "" for d in (str(x or "") for x in v["dear"][:len(out.get("guests", []))])]
+    tables, seat = clean_seating(v, len(out.get("guests", [])))
+    out["tables"], out["seat"] = tables, seat
     if isinstance(v.get("pal"), dict):
         try:
             out["pal"] = {"id": str(v["pal"].get("id", tpl))[:30], "i": max(0, min(5, int(v["pal"].get("i", 0))))}
@@ -264,6 +259,49 @@ def clean_data(d: dict) -> dict:
             photos.append(p)
     out["photos"] = photos
     return {"tpl": tpl, "sel": sel, "order": order, "v": out}
+
+
+def clean_seating(v: dict, n_guests: int):
+    """Tables [{n: name or number, s: seats}] and seat[i] = table index for guest line i (None = no table)."""
+    tables = []
+    for t in (v.get("tables") or [])[:MAX_TABLES]:
+        if isinstance(t, dict):
+            try:
+                seats = max(0, min(100, int(t.get("s") or 0)))
+            except Exception:
+                seats = 0
+            tables.append({"n": str(t.get("n") or "")[:20], "s": seats})
+    seat = []
+    for x in (v.get("seat") or [])[:n_guests]:
+        try:
+            k = int(x)
+        except Exception:
+            k = -1
+        seat.append(k if 0 <= k < len(tables) else None)
+    return tables, seat
+
+
+def table_label(v: dict, k) -> str:
+    t = v.get("tables") or []
+    if k is None or not (0 <= k < len(t)):
+        return ""
+    return (t[k].get("n") or "").strip() or str(k + 1)
+
+
+def guest_tables(d: dict) -> dict:
+    """guest name -> table label (only when the seating block is bought)."""
+    if "seating" not in d.get("sel", []) or "named" not in d.get("sel", []):
+        return {}
+    v = d["v"]
+    seat = v.get("seat") or []
+    out = {}
+    for i, g in enumerate(v.get("guests") or []):
+        g = str(g).strip()
+        if g and g not in out and i < len(seat):
+            lab = table_label(v, seat[i])
+            if lab:
+                out[g] = lab
+    return out
 
 
 def inv_title(d: dict) -> str:
@@ -612,18 +650,11 @@ def answers_of(c, inv_id):
     return [{"name": r["name"], "guest": r["gname"], "attend": bool(r["attend"]), "people": r["people"], "comment": r["comment"] or "", "at": r["updated"]} for r in rows]
 
 
-def guests_of(c, inv_id, slug):
+def guests_of(c, inv_id, slug, d: dict | None = None):
     rows = c.execute("SELECT g.*, (SELECT attend FROM rsvp WHERE guest_id=g.id ORDER BY updated DESC LIMIT 1) ans FROM guests g WHERE inv_id=? AND active=1 ORDER BY pos", (inv_id,)).fetchall()
-    return [{"id": g["id"], "name": g["name"], "link": f"{SITE_URL}/{slug}?g={g['token']}" if slug else None, "opens": g["opens"],
-             "first_open": g["first_open"], "answer": None if g["ans"] is None else bool(g["ans"]), "table": g["tbl"]} for g in rows]
-
-
-def seating_of(r) -> dict:
-    try:
-        s = json.loads(r["seating"] or "{}")
-    except Exception:
-        s = {}
-    return {"n": max(0, min(MAX_TABLES, int(s.get("n") or 0))), "show": bool(s.get("show"))}
+    tb = guest_tables(d) if d else {}
+    return [{"name": g["name"], "link": f"{SITE_URL}/{slug}?g={g['token']}" if slug else None, "opens": g["opens"],
+             "first_open": g["first_open"], "answer": None if g["ans"] is None else bool(g["ans"]), "table": tb.get(g["name"])} for g in rows]
 
 
 @need_user
@@ -634,38 +665,25 @@ async def inv_answers(req: Request):
             return err("Приглашение не найдено", 404)
         wl = json.loads(r["data"])["v"].get("wish", [])
         taken = {w["idx"]: w["name"] for w in c.execute("SELECT * FROM wish WHERE inv_id=?", (r["id"],))}
-        return JSONResponse({"answers": answers_of(c, r["id"]), "guests": guests_of(c, r["id"], r["slug"]), "seating": seating_of(r),
+        return JSONResponse({"answers": answers_of(c, r["id"]), "guests": guests_of(c, r["id"], r["slug"], json.loads(r["data"])),
                              "wish": [{"n": w["n"], "by": taken.get(i)} for i, w in enumerate(wl) if w.get("n")]})
 
 
 @need_user
 async def inv_seating(req: Request):
-    """Seating: how many tables, which table each named guest sits at, show the number to guests or not."""
+    """Seating from the cabinet: tables and who sits where (also editable after publishing)."""
     b = await body(req)
     with db() as c:
         r = own_inv(c, req, req.path_params["id"])
         if not r:
             return err("Приглашение не найдено", 404)
-        s = seating_of(r)
-        if "n" in b:
-            try:
-                s["n"] = max(0, min(MAX_TABLES, int(b["n"])))
-            except Exception:
-                return err("Неверное число столов")
-        if "show" in b:
-            s["show"] = bool(b["show"])
-        c.execute("UPDATE invitations SET seating=? WHERE id=?", (json.dumps(s), r["id"]))
-        seats = b.get("seats") or {}
-        if isinstance(seats, dict):
-            for gid, t in list(seats.items())[:2000]:
-                try:
-                    t = int(t) if t not in (None, "", 0, "0") else None
-                except Exception:
-                    t = None
-                c.execute("UPDATE guests SET tbl=? WHERE id=? AND inv_id=?", (t, int(gid), r["id"]))
-        # guests left on a removed table go back to "no table"
-        c.execute("UPDATE guests SET tbl=NULL WHERE inv_id=? AND tbl>?", (r["id"], s["n"]))
-        return JSONResponse({"seating": s, "guests": guests_of(c, r["id"], r["slug"])})
+        d = json.loads(r["data"])
+        if "seating" not in d["sel"]:
+            return err("Рассадка не подключена в этом приглашении")
+        tables, seat = clean_seating(b, len(d["v"].get("guests", [])))
+        d["v"]["tables"], d["v"]["seat"] = tables, seat
+        c.execute("UPDATE invitations SET data=?, updated=? WHERE id=?", (json.dumps(d, ensure_ascii=False), now(), r["id"]))
+        return JSONResponse({"tables": tables, "seat": seat, "guests": guests_of(c, r["id"], r["slug"], d)})
 
 
 @need_user
@@ -676,19 +694,20 @@ async def inv_print(req: Request):
         if not r:
             return err("Приглашение не найдено", 404)
         d = json.loads(r["data"])
+        if "print" not in d["sel"]:
+            return err("Печатная версия не подключена в этом приглашении", 403)
         v = dict(d["v"])
         raw = [str(x) for x in v.pop("guests", [])]
         dear = v.pop("dear", [])
-        v.pop("photos", None)
-        v.pop("wish", None)
-        seat = seating_of(r)
+        for k in ("photos", "wish", "tables", "seat"):
+            v.pop(k, None)
         cards = []
         link = f"{SITE_URL}/{r['slug']}" if r["slug"] and r["status"] == "published" else None
         if "named" in d["sel"]:
-            for g in guests_of(c, r["id"], r["slug"]):
+            for g in guests_of(c, r["id"], r["slug"], d):
                 idx = next((i for i, x in enumerate(raw) if x.strip() == g["name"]), -1)
                 cards.append({"guest": g["name"], "dear": dear[idx] if 0 <= idx < len(dear) else "",
-                              "link": g["link"] if link else None, "table": g["table"] if seat["show"] else None})
+                              "link": g["link"] if link else None, "table": g["table"]})
         if not cards:
             cards.append({"guest": None, "dear": "", "link": link, "table": None})
     return JSONResponse({"tpl": d["tpl"], "sel": d["sel"], "order": d["order"], "v": v, "cards": cards,
@@ -703,7 +722,7 @@ async def inv_export(req: Request):
         r = own_inv(c, req, req.path_params["id"])
         if not r:
             return err("Приглашение не найдено", 404)
-        ans, gs = answers_of(c, r["id"]), guests_of(c, r["id"], r["slug"])
+        ans, gs = answers_of(c, r["id"]), guests_of(c, r["id"], r["slug"], json.loads(r["data"]))
         title = inv_title(json.loads(r["data"]))
     wb = Workbook()
     ws = wb.active
@@ -740,25 +759,26 @@ def public_payload(c, r, token: str = ""):
     d = json.loads(r["data"])
     v = dict(d["v"])
     sel = list(d["sel"])
-    guest, table = None, None
+    guest = None
     if token:
         g = c.execute("SELECT * FROM guests WHERE inv_id=? AND token=? AND active=1", (r["id"], token)).fetchone()
         if g:
             guest = g["name"]
-            if seating_of(r)["show"]:
-                table = g["tbl"]
-    v.pop("guests", None)
-    v.pop("dear", None)
+    for k in ("guests", "dear", "tables", "seat"):
+        v.pop(k, None)
     if guest and "named" in sel:
         raw = [str(x) for x in d["v"].get("guests", [])]
         idx = next((i for i, x in enumerate(raw) if x.strip() == guest), -1)
         dear = d["v"].get("dear", [])
         v["guests"] = [guest]
         v["dear"] = [dear[idx] if 0 <= idx < len(dear) else ""]
+        lab = guest_tables(d).get(guest)
+        if lab:
+            v["tables"], v["seat"] = [{"n": lab, "s": 0}], [0]
     else:
-        sel = [x for x in sel if x != "named"]
+        sel = [x for x in sel if x not in ("named", "seating")]
     taken = [w["idx"] for w in c.execute("SELECT idx FROM wish WHERE inv_id=?", (r["id"],))]
-    return {"tpl": d["tpl"], "sel": sel, "order": d["order"], "v": v, "guest": guest, "table": table, "wishTaken": taken,
+    return {"tpl": d["tpl"], "sel": sel, "order": d["order"], "v": v, "guest": guest, "wishTaken": taken,
             "status": r["status"], "expired": bool(r["expires_at"] and r["expires_at"] < now()), "slug": r["slug"]}
 
 
@@ -793,6 +813,9 @@ async def preview_get(req: Request):
             first = next((i for i, x in enumerate(raw) if str(x).strip()), -1)
             dear = d["v"].get("dear", [])
             p["v"]["dear"] = [dear[first] if 0 <= first < len(dear) else ""]
+            lab = guest_tables(d).get(names[0].strip()) if names else None
+            if lab:
+                p["v"]["tables"], p["v"]["seat"] = [{"n": lab, "s": 0}], [0]
         p["preview"] = True
     return JSONResponse(p)
 

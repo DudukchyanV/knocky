@@ -84,7 +84,7 @@ body.print{background:#E9E4E5}
 .sheet .qr svg{width:27cqi;height:27cqi;flex:none;background:#fff;padding:1.6cqi;border-radius:2cqi}
 .sheet .qr div{font-size:3.3cqi;line-height:1.45;max-width:46cqi}
 .sheet .qr b{display:block;font-size:3.8cqi;margin-bottom:1cqi}
-.sheet .tb{font-size:4.4cqi}.sheet .tb b{font-family:var(--t-disp);font-weight:400;font-size:9cqi;color:var(--t-acc);margin-left:1.5cqi}
+.sheet.back .seat .cd{margin:0}
 .sheet .t-sketch .sk-art{width:46cqi;transform:translate(-50%,-50%)}
 .sheet *,.sheet *::before,.sheet *::after{animation:none!important;transition:none!important}
 @page{size:A5;margin:0}
@@ -106,7 +106,6 @@ function draw(){
   const ord=[...(P.order||[]).filter(id=>DEF_ORDER.includes(id)),...DEF_ORDER.filter(id=>!(P.order||[]).includes(id))];
   V.innerHTML=(PREVIEW?'<div class="pvbar">Предпросмотр: так приглашение увидят гости</div>':'')+
     `<div class="page">${full(t,P.v,on,ord)}</div><p class="made">Приглашение сделано на Knocky. <a href="https://knocky.ru" target="_blank" rel="noopener">Создать своё</a></p>`;
-  if(P.table){const cv=V.querySelector('.cover');if(cv)cv.insertAdjacentHTML('afterend',`<section class="seat"><h4>Ваш стол</h4><div class="cd"><div>${esc(String(P.table))}</div></div></section>`);}
   wireRsvp();wireWish();}
 function wireRsvp(){const box=V.querySelector('[data-rsvp]');if(!box)return;
   const inp=box.querySelector('input');if(P.guest&&!inp.value)inp.value=P.guest;
@@ -165,7 +164,7 @@ function printView(D){
   const online=Object.keys(NOT_PRINTED).filter(k=>sel.has(k)).map(k=>NOT_PRINTED[k]);
   const qrList=['map','rsvp','wishlist','gallery'].filter(k=>sel.has(k)).map(k=>NOT_PRINTED[k]);
   const sheet=(c)=>{
-    const v={...D.v,guests:c.guest?[c.guest]:[],dear:[c.dear||'']},on1=new Set(on);if(c.guest)on1.add('named');
+    const v={...D.v,guests:c.guest?[c.guest]:[],dear:[c.dear||''],tables:c.table?[{n:c.table}]:[],seat:c.table?[0]:[]},on1=new Set(on);if(c.guest)on1.add('named');if(c.table&&sel.has('seating'))on1.add('seating');
     const box=document.createElement('div');box.innerHTML=full(t,v,on1,ord);
     const inv=box.firstElementChild,cov=inv.querySelector('.cover');
     const front=inv.cloneNode(false);front.appendChild(cov);
@@ -173,8 +172,10 @@ function printView(D){
     /* date and place in one section instead of the map block */
     inv.querySelectorAll('section').forEach(x=>{if(x.querySelector('h4')&&x.querySelector('h4').textContent==='Место')x.remove();});
     inv.insertAdjacentHTML('afterbegin',`<section><h4>Когда и где</h4><p>${when}</p>${v.venue||v.addr?`<p style="margin-top:2cqi">${esc(v.venue||'')}${v.venue&&v.addr?'<br>':''}${esc(v.addr||'')}</p>`:''}</section>`);
-    const tail=`${c.table?`<section class="tb">Ваш стол<b>№${esc(String(c.table))}</b></section>`:''}
+    const seatSec=inv.querySelector('section.seat');
+    const tail=`${seatSec?seatSec.outerHTML:''}
       ${c.link?`<section class="qr">${qrSvg(c.link)}<div><b>Наведите камеру телефона</b>${qrList.length?esc(qrList.join(', ').replace(/^./,x=>x.toUpperCase()))+' - по этому коду.':'Приглашение откроется на телефоне.'}</div></section>`:''}`;
+    if(seatSec)seatSec.remove();
     inv.querySelector('.sign').insertAdjacentHTML('beforebegin',tail);
     const fit=document.createElement('div');fit.className='fit';while(inv.firstChild)fit.appendChild(inv.firstChild);inv.appendChild(fit);
     return `<div class="sheet front">${front.outerHTML}</div><div class="sheet back">${inv.outerHTML}</div>`;};
@@ -199,7 +200,7 @@ function printView(D){
   if(!KEY){msg('Приглашение не найдено');return;}
   if(PRINT){try{const r=await fetch('/api/invitations/'+encodeURIComponent(KEY)+'/print',{credentials:'same-origin'});const j=await r.json().catch(()=>({}));
       if(r.status===401){msg('Войдите в кабинет',`<p><a href="/">Перейти ко входу</a></p>`);return;}
-      if(!r.ok){msg('Приглашение не найдено');return;}
+      if(!r.ok){msg(r.status===403?'Печатная версия не подключена':'Приглашение не найдено',r.status===403?'<p>Добавьте блок «Печатная версия» в конструкторе.</p>':'');return;}
       document.title='Печатная версия - Knocky';printView(j);}
     catch(e){msg('Нет связи','<p>Проверьте интернет и обновите страницу.</p>');}
     return;}

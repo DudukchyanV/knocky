@@ -159,14 +159,15 @@ async function invView(id){
       <div class="acts" style="margin-top:14px">${ME.admin?`<button class="btn btn-seal" id="pubBtn">Опубликовать без оплаты</button>`:`<button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>`}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
       </div>`;
   const rsvpOn=sel.has('rsvp'),namedOn=sel.has('named'),wishOn=sel.has('wishlist');
-  const tabs=[rsvpOn&&['ans','Ответы'],namedOn&&['gst','Именные ссылки'],namedOn&&['seat','Рассадка'],wishOn&&['wish','Подарки']].filter(Boolean);
-  let seating=ans.seating||{n:0,show:false};
+  const seatOn=namedOn&&sel.has('seating'),printOn=sel.has('print');
+  const tabs=[rsvpOn&&['ans','Ответы'],namedOn&&['gst','Именные ссылки'],seatOn&&['seat','Рассадка'],wishOn&&['wish','Подарки']].filter(Boolean);
+  const SV=o.data.v;let tables=(SV.tables||[]).map(t=>({...t})),seat=[...(SV.seat||[])];
   const opened=ans.guests.filter(g=>g.opens>0).length;
   app.innerHTML=`<a class="back" href="${ME.admin&&location.search.includes('from=admin')?'/admin':'/'}" data-go>${IC.back}Мои приглашения</a>
   <div class="inv"><div class="inv-main">
     <div class="panel title"><div class="row spread"><h1>${esc(o.title)}</h1>${status(o)}</div>
       <div class="meta">${o.date?esc(dateLong(o.date)):'Дата не указана'}${d?' · дизайн «'+esc(d.n)+'»':''}${o.paid_via==='admin'?' · без оплаты (админ)':''}</div>
-      <div class="acts"><a class="btn btn-soft" href="${editUrl}" target="_blank" rel="noopener">${IC.edit}Редактировать</a><a class="btn btn-ghost" href="/p/${esc(o.id)}" target="_blank" rel="noopener">${IC.ext}Предпросмотр</a><a class="btn btn-ghost" href="/print/${esc(o.id)}" target="_blank" rel="noopener">${IC.print}Печатная версия</a>
+      <div class="acts"><a class="btn btn-soft" href="${editUrl}" target="_blank" rel="noopener">${IC.edit}Редактировать</a><a class="btn btn-ghost" href="/p/${esc(o.id)}" target="_blank" rel="noopener">${IC.ext}Предпросмотр</a>${printOn?`<a class="btn btn-ghost" href="/print/${esc(o.id)}" target="_blank" rel="noopener">${IC.print}Печатная версия</a>`:''}
       ${!pub||ME.admin?`<button class="btn btn-ghost" id="delBtn">Удалить</button>`:''}${ME.admin&&pub?`<button class="btn btn-ghost" id="unpubBtn">Снять с публикации</button>`:''}</div></div>
     ${linkBlock}
     ${rsvpOn||namedOn?`<div class="stats">
@@ -183,20 +184,27 @@ async function invView(id){
       :`<p class="empty-row">${pub?'Пока никто не ответил. Ответы появятся здесь сразу, как гости заполнят анкету.':'Ответы появятся после публикации.'}</p>`;
     if(t==='gst')el.innerHTML=ans.guests.length?`<div class="tbl"><table><thead><tr><th>Гость</th><th>Открыл</th><th>Ответ</th><th></th></tr></thead><tbody>${ans.guests.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td class="c nowrap">${g.opens?esc(tsShort(g.first_open)):'нет'}</td><td>${g.answer===null?'<span class="note">-</span>':g.answer?'<span class="chip pub">Придёт</span>':'<span class="chip red">Не сможет</span>'}</td><td class="nowrap" style="text-align:right">${g.link?`<button class="btn btn-soft btn-sm" data-copy="${esc(g.link)}">${IC.copy}Ссылка</button>`:'<span class="note">после публикации</span>'}</td></tr>`).join('')}</tbody></table></div>`
       :'<p class="empty-row">Добавьте гостей в редакторе: блок «Именные ссылки», одна строка - одна ссылка.</p>';
-    if(t==='seat'){const n=seating.n,opt=g=>`<select class="inp seatsel" data-seat="${g.id}" aria-label="Стол для ${esc(g.name)}"><option value="">Без стола</option>${Array.from({length:n},(_,i)=>`<option value="${i+1}"${g.table===i+1?' selected':''}>Стол ${i+1}</option>`).join('')}</select>`;
-      const by={};ans.guests.forEach(g=>{if(g.table)(by[g.table]=by[g.table]||[]).push(g.name);});
-      const free=ans.guests.filter(g=>!g.table).length;
-      el.innerHTML=!ans.guests.length?'<p class="empty-row">Сначала добавьте гостей в редакторе: блок «Именные ссылки».</p>':`
-        <div class="seat-top"><div class="stepper"><span>Столов</span><button type="button" class="btn btn-soft btn-sm" data-tn="-1" aria-label="Меньше столов">−</button><b>${n}</b><button type="button" class="btn btn-soft btn-sm" data-tn="1" aria-label="Больше столов">+</button></div>
-        <label class="check"><input type="checkbox" id="seatShow"${seating.show?' checked':''}><span>Показывать гостю номер стола в приглашении</span></label></div>
-        <p class="note" style="margin:10px 0 14px">${n?`Выберите стол для каждого гостя.${free?' Без стола: '+free+'.':' Все гости рассажены.'}`:'Добавьте столы кнопкой «+», затем выберите стол для каждого гостя.'} ${seating.show?'Гость видит номер стола в своем приглашении и в печатной версии.':'Пока гости номер стола не видят - включите, когда рассадка будет готова.'}</p>
-        ${n&&Object.keys(by).length?`<div class="seat-sum">${Object.keys(by).sort((a,b)=>a-b).map(k=>`<div><b>Стол ${k}</b><span>${by[k].map(esc).join(', ')}</span><i>${by[k].length}</i></div>`).join('')}</div>`:''}
-        <div class="tbl"><table><thead><tr><th>Гость</th><th>Ответ</th><th>Стол</th></tr></thead><tbody>${ans.guests.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td>${g.answer===null?'<span class="note">-</span>':g.answer?'<span class="chip pub">Придёт</span>':'<span class="chip red">Не сможет</span>'}</td><td>${n?opt(g):'<span class="note">нет столов</span>'}</td></tr>`).join('')}</tbody></table></div>`;
-      const save=async b=>{try{const j=await api('/invitations/'+o.id+'/seating',{method:'PUT',body:JSON.stringify(b)});seating=j.seating;ans.guests=j.guests;body('seat');}catch(x){toast(x.message);}};
-      el.querySelectorAll('[data-tn]').forEach(b=>b.onclick=()=>{const k=Math.max(0,Math.min(100,n+ +b.dataset.tn));
-        if(k<n&&ans.guests.some(g=>g.table>k)){ask('Убрать стол '+n+'?','Гости за этим столом останутся без стола.','Убрать').then(y=>{if(y)save({n:k});});return;}save({n:k});});
-      const sh=el.querySelector('#seatShow');if(sh)sh.onchange=()=>save({show:sh.checked});
-      el.querySelectorAll('[data-seat]').forEach(sl=>sl.onchange=()=>save({seats:{[sl.dataset.seat]:sl.value||null}}));}
+    if(t==='seat'){
+      const named=(SV.guests||[]).map((g,i)=>[String(g).trim(),i]).filter(([g])=>g);
+      const ansOf=n=>{const g=ans.guests.find(x=>x.name===n);return g?g.answer:null;};
+      const lab=k=>tables[k]?(String(tables[k].n||'').trim()||String(k+1)):'';
+      const use=k=>named.filter(([,i])=>seat[i]===k).length;
+      const free=named.filter(([,i])=>!(seat[i]>=0&&seat[i]<tables.length)).length;
+      el.innerHTML=!named.length?'<p class="empty-row">Сначала добавьте гостей в редакторе: блок «Именные ссылки».</p>':`
+        <p class="note" style="margin:0 0 12px">${tables.length?(free?'Без стола: '+free+'. ':'Все гости рассажены. ')+'Гость видит свой стол в приглашении и в печатной версии.':'Добавьте столы, укажите, сколько за каждым мест, и выберите стол для каждого гостя.'}</p>
+        <div class="seat-tabs">${tables.map((tb,k)=>{const u=use(k);return `<div class="stb"><input class="inp" data-tn="${k}" value="${esc(tb.n||'')}" placeholder="${k+1}" maxlength="20" aria-label="Номер или название стола ${k+1}"><label><input class="inp" type="number" data-ts="${k}" value="${tb.s||''}" min="1" max="100" inputmode="numeric" aria-label="Мест за столом ${k+1}">мест</label><b class="${tb.s&&u>tb.s?'over':''}">${u}${tb.s?'/'+tb.s:''}</b><button type="button" class="btn btn-ghost btn-sm" data-tdel="${k}" aria-label="Удалить стол ${k+1}">×</button></div>`;}).join('')}</div>
+        ${tables.length<100?'<button type="button" class="btn btn-soft btn-sm" id="tAdd" style="margin:10px 0 16px">+ Стол</button>':''}
+        ${tables.length?`<div class="seat-sum">${tables.map((tb,k)=>{const who=named.filter(([,i])=>seat[i]===k).map(([g])=>g);return who.length?`<div><b>Стол ${esc(lab(k))}</b><span>${who.map(esc).join(', ')}</span><i>${who.length}${tb.s?'/'+tb.s:''}</i></div>`:'';}).join('')}</div>
+        <div class="tbl"><table><thead><tr><th>Гость</th><th>Ответ</th><th>Стол</th></tr></thead><tbody>${named.map(([g,i])=>{const a=ansOf(g);return `<tr><td><b>${esc(g)}</b></td><td>${a===null?'<span class="note">-</span>':a?'<span class="chip pub">Придёт</span>':'<span class="chip red">Не сможет</span>'}</td><td><select class="inp seatsel" data-seat="${i}" aria-label="Стол для ${esc(g)}"><option value="-1">Без стола</option>${tables.map((tb,k)=>`<option value="${k}"${seat[i]===k?' selected':''}>Стол ${esc(lab(k))}${tb.s?` (${use(k)}/${tb.s})`:''}</option>`).join('')}</select></td></tr>`;}).join('')}</tbody></table></div>`:''}`;
+      let tm=0;
+      const save=(redraw)=>{clearTimeout(tm);tm=setTimeout(async()=>{try{const j=await api('/invitations/'+o.id+'/seating',{method:'PUT',body:JSON.stringify({tables,seat})});SV.tables=j.tables;SV.seat=j.seat;ans.guests=j.guests;}catch(x){toast(x.message);}},redraw?0:500);if(redraw)body('seat');};
+      el.querySelectorAll('[data-tn]').forEach(i=>{i.oninput=()=>{tables[+i.dataset.tn].n=i.value;save(false);};i.onchange=()=>body('seat');});
+      el.querySelectorAll('[data-ts]').forEach(i=>i.onchange=()=>{tables[+i.dataset.ts].s=Math.max(0,Math.min(100,parseInt(i.value)||0));save(true);});
+      el.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=async()=>{const k=+b.dataset.tdel;
+        if(use(k)&&!(await ask('Удалить стол '+lab(k)+'?','Гости за этим столом останутся без стола.','Удалить')))return;
+        tables.splice(k,1);seat=seat.map(x=>x===k?null:x>k?x-1:x);save(true);});
+      const ad=el.querySelector('#tAdd');if(ad)ad.onclick=()=>{const last=tables[tables.length-1];tables.push({n:String(tables.length+1),s:last?last.s:10});save(true);};
+      el.querySelectorAll('[data-seat]').forEach(sl=>sl.onchange=()=>{const k=+sl.value;while(seat.length<=+sl.dataset.seat)seat.push(null);seat[+sl.dataset.seat]=k>=0?k:null;save(true);});}
     if(t==='wish')el.innerHTML=ans.wish.length?`<div class="tbl"><table><thead><tr><th>Подарок</th><th>Кто подарит</th></tr></thead><tbody>${ans.wish.map(w=>`<tr><td><b>${esc(w.n)}</b></td><td>${w.by?esc(w.by):'<span class="note">свободно</span>'}</td></tr>`).join('')}</tbody></table></div>`
       :'<p class="empty-row">В вишлисте пока нет подарков. Добавьте их в редакторе.</p>';};
   if(tabs.length){body(tabs[0][0]);app.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{app.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));body(b.dataset.tab);});}
