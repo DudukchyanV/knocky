@@ -224,7 +224,7 @@ def clean_data(d: dict) -> dict:
             if w["u"] and not re.match(r"^https?://", w["u"]):
                 w["u"] = ""
     if isinstance(v.get("guests"), list):
-        out["guests"] = [str(g)[:80] for g in v["guests"][:300]]
+        out["guests"] = [str(g)[:80] for g in v["guests"][:1000]]
     if isinstance(v.get("pal"), dict):
         try:
             out["pal"] = {"id": str(v["pal"].get("id", tpl))[:30], "i": max(0, min(5, int(v["pal"].get("i", 0))))}
