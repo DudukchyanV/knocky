@@ -33,10 +33,11 @@ DOC_VERSION = "15.10.2026"
 SETUP_HASH = "36ece8f75ae5ca9817d22ef79eca21563bf3bd48314e6615f1623b9184150b26"
 BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year"}
 SESSION_DAYS = 30
+MAX_TABLES = 100
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
 TR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
               ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sch","","y","","e","yu","ya"]))
-RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www"}
+RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print"}
 
 
 # ---------------------------------------------------------------- storage
@@ -83,6 +84,13 @@ def init_db():
     MEDIA.mkdir(parents=True, exist_ok=True)
     with db() as c:
         c.executescript(SCHEMA)
+        # seating: table number per named guest, table count and "show to guests" per invitation
+        cols = {r[1] for r in c.execute("PRAGMA table_info(guests)")}
+        if "tbl" not in cols:
+            c.execute("ALTER TABLE guests ADD COLUMN tbl INTEGER")
+        cols = {r[1] for r in c.execute("PRAGMA table_info(invitations)")}
+        if "seating" not in cols:
+            c.execute("ALTER TABLE invitations ADD COLUMN seating TEXT")
 
 
 def load_secrets() -> dict:
@@ -606,8 +614,16 @@ def answers_of(c, inv_id):
 
 def guests_of(c, inv_id, slug):
     rows = c.execute("SELECT g.*, (SELECT attend FROM rsvp WHERE guest_id=g.id ORDER BY updated DESC LIMIT 1) ans FROM guests g WHERE inv_id=? AND active=1 ORDER BY pos", (inv_id,)).fetchall()
-    return [{"name": g["name"], "link": f"{SITE_URL}/{slug}?g={g['token']}" if slug else None, "opens": g["opens"],
-             "first_open": g["first_open"], "answer": None if g["ans"] is None else bool(g["ans"])} for g in rows]
+    return [{"id": g["id"], "name": g["name"], "link": f"{SITE_URL}/{slug}?g={g['token']}" if slug else None, "opens": g["opens"],
+             "first_open": g["first_open"], "answer": None if g["ans"] is None else bool(g["ans"]), "table": g["tbl"]} for g in rows]
+
+
+def seating_of(r) -> dict:
+    try:
+        s = json.loads(r["seating"] or "{}")
+    except Exception:
+        s = {}
+    return {"n": max(0, min(MAX_TABLES, int(s.get("n") or 0))), "show": bool(s.get("show"))}
 
 
 @need_user
@@ -618,8 +634,65 @@ async def inv_answers(req: Request):
             return err("Приглашение не найдено", 404)
         wl = json.loads(r["data"])["v"].get("wish", [])
         taken = {w["idx"]: w["name"] for w in c.execute("SELECT * FROM wish WHERE inv_id=?", (r["id"],))}
-        return JSONResponse({"answers": answers_of(c, r["id"]), "guests": guests_of(c, r["id"], r["slug"]),
+        return JSONResponse({"answers": answers_of(c, r["id"]), "guests": guests_of(c, r["id"], r["slug"]), "seating": seating_of(r),
                              "wish": [{"n": w["n"], "by": taken.get(i)} for i, w in enumerate(wl) if w.get("n")]})
+
+
+@need_user
+async def inv_seating(req: Request):
+    """Seating: how many tables, which table each named guest sits at, show the number to guests or not."""
+    b = await body(req)
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        s = seating_of(r)
+        if "n" in b:
+            try:
+                s["n"] = max(0, min(MAX_TABLES, int(b["n"])))
+            except Exception:
+                return err("Неверное число столов")
+        if "show" in b:
+            s["show"] = bool(b["show"])
+        c.execute("UPDATE invitations SET seating=? WHERE id=?", (json.dumps(s), r["id"]))
+        seats = b.get("seats") or {}
+        if isinstance(seats, dict):
+            for gid, t in list(seats.items())[:2000]:
+                try:
+                    t = int(t) if t not in (None, "", 0, "0") else None
+                except Exception:
+                    t = None
+                c.execute("UPDATE guests SET tbl=? WHERE id=? AND inv_id=?", (t, int(gid), r["id"]))
+        # guests left on a removed table go back to "no table"
+        c.execute("UPDATE guests SET tbl=NULL WHERE inv_id=? AND tbl>?", (r["id"], s["n"]))
+        return JSONResponse({"seating": s, "guests": guests_of(c, r["id"], r["slug"])})
+
+
+@need_user
+async def inv_print(req: Request):
+    """Data for the printable version: design, texts, one card per named guest with his link."""
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        d = json.loads(r["data"])
+        v = dict(d["v"])
+        raw = [str(x) for x in v.pop("guests", [])]
+        dear = v.pop("dear", [])
+        v.pop("photos", None)
+        v.pop("wish", None)
+        seat = seating_of(r)
+        cards = []
+        link = f"{SITE_URL}/{r['slug']}" if r["slug"] and r["status"] == "published" else None
+        if "named" in d["sel"]:
+            for g in guests_of(c, r["id"], r["slug"]):
+                idx = next((i for i, x in enumerate(raw) if x.strip() == g["name"]), -1)
+                cards.append({"guest": g["name"], "dear": dear[idx] if 0 <= idx < len(dear) else "",
+                              "link": g["link"] if link else None, "table": g["table"] if seat["show"] else None})
+        if not cards:
+            cards.append({"guest": None, "dear": "", "link": link, "table": None})
+    return JSONResponse({"tpl": d["tpl"], "sel": d["sel"], "order": d["order"], "v": v, "cards": cards,
+                         "published": bool(link)}, headers={"Cache-Control": "no-store"})
 
 
 @need_user
@@ -646,9 +719,9 @@ async def inv_export(req: Request):
     ws.append(["Итого придут", "", sum(a["people"] for a in ans if a["attend"])])
     if gs:
         g2 = wb.create_sheet("Именные ссылки")
-        g2.append(["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ"])
+        g2.append(["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ", "Стол"])
         for g in gs:
-            g2.append([g["name"], g["link"] or "", g["opens"], fmt(g["first_open"]), "" if g["answer"] is None else ("Придет" if g["answer"] else "Не сможет")])
+            g2.append([g["name"], g["link"] or "", g["opens"], fmt(g["first_open"]), "" if g["answer"] is None else ("Придет" if g["answer"] else "Не сможет"), g["table"] or ""])
     for sh in wb.worksheets:
         for cell in sh[1]:
             cell.font, cell.fill = head, fill
@@ -667,11 +740,13 @@ def public_payload(c, r, token: str = ""):
     d = json.loads(r["data"])
     v = dict(d["v"])
     sel = list(d["sel"])
-    guest = None
+    guest, table = None, None
     if token:
         g = c.execute("SELECT * FROM guests WHERE inv_id=? AND token=? AND active=1", (r["id"], token)).fetchone()
         if g:
             guest = g["name"]
+            if seating_of(r)["show"]:
+                table = g["tbl"]
     v.pop("guests", None)
     v.pop("dear", None)
     if guest and "named" in sel:
@@ -683,7 +758,7 @@ def public_payload(c, r, token: str = ""):
     else:
         sel = [x for x in sel if x != "named"]
     taken = [w["idx"] for w in c.execute("SELECT idx FROM wish WHERE inv_id=?", (r["id"],))]
-    return {"tpl": d["tpl"], "sel": sel, "order": d["order"], "v": v, "guest": guest, "wishTaken": taken,
+    return {"tpl": d["tpl"], "sel": sel, "order": d["order"], "v": v, "guest": guest, "table": table, "wishTaken": taken,
             "status": r["status"], "expired": bool(r["expires_at"] and r["expires_at"] < now()), "slug": r["slug"]}
 
 
@@ -986,12 +1061,15 @@ routes = [
     Route("/api/invitations/{id}/answers", inv_answers),
     Route("/api/invitations/{id}/export.xlsx", inv_export),
     Route("/api/invitations/{id}/preview", preview_get),
+    Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
+    Route("/api/invitations/{id}/print", inv_print),
     Route("/api/public/{slug}", pub_get),
     Route("/api/public/{slug}/rsvp", pub_rsvp, methods=["POST"]),
     Route("/api/public/{slug}/wish", pub_wish, methods=["POST"]),
     Route("/setup", page_setup, methods=["GET", "POST"]),
     Route("/i/{slug}", page_guest),
     Route("/p/{id}", page_guest),
+    Route("/print/{id}", page_guest),
     Mount("/m", StaticFiles(directory=MEDIA, check_dir=False), name="media"),
     Mount("/assets", StaticFiles(directory=HERE / "static" / "assets", check_dir=False), name="assets"),
     Route("/", page_cabinet),

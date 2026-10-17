@@ -58,6 +58,37 @@ body{background:#1E1A1C;margin:0}
 .wish .wform input{flex:1;min-width:0;font:inherit;font-size:3.6cqi;padding:2cqi 3cqi;border-radius:2cqi;background:transparent;color:var(--t-ink);border:1px solid color-mix(in srgb,var(--t-ink) 30%,transparent)}
 .wish .wform button{font:inherit;font-size:3.4cqi;font-weight:700;padding:2cqi 3.4cqi;border-radius:999px;border:0;background:var(--t-acc);color:var(--t-bg);cursor:pointer}
 .wish>div{flex-wrap:wrap}
+.inv .seat .cd div{min-width:0}
+/* printable version: A5 sheets, front = cover, back = date, place, program, dress code, QR */
+body.print{background:#E9E4E5}
+.pbar{position:sticky;top:0;z-index:50;background:#fff;color:#241B20;font:500 14px/1.5 'Manrope',system-ui,sans-serif;padding:14px 16px;box-shadow:0 2px 14px rgba(36,27,32,.08)}
+.pbar .in{max-width:760px;margin:0 auto;display:grid;gap:10px}
+.pbar h1{font-size:18px;margin:0;font-weight:800}
+.pbar .warn{background:#F3EEEE;border-radius:12px;padding:10px 12px}
+.pbar .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pbar select{flex:0 1 auto;font:inherit;padding:10px 12px;border-radius:12px;border:0;background:#F3EEEE;color:#241B20;max-width:100%}
+.pbar button{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer}
+.pbar .n{color:#6F6068;font-size:13px}
+.sheets{display:grid;gap:24px;justify-content:center;padding:24px 12px 48px}
+.sheet{width:148mm;height:210mm;container-type:inline-size;overflow:hidden;position:relative;background:#fff;box-shadow:0 6px 30px rgba(36,27,32,.18)}
+.sheet .inv{height:100%;min-height:0;transform:none}
+.sheet .cover{min-height:0!important;height:210mm;box-sizing:border-box}
+.sheet.back .inv{display:flex;flex-direction:column;justify-content:center;align-items:center}
+.sheet.back .fit{container-type:inline-size;width:100%;flex:none}
+.sheet.back section{padding:3.4cqi 9cqi}
+.sheet.back h4{font-size:6.4cqi;margin-bottom:2.2cqi}
+.sheet.back p{margin:0}
+.sheet.back .prog{gap:1.6cqi}
+.sheet.back .sign{padding:3cqi 0 6cqi}
+.sheet .qr{display:flex;gap:5cqi;align-items:center;justify-content:center;text-align:left}
+.sheet .qr svg{width:27cqi;height:27cqi;flex:none;background:#fff;padding:1.6cqi;border-radius:2cqi}
+.sheet .qr div{font-size:3.3cqi;line-height:1.45;max-width:46cqi}
+.sheet .qr b{display:block;font-size:3.8cqi;margin-bottom:1cqi}
+.sheet .tb{font-size:4.4cqi}.sheet .tb b{font-family:var(--t-disp);font-weight:400;font-size:9cqi;color:var(--t-acc);margin-left:1.5cqi}
+.sheet .t-sketch .sk-art{width:46cqi;transform:translate(-50%,-50%)}
+.sheet *,.sheet *::before,.sheet *::after{animation:none!important;transition:none!important}
+@page{size:A5;margin:0}
+@media print{.sheets{zoom:1!important}body.print{background:none}.pbar{display:none}.sheets{display:block;padding:0}.sheet{box-shadow:none;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .pvbar{position:sticky;top:0;z-index:50;background:#C62828;color:#fff;text-align:center;font:600 13px/1.4 var(--f-body);padding:8px 12px}
 """
 
@@ -65,7 +96,7 @@ GUEST_JS = r"""
 /* ===== guest page: data from the server ===== */
 const V=document.getElementById('inviteView');
 const parts_=location.pathname.split('/').filter(Boolean);
-const PREVIEW=parts_[0]==='p';const KEY=decodeURIComponent(parts_[1]||'');
+const PREVIEW=parts_[0]==='p',PRINT=parts_[0]==='print';const KEY=decodeURIComponent(parts_[1]||'');
 const G=new URLSearchParams(location.search).get('g')||'';
 let P=null;
 function msg(t,s){V.innerHTML=`<div class="gmsg"><div><b>${t}</b>${s||''}</div></div>`;}
@@ -75,6 +106,7 @@ function draw(){
   const ord=[...(P.order||[]).filter(id=>DEF_ORDER.includes(id)),...DEF_ORDER.filter(id=>!(P.order||[]).includes(id))];
   V.innerHTML=(PREVIEW?'<div class="pvbar">Предпросмотр: так приглашение увидят гости</div>':'')+
     `<div class="page">${full(t,P.v,on,ord)}</div><p class="made">Приглашение сделано на Knocky. <a href="https://knocky.ru" target="_blank" rel="noopener">Создать своё</a></p>`;
+  if(P.table){const cv=V.querySelector('.cover');if(cv)cv.insertAdjacentHTML('afterend',`<section class="seat"><h4>Ваш стол</h4><div class="cd"><div>${esc(String(P.table))}</div></div></section>`);}
   wireRsvp();wireWish();}
 function wireRsvp(){const box=V.querySelector('[data-rsvp]');if(!box)return;
   const inp=box.querySelector('input');if(P.guest&&!inp.value)inp.value=P.guest;
@@ -121,8 +153,56 @@ function wireWish(){const rows=V.querySelectorAll('.wish>div');if(!rows.length)r
   const idx=(P.v.wish||[]).map((w,i)=>w.n?i:-1).filter(i=>i>=0);
   rows.forEach((row,k)=>{const b=row.querySelector('b');if(!b)return;const i=idx[k];
     b.outerHTML=(P.wishTaken||[]).includes(i)?'<span class="wtaken">Уже выбрали</span>':`<button type="button" class="wbtn" data-wi="${i}">Подарю</button>`;});}
+__QRM__
+function qrSvg(t){const m=QRM(t),n=m.length,q=2;let d='';m.forEach((r,y)=>r.forEach((on,x)=>{if(on)d+=`M${x+q} ${y+q}h1v1h-1z`;}));
+  return `<svg viewBox="0 0 ${n+q*2} ${n+q*2}" shape-rendering="crispEdges" aria-label="QR-код"><path d="${d}" fill="#241B20"/></svg>`;}
+const NOT_PRINTED={timer:'таймер',map:'карта и маршрут',rsvp:'ответ на приглашение',wishlist:'вишлист',gallery:'фото'};
+function printView(D){
+  document.body.classList.add('print');
+  const t=TPL.find(x=>x.id===D.tpl)||TPL[0],sel=new Set(D.sel||[]);
+  const ord=[...(D.order||[]).filter(id=>DEF_ORDER.includes(id)),...DEF_ORDER.filter(id=>!(D.order||[]).includes(id))];
+  const on=new Set(['program','dress'].filter(x=>sel.has(x)));
+  const online=Object.keys(NOT_PRINTED).filter(k=>sel.has(k)).map(k=>NOT_PRINTED[k]);
+  const qrList=['map','rsvp','wishlist','gallery'].filter(k=>sel.has(k)).map(k=>NOT_PRINTED[k]);
+  const sheet=(c)=>{
+    const v={...D.v,guests:c.guest?[c.guest]:[],dear:[c.dear||'']},on1=new Set(on);if(c.guest)on1.add('named');
+    const box=document.createElement('div');box.innerHTML=full(t,v,on1,ord);
+    const inv=box.firstElementChild,cov=inv.querySelector('.cover');
+    const front=inv.cloneNode(false);front.appendChild(cov);
+    const dp=dparts(v.date),when=`${dp.dn} ${dp.mon} ${dp.y}, ${dp.wd}${v.time?', '+esc(v.time):''}`;
+    /* date and place in one section instead of the map block */
+    inv.querySelectorAll('section').forEach(x=>{if(x.querySelector('h4')&&x.querySelector('h4').textContent==='Место')x.remove();});
+    inv.insertAdjacentHTML('afterbegin',`<section><h4>Когда и где</h4><p>${when}</p>${v.venue||v.addr?`<p style="margin-top:2cqi">${esc(v.venue||'')}${v.venue&&v.addr?'<br>':''}${esc(v.addr||'')}</p>`:''}</section>`);
+    const tail=`${c.table?`<section class="tb">Ваш стол<b>№${esc(String(c.table))}</b></section>`:''}
+      ${c.link?`<section class="qr">${qrSvg(c.link)}<div><b>Наведите камеру телефона</b>${qrList.length?esc(qrList.join(', ').replace(/^./,x=>x.toUpperCase()))+' - по этому коду.':'Приглашение откроется на телефоне.'}</div></section>`:''}`;
+    inv.querySelector('.sign').insertAdjacentHTML('beforebegin',tail);
+    const fit=document.createElement('div');fit.className='fit';while(inv.firstChild)fit.appendChild(inv.firstChild);inv.appendChild(fit);
+    return `<div class="sheet front">${front.outerHTML}</div><div class="sheet back">${inv.outerHTML}</div>`;};
+  const opts=D.cards.length>1?`<select id="who" aria-label="Для кого"><option value="-1">Все гости (${D.cards.length})</option>${D.cards.map((c,i)=>`<option value="${i}">${esc(c.guest)}</option>`).join('')}</select>`:'';
+  V.innerHTML=`<div class="pbar"><div class="in"><h1>Печатная версия, формат A5</h1>
+    <div class="warn">В печатной версии только обложка, дата, адрес${on.has('program')?', программа':''}${on.has('dress')?', дресс-код':''}.${online.length?` Здесь нет: ${esc(online.join(', '))}. Гость откроет это по QR-коду на обороте.`:''}${D.published?'':' <b>QR-коды появятся после публикации приглашения.</b>'}</div>
+    <div class="row">${opts}<button type="button" id="pr">Сохранить PDF</button></div>
+    <div class="n">В окне печати выберите «Сохранить как PDF». Каждое приглашение - 2 страницы: лицевая сторона и оборот. Для печати дома на A4 выберите «2 страницы на листе».</div></div></div>
+    <div class="sheets" id="sh"></div>`;
+  /* the back side shrinks as a whole when the program is long, so everything fits on one A5 page */
+  const fitAll=()=>document.querySelectorAll('.sheet.back').forEach(sh=>{const f=sh.querySelector('.fit');f.style.width='100%';
+    for(let k=0;k<3;k++){const H=sh.clientHeight*.97,h=f.scrollHeight;if(h<=H)break;f.style.width=(parseFloat(f.style.width)*H/h).toFixed(2)+'%';}});
+  const fill=i=>{document.getElementById('sh').innerHTML=(i<0?D.cards:[D.cards[i]]).map(sheet).join('');fitAll();zoomIt();};
+  if(document.fonts)document.fonts.ready.then(fitAll);
+  /* phones: shrink the preview on screen only (print uses real A5) */
+  function zoomIt(){const sh=document.getElementById('sh'),f=sh.querySelector('.sheet');if(!f)return;sh.style.zoom='';const z=Math.min(1,(innerWidth-24)/f.offsetWidth);sh.style.zoom=z<1?z.toFixed(3):'';}
+  addEventListener('resize',zoomIt);
+  fill(-1);
+  const w=document.getElementById('who');if(w)w.onchange=()=>fill(+w.value);
+  document.getElementById('pr').onclick=()=>window.print();}
 (async()=>{
   if(!KEY){msg('Приглашение не найдено');return;}
+  if(PRINT){try{const r=await fetch('/api/invitations/'+encodeURIComponent(KEY)+'/print',{credentials:'same-origin'});const j=await r.json().catch(()=>({}));
+      if(r.status===401){msg('Войдите в кабинет',`<p><a href="/">Перейти ко входу</a></p>`);return;}
+      if(!r.ok){msg('Приглашение не найдено');return;}
+      document.title='Печатная версия - Knocky';printView(j);}
+    catch(e){msg('Нет связи','<p>Проверьте интернет и обновите страницу.</p>');}
+    return;}
   try{const r=await fetch(PREVIEW?'/api/invitations/'+encodeURIComponent(KEY)+'/preview':'/api/public/'+encodeURIComponent(KEY)+location.search,{credentials:'same-origin'});
     const j=await r.json().catch(()=>({}));
     if(r.status===401){msg('Войдите в кабинет',`<p><a href="/">Перейти ко входу</a></p>`);return;}
@@ -132,6 +212,8 @@ function wireWish(){const rows=V.querySelectorAll('.wish>div');if(!rows.length)r
   catch(e){msg('Нет связи','<p>Проверьте интернет и обновите страницу.</p>');}
 })();
 """
+
+GUEST_JS = GUEST_JS.replace("__QRM__", (ROOT / "tools" / "qrm.js").read_text(encoding="utf-8"))
 
 page = f"""<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">

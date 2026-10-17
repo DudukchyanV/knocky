@@ -13,6 +13,7 @@ const IC={
   copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
   ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
   dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  print:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></svg>'
 };
 let ME=null,DESIGNS={};
@@ -158,13 +159,14 @@ async function invView(id){
       <div class="acts" style="margin-top:14px">${ME.admin?`<button class="btn btn-seal" id="pubBtn">Опубликовать без оплаты</button>`:`<button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>`}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
       </div>`;
   const rsvpOn=sel.has('rsvp'),namedOn=sel.has('named'),wishOn=sel.has('wishlist');
-  const tabs=[rsvpOn&&['ans','Ответы'],namedOn&&['gst','Именные ссылки'],wishOn&&['wish','Подарки']].filter(Boolean);
+  const tabs=[rsvpOn&&['ans','Ответы'],namedOn&&['gst','Именные ссылки'],namedOn&&['seat','Рассадка'],wishOn&&['wish','Подарки']].filter(Boolean);
+  let seating=ans.seating||{n:0,show:false};
   const opened=ans.guests.filter(g=>g.opens>0).length;
   app.innerHTML=`<a class="back" href="${ME.admin&&location.search.includes('from=admin')?'/admin':'/'}" data-go>${IC.back}Мои приглашения</a>
   <div class="inv"><div class="inv-main">
     <div class="panel title"><div class="row spread"><h1>${esc(o.title)}</h1>${status(o)}</div>
       <div class="meta">${o.date?esc(dateLong(o.date)):'Дата не указана'}${d?' · дизайн «'+esc(d.n)+'»':''}${o.paid_via==='admin'?' · без оплаты (админ)':''}</div>
-      <div class="acts"><a class="btn btn-soft" href="${editUrl}" target="_blank" rel="noopener">${IC.edit}Редактировать</a><a class="btn btn-ghost" href="/p/${esc(o.id)}" target="_blank" rel="noopener">${IC.ext}Предпросмотр</a>
+      <div class="acts"><a class="btn btn-soft" href="${editUrl}" target="_blank" rel="noopener">${IC.edit}Редактировать</a><a class="btn btn-ghost" href="/p/${esc(o.id)}" target="_blank" rel="noopener">${IC.ext}Предпросмотр</a><a class="btn btn-ghost" href="/print/${esc(o.id)}" target="_blank" rel="noopener">${IC.print}Печатная версия</a>
       ${!pub||ME.admin?`<button class="btn btn-ghost" id="delBtn">Удалить</button>`:''}${ME.admin&&pub?`<button class="btn btn-ghost" id="unpubBtn">Снять с публикации</button>`:''}</div></div>
     ${linkBlock}
     ${rsvpOn||namedOn?`<div class="stats">
@@ -181,6 +183,20 @@ async function invView(id){
       :`<p class="empty-row">${pub?'Пока никто не ответил. Ответы появятся здесь сразу, как гости заполнят анкету.':'Ответы появятся после публикации.'}</p>`;
     if(t==='gst')el.innerHTML=ans.guests.length?`<div class="tbl"><table><thead><tr><th>Гость</th><th>Открыл</th><th>Ответ</th><th></th></tr></thead><tbody>${ans.guests.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td class="c nowrap">${g.opens?esc(tsShort(g.first_open)):'нет'}</td><td>${g.answer===null?'<span class="note">-</span>':g.answer?'<span class="chip pub">Придёт</span>':'<span class="chip red">Не сможет</span>'}</td><td class="nowrap" style="text-align:right">${g.link?`<button class="btn btn-soft btn-sm" data-copy="${esc(g.link)}">${IC.copy}Ссылка</button>`:'<span class="note">после публикации</span>'}</td></tr>`).join('')}</tbody></table></div>`
       :'<p class="empty-row">Добавьте гостей в редакторе: блок «Именные ссылки», одна строка - одна ссылка.</p>';
+    if(t==='seat'){const n=seating.n,opt=g=>`<select class="inp seatsel" data-seat="${g.id}" aria-label="Стол для ${esc(g.name)}"><option value="">Без стола</option>${Array.from({length:n},(_,i)=>`<option value="${i+1}"${g.table===i+1?' selected':''}>Стол ${i+1}</option>`).join('')}</select>`;
+      const by={};ans.guests.forEach(g=>{if(g.table)(by[g.table]=by[g.table]||[]).push(g.name);});
+      const free=ans.guests.filter(g=>!g.table).length;
+      el.innerHTML=!ans.guests.length?'<p class="empty-row">Сначала добавьте гостей в редакторе: блок «Именные ссылки».</p>':`
+        <div class="seat-top"><div class="stepper"><span>Столов</span><button type="button" class="btn btn-soft btn-sm" data-tn="-1" aria-label="Меньше столов">−</button><b>${n}</b><button type="button" class="btn btn-soft btn-sm" data-tn="1" aria-label="Больше столов">+</button></div>
+        <label class="check"><input type="checkbox" id="seatShow"${seating.show?' checked':''}><span>Показывать гостю номер стола в приглашении</span></label></div>
+        <p class="note" style="margin:10px 0 14px">${n?`Выберите стол для каждого гостя.${free?' Без стола: '+free+'.':' Все гости рассажены.'}`:'Добавьте столы кнопкой «+», затем выберите стол для каждого гостя.'} ${seating.show?'Гость видит номер стола в своем приглашении и в печатной версии.':'Пока гости номер стола не видят - включите, когда рассадка будет готова.'}</p>
+        ${n&&Object.keys(by).length?`<div class="seat-sum">${Object.keys(by).sort((a,b)=>a-b).map(k=>`<div><b>Стол ${k}</b><span>${by[k].map(esc).join(', ')}</span><i>${by[k].length}</i></div>`).join('')}</div>`:''}
+        <div class="tbl"><table><thead><tr><th>Гость</th><th>Ответ</th><th>Стол</th></tr></thead><tbody>${ans.guests.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td>${g.answer===null?'<span class="note">-</span>':g.answer?'<span class="chip pub">Придёт</span>':'<span class="chip red">Не сможет</span>'}</td><td>${n?opt(g):'<span class="note">нет столов</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+      const save=async b=>{try{const j=await api('/invitations/'+o.id+'/seating',{method:'PUT',body:JSON.stringify(b)});seating=j.seating;ans.guests=j.guests;body('seat');}catch(x){toast(x.message);}};
+      el.querySelectorAll('[data-tn]').forEach(b=>b.onclick=()=>{const k=Math.max(0,Math.min(100,n+ +b.dataset.tn));
+        if(k<n&&ans.guests.some(g=>g.table>k)){ask('Убрать стол '+n+'?','Гости за этим столом останутся без стола.','Убрать').then(y=>{if(y)save({n:k});});return;}save({n:k});});
+      const sh=el.querySelector('#seatShow');if(sh)sh.onchange=()=>save({show:sh.checked});
+      el.querySelectorAll('[data-seat]').forEach(sl=>sl.onchange=()=>save({seats:{[sl.dataset.seat]:sl.value||null}}));}
     if(t==='wish')el.innerHTML=ans.wish.length?`<div class="tbl"><table><thead><tr><th>Подарок</th><th>Кто подарит</th></tr></thead><tbody>${ans.wish.map(w=>`<tr><td><b>${esc(w.n)}</b></td><td>${w.by?esc(w.by):'<span class="note">свободно</span>'}</td></tr>`).join('')}</tbody></table></div>`
       :'<p class="empty-row">В вишлисте пока нет подарков. Добавьте их в редакторе.</p>';};
   if(tabs.length){body(tabs[0][0]);app.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{app.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));body(b.dataset.tab);});}
