@@ -223,8 +223,13 @@ def clean_data(d: dict) -> dict:
         for w in out["wish"]:
             if w["u"] and not re.match(r"^https?://", w["u"]):
                 w["u"] = ""
+    try:
+        out["packs"] = max(0, min(9, int(v.get("packs") or 0)))
+    except Exception:
+        out["packs"] = 0
     if isinstance(v.get("guests"), list):
-        out["guests"] = [str(g)[:80] for g in v["guests"][:1000]]
+        # 100 named links in the block, more in packs of 100 (+100 приглашений)
+        out["guests"] = [str(g)[:80] for g in v["guests"][:100 * (1 + out["packs"])]]
     if isinstance(v.get("pal"), dict):
         try:
             out["pal"] = {"id": str(v["pal"].get("id", tpl))[:30], "i": max(0, min(5, int(v["pal"].get("i", 0))))}
