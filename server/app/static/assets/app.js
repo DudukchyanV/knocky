@@ -156,7 +156,7 @@ async function invView(id){
       <p class="note" style="margin-top:8px">Латинские буквы, цифры и дефис. Если оставить пустым, адрес соберём из имён.</p>
       <p class="err" id="slugEr" hidden></p>
       <div class="acts" style="margin-top:14px">${ME.admin?`<button class="btn btn-seal" id="pubBtn">Опубликовать без оплаты</button>`:`<button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>`}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
-      ${ME.admin?'<p class="note" style="margin-top:10px">Вы администратор: публикация без оплаты отмечается в админке.</p>':'<div class="warn" style="margin-top:14px">Оплата на сайте подключается. Как только она заработает, здесь появится кнопка оплаты, а ссылку пришлём на почту. Черновик сохранён, его можно спокойно редактировать.</div>'}</div>`;
+      </div>`;
   const rsvpOn=sel.has('rsvp'),namedOn=sel.has('named'),wishOn=sel.has('wishlist');
   const tabs=[rsvpOn&&['ans','Ответы'],namedOn&&['gst','Именные ссылки'],wishOn&&['wish','Подарки']].filter(Boolean);
   const opened=ans.guests.filter(g=>g.opens>0).length;
