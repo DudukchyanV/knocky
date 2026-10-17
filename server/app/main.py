@@ -230,6 +230,9 @@ def clean_data(d: dict) -> dict:
     if isinstance(v.get("guests"), list):
         # 100 named links in the block, more in packs of 100 (+100 приглашений)
         out["guests"] = [str(g)[:80] for g in v["guests"][:100 * (1 + out["packs"])]]
+    if isinstance(v.get("dear"), list):
+        # greeting per guest line: pl «Дорогие», m «Дорогой», f «Дорогая»; empty = guessed from the name
+        out["dear"] = [d if d in ("pl", "m", "f") else "" for d in (str(x or "") for x in v["dear"][:len(out.get("guests", []))])]
     if isinstance(v.get("pal"), dict):
         try:
             out["pal"] = {"id": str(v["pal"].get("id", tpl))[:30], "i": max(0, min(5, int(v["pal"].get("i", 0))))}
@@ -670,8 +673,13 @@ def public_payload(c, r, token: str = ""):
         if g:
             guest = g["name"]
     v.pop("guests", None)
+    v.pop("dear", None)
     if guest and "named" in sel:
+        raw = [str(x) for x in d["v"].get("guests", [])]
+        idx = next((i for i, x in enumerate(raw) if x.strip() == guest), -1)
+        dear = d["v"].get("dear", [])
         v["guests"] = [guest]
+        v["dear"] = [dear[idx] if 0 <= idx < len(dear) else ""]
     else:
         sel = [x for x in sel if x != "named"]
     taken = [w["idx"] for w in c.execute("SELECT idx FROM wish WHERE inv_id=?", (r["id"],))]
@@ -706,6 +714,10 @@ async def preview_get(req: Request):
         if "named" in d["sel"]:
             p["sel"] = d["sel"]
             p["v"]["guests"] = names[:1] or ["Ольга и Сергей"]
+            raw = d["v"].get("guests", [])
+            first = next((i for i, x in enumerate(raw) if str(x).strip()), -1)
+            dear = d["v"].get("dear", [])
+            p["v"]["dear"] = [dear[first] if 0 <= first < len(dear) else ""]
         p["preview"] = True
     return JSONResponse(p)
 
