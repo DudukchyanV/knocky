@@ -31,11 +31,11 @@ MAIL_FROM = "hello@knocky.ru"
 DOC_VERSION = "15.10.2026"
 # sha256 of the one-time setup token (the token itself is given to the owner, never stored here)
 SETUP_HASH = "36ece8f75ae5ca9817d22ef79eca21563bf3bd48314e6615f1623b9184150b26"
-BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year", "seating", "print", "story"}
+BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year", "seating", "print"}
 SESSION_DAYS = 30
 MAX_TABLES = 100
 RENDER_PORT = int(os.environ.get("KNOCKY_PORT", "8000"))
-RENDER_SIZES = {"og": (1200, 630), "story": (1080, 1920)}
+RENDER_SIZES = {"og": (1200, 630)}
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
 TR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
               ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sch","","y","","e","yu","ya"]))
@@ -1048,23 +1048,6 @@ async def og_image(req: Request):
     return FileResponse(f, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 
-@need_user
-async def inv_story(req: Request):
-    """Picture for stories (paid block): the cover 1080x1920."""
-    with db() as c:
-        r = own_inv(c, req, req.path_params["id"])
-        if not r:
-            return err("Приглашение не найдено", 404)
-        d = json.loads(r["data"])
-    if "story" not in d["sel"]:
-        return err("Картинка для сторис не подключена в этом приглашении", 403)
-    f = await asyncio.to_thread(render_picture, render_payload(d), "story")
-    if not f:
-        return err("Не получилось сделать картинку. Попробуйте позже", 503)
-    fn = "knocky-story-" + (translit(inv_title(d)) or "invite") + ".png"
-    return FileResponse(f, media_type="image/png", headers={"Content-Disposition": f'attachment; filename="{fn}"', "Cache-Control": "no-store"})
-
-
 # ---------------------------------------------------------------- pages
 def guest_html() -> str | None:
     """The guest page contains the design code; it is stored encrypted and opened with the server key."""
@@ -1288,7 +1271,6 @@ routes = [
     Route("/print/{id}", page_guest),
     Route("/og/{slug}.png", og_image),
     Route("/render/{key}", page_render),
-    Route("/api/invitations/{id}/story.png", inv_story),
     Mount("/m", StaticFiles(directory=MEDIA, check_dir=False), name="media"),
     Mount("/assets", StaticFiles(directory=HERE / "static" / "assets", check_dir=False), name="assets"),
     Route("/", page_cabinet),
