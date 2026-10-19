@@ -132,9 +132,24 @@ async function listView(admin){
     app.innerHTML=head+(admin?`<div style="margin:-6px 0 16px"><input class="inp search" id="q" type="search" placeholder="Поиск: имена, почта, адрес ссылки" aria-label="Поиск"></div>`:'')+
       `<div class="cards" id="cards">${items.map(o=>cardOf(o,admin)).join('')}${admin?'':newCard}</div>`;
     if(admin)$('#q').oninput=e=>{const q=e.target.value.trim().toLowerCase();
-      $('#cards').innerHTML=items.filter(o=>!q||[o.title,o.owner,o.slug].join(' ').toLowerCase().includes(q)).map(o=>cardOf(o,true)).join('')||'<p class="note">Ничего не нашлось</p>';};
+      $('#cards').innerHTML=items.filter(o=>!q||[o.title,o.owner,o.slug].join(' ').toLowerCase().includes(q)).map(o=>cardOf(o,true)).join('')||'<p class="note">Ничего не нашлось</p>';markPicked();};
   }
-  app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));}
+  app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));
+  /* admins: pick several invitations and delete them at once (test invitations before launch) */
+  const picked=new Set();let picking=false;
+  function markPicked(){app.querySelectorAll('#cards a.card').forEach(a=>{const id=a.getAttribute('href').split('/inv/')[1].split('?')[0];a.classList.toggle('picked',picked.has(id));a.classList.toggle('picking',picking);});
+    const d=$('#delGo');if(d){d.disabled=!picked.size;d.textContent=`Удалить выбранные (${picked.size})`;}}
+  window.markPicked=markPicked;
+  if(ME.admin&&items.length){const bar=document.createElement('div');bar.className='pickbar';
+    bar.innerHTML=`<button class="btn btn-soft btn-sm" id="pickTog">Удалить несколько</button><span id="pickTools" hidden><button class="btn btn-ghost btn-sm" id="pickAll">Выбрать все</button><button class="btn btn-seal btn-sm" id="delGo" disabled>Удалить выбранные (0)</button></span>`;
+    $('#cards').before(bar);
+    $('#pickTog').onclick=()=>{picking=!picking;picked.clear();$('#pickTools').hidden=!picking;$('#pickTog').textContent=picking?'Отмена':'Удалить несколько';markPicked();};
+    $('#pickAll').onclick=()=>{app.querySelectorAll('#cards a.card').forEach(a=>picked.add(a.getAttribute('href').split('/inv/')[1].split('?')[0]));markPicked();};
+    $('#cards').addEventListener('click',e=>{if(!picking)return;const a=e.target.closest('a.card');if(!a)return;e.preventDefault();e.stopPropagation();
+      const id=a.getAttribute('href').split('/inv/')[1].split('?')[0];picked.has(id)?picked.delete(id):picked.add(id);markPicked();},true);
+    $('#delGo').onclick=async()=>{const n=picked.size;if(!(await ask(`Удалить ${plural(n,'приглашение','приглашения','приглашений')}?`,'Вместе с ответами гостей. Ссылки у гостей перестанут работать. Это нельзя отменить.','Удалить')))return;
+      let fail=0;for(const id of picked){try{await api('/invitations/'+encodeURIComponent(id),{method:'DELETE'});}catch(x){fail++;}}
+      toast(fail?`Не удалось удалить: ${fail}`:'Удалено');route();};}}
 
 /* ---------- one invitation ---------- */
 async function invView(id){
