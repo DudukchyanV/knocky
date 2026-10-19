@@ -209,7 +209,7 @@ def clean_data(d: dict) -> dict:
         x = v.get(k)
         if x is not None:
             out[k] = str(x)[:n]
-    for k, n in (("a", 60), ("b", 60), ("date", 10), ("time", 5), ("venue", 120), ("addr", 300), ("dressNote", 300), ("rsvpBy", 10)):
+    for k, n in (("a", 60), ("b", 60), ("date", 10), ("time", 5), ("venue", 120), ("addr", 300), ("dressNote", 300), ("rsvpBy", 10), ("d0t", 40)):
         s(k, n)
     for k in ("lat", "lng"):
         try:
