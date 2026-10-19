@@ -180,7 +180,7 @@ function printView(D){
     const dp=dparts(v.date),when=`${dp.dn} ${dp.mon} ${dp.y}, ${dp.wd}${v.time?', '+esc(v.time):''}`;
     /* date and place in one section instead of the map block */
     inv.querySelectorAll('section').forEach(x=>{if(x.querySelector('h4')&&x.querySelector('h4').textContent==='Место')x.remove();});
-    inv.insertAdjacentHTML('afterbegin',`<section><h4>Когда и где</h4><p>${when}</p>${v.venue||v.addr?`<p style="margin-top:2cqi">${esc(v.venue||'')}${v.venue&&v.addr?'<br>':''}${esc(v.addr||'')}</p>`:''}${(v.events||[]).filter(e=>e&&(e.t||e.venue||e.addr||e.date)).map(e=>`<p style="margin-top:3cqi"><b>${esc(e.t||'')}</b>${evWhen(e)?'<br>'+esc(evWhen(e)):''}${e.venue||e.addr?'<br>'+esc([e.venue,e.addr].filter(Boolean).join(', ')):''}</p>`).join('')}</section>`);
+    inv.insertAdjacentHTML('afterbegin',`<section><h4>Когда и где</h4><p>${evsOf(v).length?'<b>'+dayName(0)+'</b><br>':''}${when}</p>${v.venue||v.addr?`<p style="margin-top:2cqi">${esc(v.venue||'')}${v.venue&&v.addr?'<br>':''}${esc(v.addr||'')}</p>`:''}${evsOf(v).map((e,i)=>`<p style="margin-top:3cqi"><b>${dayName(i+1)}</b>${evWhen(e)?'<br>'+esc(evWhen(e)):''}${e.venue||e.addr?'<br>'+esc([e.venue,e.addr].filter(Boolean).join(', ')):''}</p>`).join('')}</section>`);
     const seatSec=inv.querySelector('section.seat');
     const tail=`${seatSec?seatSec.outerHTML:''}
       ${c.link?`<section class="qr">${qrSvg(c.link)}<div><b>Наведите камеру телефона</b>${qrList.length?esc(qrList.join(', ').replace(/^./,x=>x.toUpperCase()))+' - по этому коду.':'Приглашение откроется на телефоне.'}</div></section>`:''}`;

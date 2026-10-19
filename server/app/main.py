@@ -241,7 +241,8 @@ def clean_data(d: dict) -> dict:
         for e in v["events"][:4]:
             if isinstance(e, dict):
                 x = {"t": str(e.get("t") or "")[:40], "date": str(e.get("date") or "")[:10], "time": str(e.get("time") or "")[:5],
-                     "venue": str(e.get("venue") or "")[:60], "addr": str(e.get("addr") or "")[:160]}
+                     "venue": str(e.get("venue") or "")[:60], "addr": str(e.get("addr") or "")[:160],
+                     "prog": [{"t": str(r.get("t", ""))[:5], "x": str(r.get("x", ""))[:120]} for r in (e.get("prog") or [])[:20] if isinstance(r, dict)]}
                 if not re.fullmatch(r"(\d{4}-\d{2}-\d{2})?", x["date"]):
                     x["date"] = ""
                 if not re.fullmatch(r"(\d{2}:\d{2})?", x["time"]):
