@@ -48,6 +48,10 @@ body{background:#1E1A1C;margin:0}
 .rsvp select,.rsvp textarea{font:inherit;font-size:4cqi;padding:3cqi;border-radius:2cqi;background:transparent;color:var(--t-ink);border:1px solid color-mix(in srgb,var(--t-ink) 30%,transparent);width:100%;box-sizing:border-box}
 .rsvp select option{color:#241B20;background:#fff}
 .rsvp textarea{min-height:18cqi;resize:vertical}
+.rsvp .rdays{display:grid;gap:2cqi;text-align:left}
+.rsvp .rdays label{display:flex!important;flex-direction:row!important;justify-content:flex-start!important;text-align:left!important;align-items:center;gap:3cqi;font-size:3.8cqi;cursor:pointer;padding:2.4cqi 3cqi;border-radius:2cqi;background:color-mix(in srgb,var(--t-ink) 6%,transparent)}
+.rsvp .rdays input{width:4.6cqi;height:4.6cqi;accent-color:var(--t-acc);flex:none;margin:0}
+.rsvp .rdays span{display:grid;text-align:left;justify-items:start}.rsvp .rdays small{font-size:3.1cqi;opacity:.7}
 .rsvp .lbl{font-size:3.4cqi;opacity:.75;text-align:left;margin-bottom:-1.5cqi}
 .rsvp .err{font-size:3.4cqi;color:var(--t-acc)}
 .rsvp .ok{font-size:4cqi;line-height:1.5}
@@ -119,7 +123,9 @@ function draw(){
 function wireRsvp(){const box=V.querySelector('[data-rsvp]');if(!box)return;
   const inp=box.querySelector('input');if(P.guest&&!inp.value)inp.value=P.guest;
   const more=document.createElement('div');more.className='more';more.hidden=true;
-  more.innerHTML=`<div class="lbl">Сколько вас будет</div><select data-people aria-label="Сколько вас будет">${[1,2,3,4,5,6,7,8].map(n=>`<option value="${n}">${n}</option>`).join('')}</select>`;
+  const D=daysOf(P.v);
+  more.innerHTML=(D.length>1?`<div class="lbl">В какие дни придете</div><div class="rdays">${D.map((d,i)=>`<label><input type="checkbox" data-rday="${i}" checked><span>${esc(dayTitle(P.v,i))}${d.date?`<small>${esc(dayMonth(d.date))}</small>`:''}</span></label>`).join('')}</div>`:'')+
+    `<div class="lbl">Сколько вас будет</div><select data-people aria-label="Сколько вас будет">${[1,2,3,4,5,6,7,8].map(n=>`<option value="${n}">${n}</option>`).join('')}</select>`;
   const cm=document.createElement('textarea');cm.setAttribute('aria-label','Комментарий');cm.placeholder='Комментарий: пожелания по меню, вопросы (по желанию)';cm.maxLength=500;
   const er=document.createElement('div');er.className='err';er.setAttribute('role','alert');
   const send=box.querySelector('[data-send]');
@@ -133,9 +139,11 @@ document.addEventListener('click',async e=>{
     if(!ch){er.textContent='Выберите «Приду» или «Не смогу»';return;}
     if(!n){er.textContent='Укажите имя и фамилию';box.querySelector('input').focus();return;}
     if(PREVIEW){er.textContent='Это предпросмотр: ответы принимаются после публикации';return;}
-    const yes=ch.dataset.o==='1';s.disabled=true;s.textContent='Отправляем…';
+    const yes=ch.dataset.o==='1';const dayBoxes=[...box.querySelectorAll('[data-rday]')];const days=dayBoxes.filter(x=>x.checked).map(x=>+x.dataset.rday);
+    if(yes&&dayBoxes.length&&!days.length){er.textContent='Отметьте, в какие дни вы придете';return;}
+    s.disabled=true;s.textContent='Отправляем…';
     try{const r=await fetch('/api/public/'+encodeURIComponent(KEY)+'/rsvp',{method:'POST',headers:{'content-type':'application/json'},
-        body:JSON.stringify({name:n,attend:yes,people:+(box.querySelector('[data-people]')||{}).value||1,comment:(box.querySelector('textarea')||{}).value||'',g:G})});
+        body:JSON.stringify({name:n,attend:yes,people:+(box.querySelector('[data-people]')||{}).value||1,comment:(box.querySelector('textarea')||{}).value||'',g:G,days:dayBoxes.length?days:undefined})});
       const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Не получилось отправить');
       box.innerHTML=`<div class="ok">Спасибо, ${esc(n)}! ${yes?'Ждём вас на празднике.':'Жаль, что не получится. Спасибо, что ответили.'}</div><button type="button" class="again" data-again>Изменить ответ</button>`;}
     catch(x){s.disabled=false;s.textContent='Отправить ответ';er.textContent=x.message||'Нет связи. Попробуйте ещё раз';}

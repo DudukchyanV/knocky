@@ -86,6 +86,9 @@ def init_db():
     MEDIA.mkdir(parents=True, exist_ok=True)
     with db() as c:
         c.executescript(SCHEMA)
+        # several days: which days the guest will come to (JSON list of day numbers, 0 = first)
+        if "days" not in {r[1] for r in c.execute("PRAGMA table_info(rsvp)")}:
+            c.execute("ALTER TABLE rsvp ADD COLUMN days TEXT")
 
 
 def load_secrets() -> dict:
@@ -671,7 +674,26 @@ async def inv_unpublish(req: Request):
 
 def answers_of(c, inv_id):
     rows = c.execute("SELECT r.*, g.name gname FROM rsvp r LEFT JOIN guests g ON g.id=r.guest_id WHERE r.inv_id=? ORDER BY r.updated DESC", (inv_id,)).fetchall()
-    return [{"name": r["name"], "guest": r["gname"], "attend": bool(r["attend"]), "people": r["people"], "comment": r["comment"] or "", "at": r["updated"]} for r in rows]
+    def days(x):
+        try:
+            return json.loads(x) if x else None
+        except Exception:
+            return None
+    return [{"name": r["name"], "guest": r["gname"], "attend": bool(r["attend"]), "people": r["people"], "comment": r["comment"] or "", "at": r["updated"],
+             "days": days(r["days"])} for r in rows]
+
+
+DAY_N = ["первый", "второй", "третий", "четвертый", "пятый"]
+
+
+def day_titles(v: dict) -> list:
+    """Tab names the couple typed, or «День первый», «День второй»..."""
+    ev = v.get("events") or []
+    out = []
+    for i in range(len(ev) + 1):
+        t = (v.get("d0t") if i == 0 else (ev[i - 1] or {}).get("t")) or ""
+        out.append(t.strip() or f"День {DAY_N[i]}")
+    return out
 
 
 def guests_of(c, inv_id, slug, d: dict | None = None):
@@ -690,6 +712,7 @@ async def inv_answers(req: Request):
         wl = json.loads(r["data"])["v"].get("wish", [])
         taken = {w["idx"]: w["name"] for w in c.execute("SELECT * FROM wish WHERE inv_id=?", (r["id"],))}
         return JSONResponse({"answers": answers_of(c, r["id"]), "guests": guests_of(c, r["id"], r["slug"], json.loads(r["data"])),
+                             "days": day_titles(json.loads(r["data"])["v"]),
                              "wish": [{"n": w["n"], "by": taken.get(i)} for i, w in enumerate(wl) if w.get("n")]})
 
 
@@ -747,6 +770,7 @@ async def inv_export(req: Request):
         if not r:
             return err("Приглашение не найдено", 404)
         ans, gs = answers_of(c, r["id"]), guests_of(c, r["id"], r["slug"], json.loads(r["data"]))
+        dt_ = day_titles(json.loads(r["data"])["v"])
         title = inv_title(json.loads(r["data"]))
     wb = Workbook()
     ws = wb.active
@@ -755,11 +779,16 @@ async def inv_export(req: Request):
     fill = PatternFill("solid", fgColor="C62828")
     def fmt(ts):
         return dt.datetime.fromtimestamp(ts).strftime("%d.%m.%Y %H:%M") if ts else ""
-    ws.append(["Гость", "Ответ", "Сколько человек", "Комментарий", "Именная ссылка", "Когда ответил"])
+    multi = len(dt_) > 1
+    ws.append(["Гость", "Ответ", "Сколько человек"] + (["Дни"] if multi else []) + ["Комментарий", "Именная ссылка", "Когда ответил"])
     for a in ans:
-        ws.append([a["name"], "Придет" if a["attend"] else "Не сможет", a["people"] if a["attend"] else 0, a["comment"], a["guest"] or "", fmt(a["at"])])
+        dcol = [", ".join(dt_[i] for i in (a["days"] if a["days"] is not None else range(len(dt_))) if i < len(dt_)) if a["attend"] else ""] if multi else []
+        ws.append([a["name"], "Придет" if a["attend"] else "Не сможет", a["people"] if a["attend"] else 0] + dcol + [a["comment"], a["guest"] or "", fmt(a["at"])])
     ws.append([])
     ws.append(["Итого придут", "", sum(a["people"] for a in ans if a["attend"])])
+    if multi:
+        for i, t in enumerate(dt_):
+            ws.append([t, "", sum(a["people"] for a in ans if a["attend"] and (a["days"] is None or i in a["days"]))])
     if gs:
         g2 = wb.create_sheet("Именные ссылки")
         g2.append(["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ", "Стол"])
@@ -862,19 +891,31 @@ async def pub_rsvp(req: Request):
         people = 1
     comment = str(d.get("comment") or "")[:500]
     tok = str(d.get("g") or "")[:20]
+    days_in = d.get("days")
     with db() as c:
         r = c.execute("SELECT * FROM invitations WHERE slug=? AND status='published'", (slug,)).fetchone()
         if not r or (r["expires_at"] and r["expires_at"] < now()):
             return err("Приглашение не найдено", 404)
-        if "rsvp" not in json.loads(r["data"])["sel"]:
+        dd = json.loads(r["data"])
+        if "rsvp" not in dd["sel"]:
             return err("В этом приглашении нет анкеты")
+        n_days = len(dd["v"].get("events") or []) + 1
+        days = None
+        if n_days > 1 and attend:
+            try:
+                days = sorted({int(x) for x in (days_in or []) if 0 <= int(x) < n_days})
+            except Exception:
+                days = []
+            if not days:
+                return err("Отметьте, в какие дни вы придете")
         g = c.execute("SELECT id FROM guests WHERE inv_id=? AND token=?", (r["id"], tok)).fetchone() if tok else None
         prev = c.execute("SELECT id FROM rsvp WHERE inv_id=? AND guest_id=?", (r["id"], g["id"])).fetchone() if g else None
         if prev:
-            c.execute("UPDATE rsvp SET name=?, attend=?, people=?, comment=?, updated=? WHERE id=?", (name, attend, people, comment, now(), prev["id"]))
+            c.execute("UPDATE rsvp SET name=?, attend=?, people=?, comment=?, days=?, updated=? WHERE id=?",
+                      (name, attend, people, comment, json.dumps(days) if days is not None else None, now(), prev["id"]))
         else:
-            c.execute("INSERT INTO rsvp(inv_id,guest_id,name,attend,people,comment,created,updated) VALUES(?,?,?,?,?,?,?,?)",
-                      (r["id"], g["id"] if g else None, name, attend, people, comment, now(), now()))
+            c.execute("INSERT INTO rsvp(inv_id,guest_id,name,attend,people,comment,days,created,updated) VALUES(?,?,?,?,?,?,?,?,?)",
+                      (r["id"], g["id"] if g else None, name, attend, people, comment, json.dumps(days) if days is not None else None, now(), now()))
     return JSONResponse({"ok": True})
 
 
