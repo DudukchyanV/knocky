@@ -6,7 +6,7 @@ Secrets (mail password, key for the sealed guest page) live only on the server
 in $KNOCKY_SECRETS (default /etc/knocky/secrets.json), set via the one-time /setup page.
 Nothing secret is stored in this repository.
 """
-import asyncio, base64, datetime as dt, hashlib, hmac, io, json, os, re, secrets, smtplib, sqlite3, time
+import asyncio, base64, threading, datetime as dt, hashlib, hmac, io, json, os, re, secrets, smtplib, sqlite3, time
 from email.message import EmailMessage
 from email.utils import formataddr
 from pathlib import Path
@@ -31,13 +31,15 @@ MAIL_FROM = "hello@knocky.ru"
 DOC_VERSION = "15.10.2026"
 # sha256 of the one-time setup token (the token itself is given to the owner, never stored here)
 SETUP_HASH = "36ece8f75ae5ca9817d22ef79eca21563bf3bd48314e6615f1623b9184150b26"
-BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year", "seating", "print"}
+BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year", "seating", "print", "story"}
 SESSION_DAYS = 30
 MAX_TABLES = 100
+RENDER_PORT = int(os.environ.get("KNOCKY_PORT", "8000"))
+RENDER_SIZES = {"og": (1200, 630), "story": (1080, 1920)}
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
 TR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
               ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sch","","y","","e","yu","ya"]))
-RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print"}
+RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print", "og", "render"}
 
 
 # ---------------------------------------------------------------- storage
@@ -234,6 +236,18 @@ def clean_data(d: dict) -> dict:
     if isinstance(v.get("dear"), list):
         # greeting per guest line: pl «Дорогие», m «Дорогой», f «Дорогая»; empty = guessed from the name
         out["dear"] = [d if d in ("pl", "m", "f") else "" for d in (str(x or "") for x in v["dear"][:len(out.get("guests", []))])]
+    if isinstance(v.get("events"), list):
+        ev = []
+        for e in v["events"][:4]:
+            if isinstance(e, dict):
+                x = {"t": str(e.get("t") or "")[:40], "date": str(e.get("date") or "")[:10], "time": str(e.get("time") or "")[:5],
+                     "venue": str(e.get("venue") or "")[:60], "addr": str(e.get("addr") or "")[:160]}
+                if not re.fullmatch(r"(\d{4}-\d{2}-\d{2})?", x["date"]):
+                    x["date"] = ""
+                if not re.fullmatch(r"(\d{2}:\d{2})?", x["time"]):
+                    x["time"] = ""
+                ev.append(x)
+        out["events"] = ev
     tables, seat = clean_seating(v, len(out.get("guests", [])))
     out["tables"], out["seat"] = tables, seat
     if isinstance(v.get("pal"), dict):
@@ -880,6 +894,167 @@ async def pub_wish(req: Request):
     return JSONResponse({"ok": True})
 
 
+# ---------------------------------------------------------------- cover pictures (link preview, stories)
+OG_DIR = DATA / "og"
+_RENDER_LOCK = threading.Lock()
+
+
+def render_payload(d: dict, guest: str | None = None) -> dict:
+    """What the cover needs: design, texts, greeting for one named guest. No guest list, photos only for covers."""
+    v = {k: d["v"].get(k) for k in ("a", "b", "date", "time", "venue", "addr", "pal", "lat", "lng") if d["v"].get(k) is not None}
+    v["photos"] = (d["v"].get("photos") or [])[:3]
+    sel = [x for x in d["sel"] if x != "named"]
+    if guest and "named" in d["sel"]:
+        raw = [str(x) for x in d["v"].get("guests", [])]
+        idx = next((i for i, x in enumerate(raw) if x.strip() == guest), -1)
+        dear = d["v"].get("dear", [])
+        v["guests"], v["dear"] = [guest], [dear[idx] if 0 <= idx < len(dear) else ""]
+        sel.append("named")
+    return {"tpl": d["tpl"], "sel": sel, "order": d["order"], "v": v}
+
+
+def render_hash(payload: dict, fmt: str) -> str:
+    return hashlib.sha256((fmt + json.dumps(payload, sort_keys=True, ensure_ascii=False)).encode()).hexdigest()[:20]
+
+
+_RENDER_JOBS: dict = {}
+
+
+async def page_render(req: Request):
+    """Cover for the screenshot; opened only by the server's own browser (one-time key)."""
+    job = _RENDER_JOBS.pop(req.path_params["key"], None)
+    h = guest_page()
+    if not job or not h:
+        return err("Не найдено", 404)
+    data = json.dumps(job, ensure_ascii=False).replace("</", "<\\/")
+    h = h.replace("<body", f"<script>window.RENDER={data};</script><body", 1)
+    return HTMLResponse(h, headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+def _render_chromium(payload: dict, fmt: str, out: Path) -> bool:
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        return False
+    w, h = RENDER_SIZES[fmt]
+    tmp = out.with_suffix(".tmp.png")
+    try:
+        with _RENDER_LOCK, sync_playwright() as pw:
+            b = pw.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+            try:
+                pg = b.new_page(viewport={"width": w, "height": h})
+                key = secrets.token_urlsafe(16)
+                _RENDER_JOBS[key] = {**payload, "fmt": fmt}
+                pg.goto(f"http://127.0.0.1:{RENDER_PORT}/render/{key}", wait_until="load", timeout=15000)
+                pg.wait_for_function("window.RENDER_DONE===true", timeout=10000)
+                pg.screenshot(path=str(tmp), type="png")
+            finally:
+                b.close()
+        tmp.replace(out)
+        return True
+    except Exception as e:
+        print("render failed:", e, flush=True)
+        return False
+
+
+def _render_card(payload: dict, fmt: str, out: Path) -> bool:
+    """Fallback without a browser: a plain card in the design colours."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except Exception:
+        return False
+    w, h = RENDER_SIZES[fmt]
+    try:
+        dz = json.loads((HERE / "static" / "assets" / "designs.json").read_text()).get(payload["tpl"], {})
+    except Exception:
+        dz = {}
+    bg, ink, acc = dz.get("bg", "#F3EEEE"), dz.get("ink", "#241B20"), dz.get("acc", "#C62828")
+    im = Image.new("RGB", (w, h), bg)
+    dr = ImageDraw.Draw(im)
+    def font(px, bold=False):
+        for f in ("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+                  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"):
+            try:
+                return ImageFont.truetype(f, px)
+            except Exception:
+                pass
+        return ImageFont.load_default()
+    v = payload["v"]
+    s = h / 630 if fmt == "og" else w / 900
+    lines = []
+    if v.get("guests"):
+        dw = {"m": "Дорогой", "f": "Дорогая"}.get((v.get("dear") or [""])[0], "Дорогие")
+        lines.append((f"{dw} {v['guests'][0]}!", font(int(30 * s)), acc))
+    else:
+        lines.append(("Приглашаем на свадьбу", font(int(30 * s)), acc))
+    lines.append((f"{v.get('a') or ''} и {v.get('b') or ''}", font(int(78 * s), True), ink))
+    p = (v.get("date") or "").split("-")
+    months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+    if len(p) == 3 and p[1].isdigit() and 1 <= int(p[1]) <= 12:
+        lines.append((f"{int(p[2])} {months[int(p[1]) - 1]} {p[0]}" + (f", {v['time']}" if v.get("time") else ""), font(int(34 * s)), ink))
+    if v.get("venue"):
+        lines.append((v["venue"], font(int(28 * s)), ink))
+    hs = [dr.textbbox((0, 0), t, font=f) for t, f, _ in lines]
+    total = sum(b[3] - b[1] for b in hs) + int(26 * s) * (len(lines) - 1)
+    y = (h - total) // 2
+    for (t, f, c), b in zip(lines, hs):
+        tw = b[2] - b[0]
+        dr.text(((w - tw) // 2 - b[0], y - b[1]), t, font=f, fill=c)
+        y += b[3] - b[1] + int(26 * s)
+    tmp = out.with_suffix(".tmp.png")
+    im.save(tmp, "PNG")
+    tmp.replace(out)
+    return True
+
+
+def render_picture(payload: dict, fmt: str) -> Path | None:
+    OG_DIR.mkdir(parents=True, exist_ok=True)
+    out = OG_DIR / f"{fmt}-{render_hash(payload, fmt)}.png"
+    if out.exists():
+        return out
+    if guest_page() and _render_chromium(payload, fmt, out):
+        return out
+    fb = OG_DIR / f"{fmt}-{render_hash(payload, fmt)}-card.png"
+    if fb.exists() or _render_card(payload, fmt, fb):
+        return fb
+    return None
+
+
+async def og_image(req: Request):
+    """Link preview picture for knocky.ru/address (and for each named link: ?g=code)."""
+    slug = req.path_params["slug"].lower()
+    tok = req.query_params.get("g", "")[:20]
+    with db() as c:
+        r = c.execute("SELECT * FROM invitations WHERE slug=? AND status='published'", (slug,)).fetchone()
+        if not r:
+            return err("Не найдено", 404)
+        guest = None
+        if tok:
+            g = c.execute("SELECT name FROM guests WHERE inv_id=? AND token=? AND active=1", (r["id"], tok)).fetchone()
+            guest = g["name"] if g else None
+    f = await asyncio.to_thread(render_picture, render_payload(json.loads(r["data"]), guest), "og")
+    if not f:
+        return err("Картинка недоступна", 503)
+    return FileResponse(f, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@need_user
+async def inv_story(req: Request):
+    """Picture for stories (paid block): the cover 1080x1920."""
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        d = json.loads(r["data"])
+    if "story" not in d["sel"]:
+        return err("Картинка для сторис не подключена в этом приглашении", 403)
+    f = await asyncio.to_thread(render_picture, render_payload(d), "story")
+    if not f:
+        return err("Не получилось сделать картинку. Попробуйте позже", 503)
+    fn = "knocky-story-" + (translit(inv_title(d)) or "invite") + ".png"
+    return FileResponse(f, media_type="image/png", headers={"Content-Disposition": f'attachment; filename="{fn}"', "Cache-Control": "no-store"})
+
+
 # ---------------------------------------------------------------- pages
 def guest_html() -> str | None:
     """The guest page contains the design code; it is stored encrypted and opened with the server key."""
@@ -919,13 +1094,18 @@ async def page_guest(req: Request):
     h = guest_page()
     if not h:
         return HTMLResponse(SOON, headers={"Cache-Control": "no-cache", "X-Robots-Tag": "noindex"})
-    title, desc = "Приглашение на свадьбу", "Приглашение сделано на Knocky"
+    title, desc, img = "Приглашение на свадьбу", "Приглашение сделано на Knocky", ""
     slug = req.path_params.get("slug")
     if slug:
+        tok = req.query_params.get("g", "")[:20]
         with db() as c:
-            r = c.execute("SELECT data FROM invitations WHERE slug=? AND status='published'", (slug.lower(),)).fetchone()
+            r = c.execute("SELECT data, id FROM invitations WHERE slug=? AND status='published'", (slug.lower(),)).fetchone()
+            g = c.execute("SELECT name FROM guests WHERE inv_id=? AND token=? AND active=1", (r["id"], tok)).fetchone() if r and tok else None
         if r:
-            v = json.loads(r["data"])["v"]
+            d = json.loads(r["data"])
+            v = d["v"]
+            ver = render_hash(render_payload(d, g["name"] if g else None), "og")[:10]
+            img = f"{APP_URL}/og/{slug.lower()}.png?" + (f"g={tok}&" if g else "") + f"v={ver}"
             title = f"{inv_title({'v': v})} - приглашение на свадьбу"
             p = (v.get("date") or "").split("-")
             months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
@@ -933,6 +1113,9 @@ async def page_guest(req: Request):
                 desc = f"{int(p[2])} {months[int(p[1]) - 1]} {p[0]}" + (f", {v['venue']}" if v.get("venue") else "")
     meta = (f'<title>{h_esc(title)}</title><meta property="og:title" content="{h_esc(title)}">'
             f'<meta property="og:description" content="{h_esc(desc)}"><meta name="description" content="{h_esc(desc)}">')
+    if img:
+        meta += (f'<meta property="og:image" content="{h_esc(img)}"><meta property="og:image:width" content="1200">'
+                 f'<meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">')
     h = h.replace("<title>Knocky</title>", meta, 1)
     return HTMLResponse(h, headers={"Cache-Control": "no-cache", "X-Robots-Tag": "noindex"})
 
@@ -1093,6 +1276,9 @@ routes = [
     Route("/i/{slug}", page_guest),
     Route("/p/{id}", page_guest),
     Route("/print/{id}", page_guest),
+    Route("/og/{slug}.png", og_image),
+    Route("/render/{key}", page_render),
+    Route("/api/invitations/{id}/story.png", inv_story),
     Mount("/m", StaticFiles(directory=MEDIA, check_dir=False), name="media"),
     Mount("/assets", StaticFiles(directory=HERE / "static" / "assets", check_dir=False), name="assets"),
     Route("/", page_cabinet),

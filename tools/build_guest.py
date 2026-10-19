@@ -72,7 +72,7 @@ body.print{background:#E9E4E5}
 .sheets{display:grid;gap:24px;justify-content:center;padding:24px 12px 48px}
 .sheet{width:148mm;height:210mm;container-type:inline-size;overflow:hidden;position:relative;background:#fff;box-shadow:0 6px 30px rgba(36,27,32,.18)}
 .sheet .inv{height:100%;min-height:0;transform:none}
-.sheet .cover{min-height:0!important;height:210mm;box-sizing:border-box}
+.sheet .cover{min-height:0!important;height:210mm;box-sizing:border-box;aspect-ratio:auto!important}
 .sheet.back .inv{display:flex;flex-direction:column;justify-content:center;align-items:center}
 .sheet.back .fit{container-type:inline-size;width:100%;flex:none}
 .sheet.back section{padding:3.4cqi 9cqi}
@@ -87,6 +87,13 @@ body.print{background:#E9E4E5}
 .sheet.back .seat .cd{margin:0}
 .sheet .t-sketch .sk-art{width:46cqi;transform:translate(-50%,-50%)}
 .sheet *,.sheet *::before,.sheet *::after{animation:none!important;transition:none!important}
+body.render{margin:0;background:#000;overflow:hidden}
+.rn{display:flex;align-items:center;justify-content:center;background:var(--t-bg);overflow:hidden}
+.rn *,.rn *::before,.rn *::after{animation:none!important;transition:none!important}
+.rn-og{width:1200px;height:630px}.rn-og .rn-c{width:430px;height:881px;zoom:.7151;container-type:inline-size;box-shadow:0 0 90px rgba(0,0,0,.2)}
+.rn-story{width:1080px;height:1920px}.rn-story .rn-c{width:1080px;height:1920px;container-type:inline-size}
+.rn .inv{height:100%;min-height:0;transform:none}.rn .cover{min-height:0!important;height:100%;box-sizing:border-box;aspect-ratio:auto!important;width:auto}
+.rn .t-sketch .sk-art{width:52cqi;transform:translate(-50%,-50%)}
 @page{size:A5;margin:0}
 @media print{.sheets{zoom:1!important}body.print{background:none}.pbar{display:none}.sheets{display:block;padding:0}.sheet{box-shadow:none;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .pvbar{position:sticky;top:0;z-index:50;background:#C62828;color:#fff;text-align:center;font:600 13px/1.4 var(--f-body);padding:8px 12px}
@@ -96,7 +103,9 @@ GUEST_JS = r"""
 /* ===== guest page: data from the server ===== */
 const V=document.getElementById('inviteView');
 const parts_=location.pathname.split('/').filter(Boolean);
-const PREVIEW=parts_[0]==='p',PRINT=parts_[0]==='print';const KEY=decodeURIComponent(parts_[1]||'');
+const PREVIEW=parts_[0]==='p',PRINT=parts_[0]==='print';
+/* app.knocky.ru/i/<address>, /p/<id>, /print/<id>, or knocky.ru/<address> served by our server */
+const KEY=decodeURIComponent((['i','p','print'].includes(parts_[0])?parts_[1]:parts_[0])||'');
 const G=new URLSearchParams(location.search).get('g')||'';
 let P=null;
 function msg(t,s){V.innerHTML=`<div class="gmsg"><div><b>${t}</b>${s||''}</div></div>`;}
@@ -171,7 +180,7 @@ function printView(D){
     const dp=dparts(v.date),when=`${dp.dn} ${dp.mon} ${dp.y}, ${dp.wd}${v.time?', '+esc(v.time):''}`;
     /* date and place in one section instead of the map block */
     inv.querySelectorAll('section').forEach(x=>{if(x.querySelector('h4')&&x.querySelector('h4').textContent==='Место')x.remove();});
-    inv.insertAdjacentHTML('afterbegin',`<section><h4>Когда и где</h4><p>${when}</p>${v.venue||v.addr?`<p style="margin-top:2cqi">${esc(v.venue||'')}${v.venue&&v.addr?'<br>':''}${esc(v.addr||'')}</p>`:''}</section>`);
+    inv.insertAdjacentHTML('afterbegin',`<section><h4>Когда и где</h4><p>${when}</p>${v.venue||v.addr?`<p style="margin-top:2cqi">${esc(v.venue||'')}${v.venue&&v.addr?'<br>':''}${esc(v.addr||'')}</p>`:''}${(v.events||[]).filter(e=>e&&(e.t||e.venue||e.addr||e.date)).map(e=>`<p style="margin-top:3cqi"><b>${esc(e.t||'')}</b>${evWhen(e)?'<br>'+esc(evWhen(e)):''}${e.venue||e.addr?'<br>'+esc([e.venue,e.addr].filter(Boolean).join(', ')):''}</p>`).join('')}</section>`);
     const seatSec=inv.querySelector('section.seat');
     const tail=`${seatSec?seatSec.outerHTML:''}
       ${c.link?`<section class="qr">${qrSvg(c.link)}<div><b>Наведите камеру телефона</b>${qrList.length?esc(qrList.join(', ').replace(/^./,x=>x.toUpperCase()))+' - по этому коду.':'Приглашение откроется на телефоне.'}</div></section>`:''}`;
@@ -196,7 +205,16 @@ function printView(D){
   fill(-1);
   const w=document.getElementById('who');if(w)w.onchange=()=>fill(+w.value);
   document.getElementById('pr').onclick=()=>window.print();}
+/* server-side picture of the cover: link preview 1200x630 or stories 1080x1920 */
+function renderView(R){
+  document.body.className='render';const t=TPL.find(x=>x.id===R.tpl)||TPL[0];
+  const box=document.createElement('div');box.innerHTML=full(t,R.v,new Set(R.sel||[]),DEF_ORDER);
+  const inv=box.firstElementChild,cov=inv.querySelector('.cover');while(inv.firstChild)inv.removeChild(inv.firstChild);inv.appendChild(cov);
+  V.innerHTML=`<div class="rn rn-${R.fmt}" style="${inv.getAttribute('style')}"><div class="rn-c">${inv.outerHTML}</div></div>`;
+  const imgs=[...V.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;}));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>Promise.all([document.fonts?document.fonts.ready:0,...imgs]).then(()=>setTimeout(()=>{window.RENDER_DONE=true;},150))));}
 (async()=>{
+  if(window.RENDER){renderView(window.RENDER);return;}
   if(!KEY){msg('Приглашение не найдено');return;}
   if(PRINT){try{const r=await fetch('/api/invitations/'+encodeURIComponent(KEY)+'/print',{credentials:'same-origin'});const j=await r.json().catch(()=>({}));
       if(r.status===401){msg('Войдите в кабинет',`<p><a href="/">Перейти ко входу</a></p>`);return;}

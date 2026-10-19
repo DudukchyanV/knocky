@@ -12,3 +12,37 @@ app.knocky.ru {
 	}
 	header Strict-Transport-Security "max-age=31536000"
 }
+
+# knocky.ru -> this server once its A record in Cloudflare points to 31.130.148.211 (DNS only).
+# Site files from the repo; knocky.ru/<address> opens the invitation (link previews in messengers need this).
+knocky.ru {
+	encode gzip
+	@app path /api/* /assets/* /m/* /og/* /render/*
+	handle @app {
+		reverse_proxy 127.0.0.1:8000
+	}
+	handle {
+		root * /opt/knocky/site
+		@guest {
+			not file
+			path_regexp slug ^/([A-Za-z0-9][A-Za-z0-9-]{1,38}[A-Za-z0-9])/?$
+		}
+		handle @guest {
+			rewrite * /i/{re.slug.1}
+			reverse_proxy 127.0.0.1:8000
+		}
+		handle {
+			file_server
+		}
+	}
+	handle_errors {
+		root * /opt/knocky/site
+		rewrite * /404.html
+		file_server
+	}
+	header Strict-Transport-Security "max-age=31536000"
+}
+
+www.knocky.ru {
+	redir https://knocky.ru{uri} permanent
+}

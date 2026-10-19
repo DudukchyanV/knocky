@@ -167,7 +167,7 @@ async function invView(id){
   <div class="inv"><div class="inv-main">
     <div class="panel title"><div class="row spread"><h1>${esc(o.title)}</h1>${status(o)}</div>
       <div class="meta">${o.date?esc(dateLong(o.date)):'Дата не указана'}${d?' · дизайн «'+esc(d.n)+'»':''}${o.paid_via==='admin'?' · без оплаты (админ)':''}</div>
-      <div class="acts"><a class="btn btn-soft" href="${editUrl}" target="_blank" rel="noopener">${IC.edit}Редактировать</a><a class="btn btn-ghost" href="/p/${esc(o.id)}" target="_blank" rel="noopener">${IC.ext}Предпросмотр</a>${printOn?`<a class="btn btn-ghost" href="/print/${esc(o.id)}" target="_blank" rel="noopener">${IC.print}Печатная версия</a>`:''}
+      <div class="acts"><a class="btn btn-soft" href="${editUrl}" target="_blank" rel="noopener">${IC.edit}Редактировать</a><a class="btn btn-ghost" href="/p/${esc(o.id)}" target="_blank" rel="noopener">${IC.ext}Предпросмотр</a>${printOn?`<a class="btn btn-ghost" href="/print/${esc(o.id)}" target="_blank" rel="noopener">${IC.print}Печатная версия</a>`:''}${sel.has('story')?`<a class="btn btn-ghost" href="/api/invitations/${esc(o.id)}/story.png" download>${IC.dl}Картинка для сторис</a>`:''}
       ${!pub||ME.admin?`<button class="btn btn-ghost" id="delBtn">Удалить</button>`:''}${ME.admin&&pub?`<button class="btn btn-ghost" id="unpubBtn">Снять с публикации</button>`:''}</div></div>
     ${linkBlock}
     ${rsvpOn||namedOn?`<div class="stats">
