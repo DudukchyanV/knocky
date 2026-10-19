@@ -174,7 +174,7 @@ function printView(D){
   const qrList=['map','rsvp','wishlist','gallery'].filter(k=>sel.has(k)).map(k=>NOT_PRINTED[k]);
   const sheet=(c)=>{
     const v={...D.v,guests:c.guest?[c.guest]:[],dear:[c.dear||''],tables:c.table?[{n:c.table}]:[],seat:c.table?[0]:[]},on1=new Set(on);if(c.guest)on1.add('named');if(c.table&&sel.has('seating'))on1.add('seating');
-    const box=document.createElement('div');box.innerHTML=full(t,v,on1,ord);
+    const box=document.createElement('div');EXPAND_DAYS=true;box.innerHTML=full(t,v,on1,ord);EXPAND_DAYS=false;
     const inv=box.firstElementChild,cov=inv.querySelector('.cover');
     const front=inv.cloneNode(false);front.appendChild(cov);
     const dp=dparts(v.date),when=`${dp.dn} ${dp.mon} ${dp.y}, ${dp.wd}${v.time?', '+esc(v.time):''}`;

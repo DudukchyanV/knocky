@@ -242,7 +242,16 @@ def clean_data(d: dict) -> dict:
             if isinstance(e, dict):
                 x = {"t": str(e.get("t") or "")[:40], "date": str(e.get("date") or "")[:10], "time": str(e.get("time") or "")[:5],
                      "venue": str(e.get("venue") or "")[:60], "addr": str(e.get("addr") or "")[:160],
-                     "prog": [{"t": str(r.get("t", ""))[:5], "x": str(r.get("x", ""))[:120]} for r in (e.get("prog") or [])[:20] if isinstance(r, dict)]}
+                     "prog": [{"t": str(r.get("t", ""))[:5], "x": str(r.get("x", ""))[:120]} for r in (e.get("prog") or [])[:20] if isinstance(r, dict)],
+                     "map": bool(e.get("map")), "dress": bool(e.get("dress")), "dressNote": str(e.get("dressNote") or "")[:300]}
+                for k in ("lat", "lng"):
+                    try:
+                        if e.get(k) not in (None, ""):
+                            x[k] = round(float(e[k]), 6)
+                    except Exception:
+                        pass
+                if isinstance(e.get("sw"), list):
+                    x["sw"] = [c for c in (str(c)[:9] for c in e["sw"][:8]) if re.fullmatch(r"#[0-9a-fA-F]{3,8}", c)]
                 if not re.fullmatch(r"(\d{4}-\d{2}-\d{2})?", x["date"]):
                     x["date"] = ""
                 if not re.fullmatch(r"(\d{2}:\d{2})?", x["time"]):
