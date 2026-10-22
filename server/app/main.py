@@ -1315,11 +1315,11 @@ __MSG__<form method="post"><input type="hidden" name="t" value="__T__">
 <label for="to">Куда отправить проверочное письмо</label><input id="to" name="to" value="me@dudukchyan.ru">
 <h2>Оплата: Робокасса</h2>
 <p class="n">Из личного кабинета Робокассы: Мои магазины - магазин Knocky - Технические настройки. Заполненные поля сохранятся, пустые останутся как были. __RK__</p>
-<label for="rl">Идентификатор магазина</label><input id="rl" name="rk_login" autocomplete="off" value="__RKL__">
-<label for="r1">Пароль #1</label><input id="r1" name="rk_p1" type="password" autocomplete="off">
-<label for="r2">Пароль #2</label><input id="r2" name="rk_p2" type="password" autocomplete="off">
-<label for="t1">Тестовый пароль #1</label><input id="t1" name="rk_t1" type="password" autocomplete="off">
-<label for="t2">Тестовый пароль #2</label><input id="t2" name="rk_t2" type="password" autocomplete="off">
+<label for="rl">Идентификатор магазина</label><input id="rl" name="rk_login" autocomplete="off" data-lpignore="true" value="__RKL__">
+<label for="r1">Пароль #1</label><input id="r1" name="rk_p1" type="password" autocomplete="new-password">
+<label for="r2">Пароль #2</label><input id="r2" name="rk_p2" type="password" autocomplete="new-password">
+<label for="t1">Тестовый пароль #1</label><input id="t1" name="rk_t1" type="password" autocomplete="new-password">
+<label for="t2">Тестовый пароль #2</label><input id="t2" name="rk_t2" type="password" autocomplete="new-password">
 <label for="sno">Система налогообложения ИП (для чеков)</label><select id="sno" name="rk_sno" style="width:100%;font:inherit;padding:12px 14px;border:0;border-radius:12px;background:#F3EEEE"><option value="usn_income"__S1__>УСН доходы</option><option value="usn_income_outcome"__S2__>УСН доходы минус расходы</option></select>
 <label for="mode">Режим оплаты</label><select id="mode" name="rk_mode" style="width:100%;font:inherit;padding:12px 14px;border:0;border-radius:12px;background:#F3EEEE"><option value="test"__M1__>Тестовый: деньги не списываются</option><option value="live"__M2__>Боевой: настоящие оплаты</option></select>
 <button>Сохранить</button></form></div></html>"""
@@ -1332,7 +1332,10 @@ def rk_conf_from(rk: dict) -> bool:
 
 def setup_form(t: str, msg: str) -> str:
     rk = load_secrets().get("robokassa") or {}
-    state = ("Сейчас: " + ("настроено, режим " + ("тестовый" if rk.get("test", True) else "боевой") if rk_conf_from(rk) else "не настроено") + ".")
+    have = lambda k: "есть" if rk.get(k) else "нет"
+    state = ("Сейчас: " + ("настроено, режим " + ("тестовый" if rk.get("test", True) else "боевой") if rk_conf_from(rk) else "не настроено")
+             + f". Режим: {'тестовый' if rk.get('test', True) else 'боевой'}. Идентификатор: {h_esc(rk.get('login') or 'нет')}; пароль #1: {have('p1')}, #2: {have('p2')}; "
+             f"тестовый #1: {have('test_p1')}, тестовый #2: {have('test_p2')}.")
     test = rk.get("test", True)
     sno2 = rk.get("sno") == "usn_income_outcome"
     return (SETUP_FORM.replace("__T__", t).replace("__MSG__", msg).replace("__RK__", state).replace("__RKL__", h_esc(rk.get("login", "")))
@@ -1407,7 +1410,8 @@ async def page_setup(req: Request):
         s["robokassa"] = rk
         ready = rk_conf_from(rk)
         msgs.append(("ok" if ready else "bad", "Робокасса: настройки сохранены. " + ("Режим: " + ("тестовый." if rk.get("test", True) else "боевой, оплаты настоящие.") if ready else
-                     "Не хватает идентификатора или паролей для выбранного режима, оплата пока выключена.")))
+                     "Не хватает: " + ", ".join(n for k, n in (("login", "идентификатора магазина"), ("test_p1" if rk.get("test", True) else "p1", "пароля #1" + (" (тестового)" if rk.get("test", True) else "")),
+                     ("test_p2" if rk.get("test", True) else "p2", "пароля #2" + (" (тестового)" if rk.get("test", True) else ""))) if not rk.get(k)) + ". Оплата пока выключена.")))
     save_secrets(s)
     _GUEST["html"] = None
     if not msgs:
