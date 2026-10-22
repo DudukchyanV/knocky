@@ -156,7 +156,9 @@ async function invView(id){
       <label class="field"><span>Адрес ссылки</span><div class="slug"><span>knocky.ru/</span><input class="inp" id="slug" value="${esc(o.slug||'')}" placeholder="anna-ilya" maxlength="40" autocomplete="off" spellcheck="false"></div></label>
       <p class="note" style="margin-top:8px">Латинские буквы, цифры и дефис. Если оставить пустым, адрес соберём из имён.</p>
       <p class="err" id="slugEr" hidden></p>
-      <div class="acts" style="margin-top:14px">${ME.admin?`<button class="btn btn-seal" id="pubBtn">Опубликовать без оплаты</button>`:`<button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>`}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
+      <div class="acts" style="margin-top:14px"><button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>${ME.admin?`<button class="btn btn-soft" id="pubBtn">Опубликовать без оплаты</button>`:''}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
+      <div id="priceBox" style="margin-top:12px"></div>
+      <p class="note" style="margin-top:8px">Оплата картой или через СБП в Робокассе. Чек придет на почту. Ссылка появится здесь сразу после оплаты.</p>
       </div>`;
   const rsvpOn=sel.has('rsvp'),namedOn=sel.has('named'),wishOn=sel.has('wishlist');
   const seatOn=namedOn&&sel.has('seating'),printOn=sel.has('print');
@@ -216,7 +218,14 @@ async function invView(id){
   if($('#slugSave'))$('#slugSave').onclick=async()=>{if(!slugIn.value){slugEr.hidden=false;slugEr.textContent='Впишите адрес или опубликуйте - соберём его из имён';return;}if(await saveSlug())toast('Адрес сохранён');};
   if($('#pubBtn'))$('#pubBtn').onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;
     try{await api('/invitations/'+o.id+'/publish',{method:'POST'});toast('Опубликовано');invView(id);}catch(x){slugEr.hidden=false;slugEr.textContent=x.message;}};
-  if($('#payBtn'))$('#payBtn').onclick=()=>toast('Оплата скоро заработает');
+  if($('#payBtn')){const pb=$('#payBtn');
+    api('/invitations/'+o.id+'/price').then(pr=>{pb.textContent=`Оплатить ${pr.total.toLocaleString('ru-RU')} ₽ и получить ссылку`;pb.removeAttribute('aria-disabled');
+      const box=$('#priceBox');if(box)box.innerHTML=`<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${i.price.toLocaleString('ru-RU')} ₽</td></tr>`).join('')}</tbody></table></div></details>`;}).catch(()=>{});
+    pb.onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;pb.disabled=true;
+      try{const j=await api('/invitations/'+o.id+'/pay',{method:'POST'});location.href=j.url;}catch(x){pb.disabled=false;slugEr.hidden=false;slugEr.textContent=x.message;}};}
+  const qs=new URLSearchParams(location.search);
+  if(qs.get('paid')){history.replaceState({},'',location.pathname);if(!pub){toast('Оплата прошла. Публикуем приглашение…');setTimeout(()=>invView(id),4000);}else toast('Оплата прошла, приглашение опубликовано');}
+  if(qs.get('payfail')){history.replaceState({},'',location.pathname);toast('Оплата не прошла. Попробуйте еще раз');}
   if($('#unpubBtn'))$('#unpubBtn').onclick=async()=>{if(!(await ask('Снять с публикации?','Гости перестанут видеть приглашение по ссылке, пока вы не опубликуете его снова.','Снять')))return;
     try{await api('/invitations/'+o.id+'/unpublish',{method:'POST'});invView(id);}catch(x){toast(x.message);}};
   if($('#delBtn'))$('#delBtn').onclick=async()=>{if(!(await ask('Удалить приглашение?',pub?'Ссылка у гостей перестанет работать, ответы удалятся. Это нельзя отменить.':'Черновик удалится насовсем.','Удалить')))return;

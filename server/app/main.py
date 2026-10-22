@@ -34,12 +34,19 @@ SETUP_HASH = "36ece8f75ae5ca9817d22ef79eca21563bf3bd48314e6615f1623b9184150b26"
 BLOCK_IDS = {"timer", "program", "map", "dress", "rsvp", "gallery", "wishlist", "named", "year", "seating", "print"}
 SESSION_DAYS = 30
 MAX_TABLES = 100
+# prices: the same numbers as in the constructor on knocky.ru (BLOCKS, GUEST_STEP_PRICE, DAY_MAP_PRICE)
+PRICE_BASE = 490
+PRICE_BLOCKS = {"timer": 50, "program": 100, "map": 100, "dress": 150, "rsvp": 200, "gallery": 100, "wishlist": 100,
+                "named": 300, "seating": 200, "print": 50, "year": 150}
+PRICE_PACK = 200
+PRICE_DAY_MAP = 50
+ROBOKASSA_URL = "https://auth.robokassa.ru/Merchant/Index.aspx"
 RENDER_PORT = int(os.environ.get("KNOCKY_PORT", "8000"))
 RENDER_SIZES = {"og": (1200, 630)}
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
 TR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
               ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sch","","y","","e","yu","ya"]))
-RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print", "og", "render"}
+RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print", "og", "render", "pay"}
 
 
 # ---------------------------------------------------------------- storage
@@ -75,6 +82,8 @@ CREATE TABLE IF NOT EXISTS rsvp(id INTEGER PRIMARY KEY, inv_id TEXT NOT NULL REF
 CREATE TABLE IF NOT EXISTS wish(inv_id TEXT NOT NULL REFERENCES invitations(id) ON DELETE CASCADE, idx INTEGER NOT NULL,
   name TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY(inv_id, idx));
 CREATE TABLE IF NOT EXISTS hits(key TEXT, at INTEGER);
+CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, inv_id TEXT NOT NULL, user_id INTEGER, amount INTEGER NOT NULL,
+  items TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new', test INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, paid_at INTEGER);
 CREATE INDEX IF NOT EXISTS inv_user ON invitations(user_id);
 CREATE INDEX IF NOT EXISTS rsvp_inv ON rsvp(inv_id);
 CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at);
@@ -807,6 +816,136 @@ async def inv_export(req: Request):
                     headers={"Content-Disposition": f'attachment; filename="{fn}"'})
 
 
+# ---------------------------------------------------------------- payment (Robokassa)
+def price_of(d: dict) -> tuple[int, list]:
+    """Price the server trusts: base + blocks + guest packs + maps for extra days."""
+    sel = set(d["sel"])
+    v = d["v"]
+    items = [("Основа приглашения", PRICE_BASE)]
+    names = {"timer": "Таймер", "program": "Программа дня", "map": "Карта и маршрут", "dress": "Дресс-код", "rsvp": "Анкета гостя",
+             "gallery": "Фотогалерея", "wishlist": "Вишлист", "named": "Именные ссылки", "seating": "Рассадка",
+             "print": "Печатная версия", "year": "Ссылка на 12 месяцев"}
+    for b, pr in PRICE_BLOCKS.items():
+        if b in sel and (b != "seating" or "named" in sel):
+            items.append((names[b], pr))
+    if "named" in sel and int(v.get("packs") or 0):
+        n = int(v["packs"])
+        items.append((f"+100 приглашений x {n}", n * PRICE_PACK))
+    if "map" in sel:
+        n = sum(1 for e in (v.get("events") or []) if e.get("map"))
+        if n:
+            items.append((f"Карта для дополнительного дня x {n}", n * PRICE_DAY_MAP))
+    return sum(x for _, x in items), items
+
+
+def rk_conf() -> dict | None:
+    s = load_secrets().get("robokassa") or {}
+    test = bool(s.get("test", True))
+    p1, p2 = (s.get("test_p1"), s.get("test_p2")) if test else (s.get("p1"), s.get("p2"))
+    if not s.get("login") or not p1 or not p2:
+        return None
+    return {"login": s["login"], "p1": p1, "p2": p2, "test": test, "sno": s.get("sno") or "usn_income"}
+
+
+def rk_sign(*parts) -> str:
+    return hashlib.sha256(":".join(str(x) for x in parts).encode()).hexdigest()
+
+
+@need_user
+async def inv_price(req: Request):
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        total, items = price_of(json.loads(r["data"]))
+    return JSONResponse({"total": total, "items": [{"name": n, "price": p} for n, p in items], "ready": rk_conf() is not None})
+
+
+@need_user
+async def inv_pay(req: Request):
+    """Create an order and send the client to Robokassa. The invitation is published when Robokassa confirms the payment."""
+    from urllib.parse import quote, urlencode
+    conf = rk_conf()
+    if not conf:
+        return err("Оплата скоро заработает", 503)
+    u = req.state.user
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        if r["status"] == "published" and not (r["expires_at"] and r["expires_at"] < now()):
+            return err("Приглашение уже опубликовано")
+        d = json.loads(r["data"])
+        total, items = price_of(d)
+        cur = c.execute("INSERT INTO orders(inv_id,user_id,amount,items,test,created) VALUES(?,?,?,?,?,?)",
+                        (r["id"], u["id"], total, json.dumps(items, ensure_ascii=False), 1 if conf["test"] else 0, now()))
+        oid = cur.lastrowid
+    out_sum = f"{total}.00"
+    receipt = json.dumps({"sno": conf["sno"], "items": [{"name": "Онлайн-приглашение Knocky: " + inv_title(d)[:80], "quantity": 1, "sum": total,
+                          "payment_method": "full_payment", "payment_object": "service", "tax": "none"}]}, ensure_ascii=False, separators=(",", ":"))
+    rq = quote(receipt, safe="")
+    sig = rk_sign(conf["login"], out_sum, oid, rq, conf["p1"])
+    params = {"MerchantLogin": conf["login"], "OutSum": out_sum, "InvId": oid, "Description": "Приглашение Knocky",
+              "Receipt": rq, "SignatureValue": sig, "Email": u["email"], "Culture": "ru", "Encoding": "utf-8"}
+    if conf["test"]:
+        params["IsTest"] = 1
+    # Receipt is already encoded once (it is signed in that form); urlencode encodes it a second time, as Robokassa expects in a link
+    return JSONResponse({"url": ROBOKASSA_URL + "?" + urlencode(params), "amount": total, "order": oid})
+
+
+def publish_paid(c, inv_id: str, via: str):
+    r = c.execute("SELECT * FROM invitations WHERE id=?", (inv_id,)).fetchone()
+    if not r:
+        return
+    d = json.loads(r["data"])
+    slug = r["slug"] or free_slug(c, f"{d['v'].get('a','')}-{d['v'].get('b','')}", r["id"])
+    t = now()
+    exp = add_months(t, 12 if "year" in d["sel"] else 3)
+    c.execute("UPDATE invitations SET status='published', slug=?, published_at=COALESCE(published_at,?), expires_at=?, paid_via=?, updated=? WHERE id=?",
+              (slug, t, exp, via, t, r["id"]))
+
+
+async def pay_result(req: Request):
+    """Robokassa Result URL: confirms the payment (server to server). Answer OK<InvId>."""
+    form = dict(await req.form()) if req.method == "POST" else dict(req.query_params)
+    try:
+        oid = int(form.get("InvId", 0))
+        out_sum = str(form.get("OutSum", ""))
+        sig = str(form.get("SignatureValue", "")).lower()
+    except Exception:
+        return Response("bad request", status_code=400)
+    s = load_secrets().get("robokassa") or {}
+    with db() as c:
+        o = c.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()
+        if not o:
+            return Response("bad order", status_code=400)
+        p2 = s.get("test_p2") if o["test"] else s.get("p2")
+        if not p2 or not hmac.compare_digest(rk_sign(out_sum, oid, p2), sig):
+            return Response("bad sign", status_code=400)
+        try:
+            if round(float(out_sum)) != o["amount"]:
+                return Response("bad sum", status_code=400)
+        except Exception:
+            return Response("bad sum", status_code=400)
+        if o["status"] != "paid":
+            c.execute("UPDATE orders SET status='paid', paid_at=? WHERE id=?", (now(), oid))
+            publish_paid(c, o["inv_id"], "robokassa-test" if o["test"] else "robokassa")
+    return Response(f"OK{oid}", media_type="text/plain")
+
+
+async def pay_back(req: Request):
+    """Success / Fail URL: back to the invitation in the cabinet."""
+    ok = req.path_params["kind"] == "ok"
+    try:
+        oid = int(req.query_params.get("InvId", 0))
+    except Exception:
+        oid = 0
+    with db() as c:
+        o = c.execute("SELECT inv_id FROM orders WHERE id=?", (oid,)).fetchone()
+    target = f"/inv/{o['inv_id']}" if o else "/"
+    return RedirectResponse(target + ("?paid=1" if ok else "?payfail=1"), status_code=302)
+
+
 # ---------------------------------------------------------------- public (guests)
 def public_payload(c, r, token: str = ""):
     d = json.loads(r["data"])
@@ -1174,7 +1313,31 @@ __MSG__<form method="post"><input type="hidden" name="t" value="__T__">
 <label for="l">Почта, с которой уходят письма</label><input id="l" name="login" value="hello@knocky.ru">
 <label for="p">Пароль приложения Яндекса для этой почты</label><input id="p" name="pw" type="password" autocomplete="off">
 <label for="to">Куда отправить проверочное письмо</label><input id="to" name="to" value="me@dudukchyan.ru">
+<h2>Оплата: Робокасса</h2>
+<p class="n">Из личного кабинета Робокассы: Мои магазины - магазин Knocky - Технические настройки. Заполненные поля сохранятся, пустые останутся как были. __RK__</p>
+<label for="rl">Идентификатор магазина</label><input id="rl" name="rk_login" autocomplete="off" value="__RKL__">
+<label for="r1">Пароль #1</label><input id="r1" name="rk_p1" type="password" autocomplete="off">
+<label for="r2">Пароль #2</label><input id="r2" name="rk_p2" type="password" autocomplete="off">
+<label for="t1">Тестовый пароль #1</label><input id="t1" name="rk_t1" type="password" autocomplete="off">
+<label for="t2">Тестовый пароль #2</label><input id="t2" name="rk_t2" type="password" autocomplete="off">
+<label for="sno">Система налогообложения ИП (для чеков)</label><select id="sno" name="rk_sno" style="width:100%;font:inherit;padding:12px 14px;border:0;border-radius:12px;background:#F3EEEE"><option value="usn_income"__S1__>УСН доходы</option><option value="usn_income_outcome"__S2__>УСН доходы минус расходы</option></select>
+<label for="mode">Режим оплаты</label><select id="mode" name="rk_mode" style="width:100%;font:inherit;padding:12px 14px;border:0;border-radius:12px;background:#F3EEEE"><option value="test"__M1__>Тестовый: деньги не списываются</option><option value="live"__M2__>Боевой: настоящие оплаты</option></select>
 <button>Сохранить</button></form></div></html>"""
+
+
+def rk_conf_from(rk: dict) -> bool:
+    test = rk.get("test", True)
+    return bool(rk.get("login") and (rk.get("test_p1") and rk.get("test_p2") if test else rk.get("p1") and rk.get("p2")))
+
+
+def setup_form(t: str, msg: str) -> str:
+    rk = load_secrets().get("robokassa") or {}
+    state = ("Сейчас: " + ("настроено, режим " + ("тестовый" if rk.get("test", True) else "боевой") if rk_conf_from(rk) else "не настроено") + ".")
+    test = rk.get("test", True)
+    sno2 = rk.get("sno") == "usn_income_outcome"
+    return (SETUP_FORM.replace("__T__", t).replace("__MSG__", msg).replace("__RK__", state).replace("__RKL__", h_esc(rk.get("login", "")))
+            .replace("__S1__", "" if sno2 else " selected").replace("__S2__", " selected" if sno2 else "")
+            .replace("__M1__", " selected" if test else "").replace("__M2__", "" if test else " selected"))
 
 
 def pw_hash(pw: str, salt: bytes | None = None) -> str:
@@ -1199,7 +1362,7 @@ async def page_setup(req: Request):
         t = req.query_params.get("t", "")
         if not setup_token_ok(t):
             return HTMLResponse("Ссылка недействительна", status_code=404)
-        return HTMLResponse(SETUP_FORM.replace("__T__", t).replace("__MSG__", ""), headers={"Cache-Control": "no-store"})
+        return HTMLResponse(setup_form(t, ""), headers={"Cache-Control": "no-store"})
     if not rate("setup:" + client_ip(req), 10, 3600):
         return HTMLResponse("Слишком много попыток", status_code=429)
     form = dict(await req.form())
@@ -1230,12 +1393,27 @@ async def page_setup(req: Request):
             msgs.append(("ok", f"Почта работает: проверочное письмо ушло на {h_esc(to)}."))
         except Exception as e:
             msgs.append(("bad", f"Письмо не ушло. Проверьте пароль приложения и что в настройках почты включен доступ для почтовых программ. ({type(e).__name__})"))
+    rk = dict(s.get("robokassa") or {})
+    changed = False
+    for f, k in (("rk_login", "login"), ("rk_p1", "p1"), ("rk_p2", "p2"), ("rk_t1", "test_p1"), ("rk_t2", "test_p2")):
+        val = str(form.get(f) or "").strip()
+        if val and val != rk.get(k):
+            rk[k], changed = val, True
+    if form.get("rk_sno") in ("usn_income", "usn_income_outcome") and form.get("rk_sno") != rk.get("sno"):
+        rk["sno"], changed = form["rk_sno"], True
+    if form.get("rk_mode") in ("test", "live") and (form["rk_mode"] == "test") != rk.get("test", True):
+        rk["test"], changed = form["rk_mode"] == "test", True
+    if changed:
+        s["robokassa"] = rk
+        ready = rk_conf_from(rk)
+        msgs.append(("ok" if ready else "bad", "Робокасса: настройки сохранены. " + ("Режим: " + ("тестовый." if rk.get("test", True) else "боевой, оплаты настоящие.") if ready else
+                     "Не хватает идентификатора или паролей для выбранного режима, оплата пока выключена.")))
     save_secrets(s)
     _GUEST["html"] = None
     if not msgs:
         msgs.append(("ok", "Сохранено."))
     msg = "".join(f'<div class="m"{" style=\"background:#FBE6E6\"" if k == "bad" else ""}>{m}</div>' for k, m in msgs)
-    return HTMLResponse(SETUP_FORM.replace("__T__", t).replace("__MSG__", msg), headers={"Cache-Control": "no-store"})
+    return HTMLResponse(setup_form(t, msg), headers={"Cache-Control": "no-store"})
 
 
 async def health(req: Request):
@@ -1302,6 +1480,10 @@ routes = [
     Route("/api/invitations/{id}/export.xlsx", inv_export),
     Route("/api/invitations/{id}/preview", preview_get),
     Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
+    Route("/api/invitations/{id}/price", inv_price),
+    Route("/api/invitations/{id}/pay", inv_pay, methods=["POST"]),
+    Route("/api/pay/result", pay_result, methods=["GET", "POST"]),
+    Route("/pay/{kind:str}", pay_back),
     Route("/api/invitations/{id}/print", inv_print),
     Route("/api/public/{slug}", pub_get),
     Route("/api/public/{slug}/rsvp", pub_rsvp, methods=["POST"]),
