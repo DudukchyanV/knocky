@@ -219,8 +219,8 @@ async function invView(id){
   if($('#pubBtn'))$('#pubBtn').onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;
     try{await api('/invitations/'+o.id+'/publish',{method:'POST'});toast('Опубликовано');invView(id);}catch(x){slugEr.hidden=false;slugEr.textContent=x.message;}};
   if($('#payBtn')){const pb=$('#payBtn');
-    api('/invitations/'+o.id+'/price').then(pr=>{pb.textContent=`Оплатить ${pr.total.toLocaleString('ru-RU')} ₽ и получить ссылку`;pb.removeAttribute('aria-disabled');
-      const box=$('#priceBox');if(box)box.innerHTML=`<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${i.price.toLocaleString('ru-RU')} ₽</td></tr>`).join('')}</tbody></table></div></details>`;}).catch(()=>{});
+    api('/invitations/'+o.id+'/price').then(pr=>{if(!pr.ready){pb.textContent='Прием оплаты откроется в ближайшие дни';pb.disabled=true;pb.setAttribute('aria-disabled','true');}else{pb.textContent=`Оплатить ${pr.total.toLocaleString('ru-RU')} ₽ и получить ссылку${pr.test?' (тест)':''}`;pb.removeAttribute('aria-disabled');}
+      const box=$('#priceBox');if(box)box.innerHTML=`${pr.ready?'':'<p style="margin:0 0 8px;color:var(--muted,#6E5F68)">Приглашение сохранено. Вернитесь сюда, когда откроется оплата.</p>'}<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${i.price.toLocaleString('ru-RU')} ₽</td></tr>`).join('')}</tbody></table></div></details>`;}).catch(()=>{});
     pb.onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;pb.disabled=true;
       try{const j=await api('/invitations/'+o.id+'/pay',{method:'POST'});location.href=j.url;}catch(x){pb.disabled=false;slugEr.hidden=false;slugEr.textContent=x.message;}};}
   const qs=new URLSearchParams(location.search);

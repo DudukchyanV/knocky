@@ -858,7 +858,11 @@ async def inv_price(req: Request):
         if not r:
             return err("Приглашение не найдено", 404)
         total, items = price_of(json.loads(r["data"]))
-    return JSONResponse({"total": total, "items": [{"name": n, "price": p} for n, p in items], "ready": rk_conf() is not None})
+    conf = rk_conf()
+    # while Robokassa is in test mode only admins can pay (a test payment would publish for free)
+    ready = conf is not None and (not conf["test"] or is_admin(req.state.user))
+    return JSONResponse({"total": total, "items": [{"name": n, "price": p} for n, p in items], "ready": ready,
+                         "test": bool(conf and conf["test"])})
 
 
 @need_user
@@ -866,9 +870,9 @@ async def inv_pay(req: Request):
     """Create an order and send the client to Robokassa. The invitation is published when Robokassa confirms the payment."""
     from urllib.parse import quote, urlencode
     conf = rk_conf()
-    if not conf:
-        return err("Оплата скоро заработает", 503)
     u = req.state.user
+    if not conf or (conf["test"] and not is_admin(u)):
+        return err("Прием оплаты откроется в ближайшие дни. Приглашение сохранено в кабинете", 503)
     with db() as c:
         r = own_inv(c, req, req.path_params["id"])
         if not r:
