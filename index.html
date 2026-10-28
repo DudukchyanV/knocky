@@ -2233,6 +2233,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
       <div>
         <h4>Контакты</h4>
         <ul>
+          <li>Телефон: <a href="tel:+79258735718">+7 925 873-57-18</a></li>
           <li>Почта: <a href="mailto:hello@knocky.ru">hello@knocky.ru</a></li>
           <li>Поддержка ежедневно с 10:00 до 20:00 по Москве</li>
           <li><button class="linkbtn" data-doc="requisites">Реквизиты</button></li>
@@ -2243,7 +2244,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
     <div class="req">
       <div>
         © 2026 Knocky (Нокки)<br>
-        ИП Дарбинян Элла Вардазаровна<br>
+        ИП Дарбинян Элла Вардазаровна, г. Москва<br>
         ОГРНИП 324774600657694, ИНН 502718452113
       </div>
       <div>
@@ -3352,7 +3353,7 @@ const SELLER_NAME='Индивидуальный предприниматель �
 const OGRNIP='324774600657694', INN='502718452113', LMAIL='hello@knocky.ru', LSITE='knocky.ru', DOC_DATE='17.10.2026';
 const LMAILTO=`<a href="mailto:${LMAIL}">${LMAIL}</a>`;
 const SELLER=`${SELLER_NAME} (ОГРНИП ${OGRNIP}${INN?', ИНН '+INN:''})`;
-const REQS=`<ul><li>${SELLER_NAME}</li><li>ОГРНИП: ${OGRNIP}</li>${INN?`<li>ИНН: ${INN}</li>`:''}<li>Сайт: ${LSITE}</li><li>Email: ${LMAILTO}</li><li>Поддержка: ежедневно с 10:00 до 20:00 по московскому времени</li></ul>`;
+const REQS=`<ul><li>${SELLER_NAME}</li><li>ОГРНИП: ${OGRNIP}</li>${INN?`<li>ИНН: ${INN}</li>`:''}<li>Город: Москва</li><li>Сайт: ${LSITE}</li><li>Телефон: <a href="tel:+79258735718">+7 925 873-57-18</a></li><li>Email: ${LMAILTO}</li><li>Поддержка: ежедневно с 10:00 до 20:00 по московскому времени</li></ul>`;
 const DOCS={
 offer:{t:'Публичная оферта на оказание услуг',b:`
 <h3>1. Общие положения</h3>
