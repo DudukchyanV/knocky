@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://knocky.ru/sitemap.xml

@@ -25,7 +25,7 @@ fi
 # public site knocky.ru (served by Caddy once DNS points here): only the site files, not the code
 SITE=/opt/knocky/site
 mkdir -p $SITE
-rsync -a --delete --include='/*.html' --include='/*.txt' --include='/CNAME' --exclude='*' "$REPO/" "$SITE/"
+rsync -a --delete --include='/*.html' --include='/*.txt' --include='/*.xml' --include='/CNAME' --exclude='*' "$REPO/" "$SITE/"
 
 # app user and folders: data and secrets belong to the app, code stays root-owned
 id knocky >/dev/null 2>&1 || useradd --system --home /opt/knocky --shell /usr/sbin/nologin knocky
