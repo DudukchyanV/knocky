@@ -815,14 +815,17 @@ async def inv_export(req: Request):
         for g in gs:
             g2.append([g["name"], g["link"] or "", g["opens"], fmt(g["first_open"]), "" if g["answer"] is None else ("Придет" if g["answer"] else "Не сможет")]
                       + per_day(g["answer"], g["days"]) + [g["table"] or ""])
-    # guest texts like "=)" or "+7..." must stay text: a string starting with = becomes a broken formula and Excel offers to "repair" the file
+    # guest texts like "=)" must stay text (not a formula), and empty texts must be empty cells, otherwise Excel offers to "repair" the file
     from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
     for sh in wb.worksheets:
         for row in sh.iter_rows():
             for cell in row:
                 if isinstance(cell.value, str):
-                    cell.value = ILLEGAL_CHARACTERS_RE.sub("", cell.value)
-                    cell.data_type = "s"
+                    txt = ILLEGAL_CHARACTERS_RE.sub("", cell.value)
+                    # an empty text cell is written as <c t="inlineStr"></c>, which Excel calls broken: leave it truly empty
+                    cell.value = txt or None
+                    if txt:
+                        cell.data_type = "s"
     for sh in wb.worksheets:
         for cell in sh[1]:
             cell.font, cell.fill = head, fill
@@ -1132,8 +1135,11 @@ def render_payload(d: dict, guest: str | None = None) -> dict:
     return {"tpl": d["tpl"], "sel": sel, "order": d["order"], "v": v}
 
 
+RENDER_VER = "2"  # bump when the look of the pictures changes, so old cached pictures (and old preview links) are not reused
+
+
 def render_hash(payload: dict, fmt: str) -> str:
-    return hashlib.sha256((fmt + json.dumps(payload, sort_keys=True, ensure_ascii=False)).encode()).hexdigest()[:20]
+    return hashlib.sha256((RENDER_VER + fmt + json.dumps(payload, sort_keys=True, ensure_ascii=False)).encode()).hexdigest()[:20]
 
 
 _RENDER_JOBS: dict = {}
@@ -1201,6 +1207,61 @@ def _print_pdf(inv_id: str, session: str, who: int | None) -> bytes | None:
     except Exception as e:
         print("print pdf failed:", e, flush=True)
         return None
+
+
+def _print_zip(inv_id: str, session: str) -> bytes | None:
+    """One PDF per named guest, all in a zip: easier than downloading 100 files one by one."""
+    import zipfile
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        return None
+    try:
+        buf = io.BytesIO()
+        with _RENDER_LOCK, sync_playwright() as pw, zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+            b = pw.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+            try:
+                ctx = b.new_context(viewport={"width": 900, "height": 1200})
+                ctx.add_cookies([{"name": "kn", "value": session, "url": f"http://127.0.0.1:{RENDER_PORT}"}])
+                pg = ctx.new_page()
+                pg.goto(f"http://127.0.0.1:{RENDER_PORT}/print/{inv_id}", wait_until="load", timeout=20000)
+                pg.wait_for_selector(".sheet", timeout=15000)
+                names = pg.eval_on_selector_all("#who option", "o=>o.map(x=>[x.value,x.textContent])") if pg.query_selector("#who") else []
+                names = [(v, t) for v, t in names if v != "-1"] or [("-1", "Приглашение")]
+                used = set()
+                for k, (val, name) in enumerate(names, 1):
+                    if val != "-1":
+                        pg.select_option("#who", val)
+                    pg.wait_for_function("document.fonts.status==='loaded' && [...document.images].every(i=>i.complete)", timeout=15000)
+                    pg.wait_for_timeout(150)
+                    fn = re.sub(r'[\\/:*?"<>|]+', " ", name).strip()[:60] or "Гость"
+                    fn = f"{k:03d} {fn}.pdf"
+                    if fn in used:
+                        continue
+                    used.add(fn)
+                    z.writestr(fn, pg.pdf(prefer_css_page_size=True, print_background=True))
+            finally:
+                b.close()
+        return buf.getvalue()
+    except Exception as e:
+        print("print zip failed:", e, flush=True)
+        return None
+
+
+@need_user
+async def inv_print_zip(req: Request):
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        d = json.loads(r["data"])
+        if "print" not in d["sel"]:
+            return err("Печатная версия не подключена в этом приглашении", 403)
+    data = await asyncio.to_thread(_print_zip, r["id"], req.cookies.get("kn", ""))
+    if not data:
+        return err("Не получилось собрать архив. Попробуйте еще раз через минуту", 503)
+    fn = "knocky-" + (translit(inv_title(d)) or "priglasheniya") + ".zip"
+    return Response(data, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{fn}"'})
 
 
 @need_user
@@ -1563,6 +1624,7 @@ routes = [
     Route("/api/pay/result", pay_result, methods=["GET", "POST"]),
     Route("/pay/{kind:str}", pay_back),
     Route("/api/invitations/{id}/print.pdf", inv_print_pdf),
+    Route("/api/invitations/{id}/print.zip", inv_print_zip),
     Route("/api/invitations/{id}/print", inv_print),
     Route("/api/public/{slug}", pub_get),
     Route("/api/public/{slug}/rsvp", pub_rsvp, methods=["POST"]),

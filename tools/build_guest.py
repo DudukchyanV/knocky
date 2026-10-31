@@ -71,7 +71,7 @@ body.print{background:#E9E4E5}
 .pbar .warn{background:#F3EEEE;border-radius:12px;padding:10px 12px}
 .pbar .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .pbar select{flex:0 1 auto;font:inherit;padding:10px 12px;border-radius:12px;border:0;background:#F3EEEE;color:#241B20;max-width:100%}
-.pbar button,.pbar #dl{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}.pbar button.soft{background:#F3EEEE;color:#241B20}.pbar #dl[aria-busy=true]{opacity:.6;pointer-events:none}
+.pbar button,.pbar #dl,.pbar #zip{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}.pbar button.soft,.pbar #zip{background:#F3EEEE;color:#241B20}.pbar #zip[aria-busy=true]{opacity:.6;pointer-events:none}.pbar #dl[aria-busy=true]{opacity:.6;pointer-events:none}
 .pbar .n{color:#6F6068;font-size:13px}
 .sheets{display:grid;gap:24px;justify-content:center;padding:24px 12px 48px}
 .sheet{width:148mm;height:210mm;container-type:inline-size;overflow:hidden;position:relative;background:#fff;box-shadow:0 6px 30px rgba(36,27,32,.18)}
@@ -199,7 +199,7 @@ function printView(D){
   const opts=D.cards.length>1?`<select id="who" aria-label="Для кого"><option value="-1">Все гости (${D.cards.length})</option>${D.cards.map((c,i)=>`<option value="${i}">${esc(c.guest)}</option>`).join('')}</select>`:'';
   V.innerHTML=`<div class="pbar"><div class="in"><h1>Печатная версия, формат A5</h1>
     <div class="warn">В печатной версии только обложка, дата, адрес${on.has('program')?', программа':''}${on.has('dress')?', дресс-код':''}.${online.length?` Здесь нет: ${esc(online.join(', '))}. Гость откроет это по QR-коду на обороте.`:''}${D.published?'':' <b>QR-коды появятся после публикации приглашения.</b>'}</div>
-    <div class="row">${opts}<a id="dl" href="/api/invitations/${encodeURIComponent(KEY)}/print.pdf">Скачать PDF</a><button type="button" id="pr" class="soft">Распечатать</button></div>
+    <div class="row">${opts}<a id="dl" href="/api/invitations/${encodeURIComponent(KEY)}/print.pdf">Скачать PDF</a>${D.cards.length>1?`<a id="zip" class="soft" href="/api/invitations/${encodeURIComponent(KEY)}/print.zip">Архив: PDF на каждого гостя</a>`:''}<button type="button" id="pr" class="soft">Распечатать</button></div>
     <div class="n">«Скачать PDF» - готовый файл, сборка занимает до 20 секунд. Каждое приглашение - 2 страницы: лицевая сторона и оборот. Для печати дома на A4 выберите «2 страницы на листе».</div></div></div>
     <div class="sheets" id="sh"></div>`;
   /* the back side shrinks as a whole when the program is long, so everything fits on one A5 page */
@@ -214,6 +214,7 @@ function printView(D){
   const w=document.getElementById('who'),dl=document.getElementById('dl'),base=dl.getAttribute('href');
   if(w)w.onchange=()=>{fill(+w.value);dl.href=base+(+w.value>=0?'?i='+w.value:'');};
   dl.onclick=()=>{dl.setAttribute('aria-busy','true');dl.textContent='Собираем PDF…';setTimeout(()=>{dl.removeAttribute('aria-busy');dl.textContent='Скачать PDF';},20000);};
+  const zp=document.getElementById('zip');if(zp)zp.onclick=()=>{zp.setAttribute('aria-busy','true');const t0=zp.textContent;zp.textContent='Собираем архив, до 2-3 минут…';setTimeout(()=>{zp.removeAttribute('aria-busy');zp.textContent=t0;},120000);};
   document.getElementById('pr').onclick=()=>window.print();}
 /* server-side picture of the cover: link preview 1200x630 or stories 1080x1920 */
 function renderView(R){
