@@ -675,6 +675,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		print-color-adjust: exact;
 		}
 	}
+
+button,a,input,select,textarea,label,summary,[role=button]{touch-action:manipulation}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -709,9 +711,9 @@ button,.btn{font:inherit;cursor:pointer}
 .btn-seal{background:var(--seal);color:var(--seal-ink)}
 .btn-xl{padding:18px 36px;font-size:18px;line-height:22px}
 @media (max-width:600px){.btn-xl{width:100%}}
-.btn-seal:hover{transform:translateY(-1px)}
+@media (hover:hover){.btn-seal:hover{transform:translateY(-1px)}}
 .btn-line{border-color:transparent;background:var(--soft);color:var(--ink)}
-.btn-line:hover{background:color-mix(in srgb,var(--ink) 9%,var(--soft))}
+@media (hover:hover){.btn-line:hover{background:color-mix(in srgb,var(--ink) 9%,var(--soft))}}
 
 /* header */
 header{position:relative;z-index:20;background:var(--bg)}
@@ -739,7 +741,7 @@ header{position:relative;z-index:20;background:var(--bg)}
 .menu.open{transform:none;visibility:visible;transition:transform .35s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .menu-nav{display:flex;flex-direction:column;align-items:flex-end}
 .menu-nav a,.menu-row{display:flex;align-items:center;justify-content:flex-end;gap:10px;background:none;border:0;padding:9px 0;color:var(--ink);font:600 17px var(--f-body);text-decoration:none}
-.menu-nav a:hover,.menu-row:hover{color:var(--seal)}
+@media (hover:hover){.menu-nav a:hover,.menu-row:hover{color:var(--seal)}}
 .menu-side{display:flex;flex-direction:column;align-items:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);min-width:140px}
 .menu-side .adm-pill{margin:6px 0}
 .menu .theme svg{width:16px;height:16px;flex:none}
@@ -771,7 +773,7 @@ header{position:relative;z-index:20;background:var(--bg)}
 .foot h4{margin:0 0 12px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
 .foot ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .foot a,.foot .linkbtn{color:var(--muted);text-decoration:none}
-.foot a:hover,.foot .linkbtn:hover{color:var(--seal)}
+@media (hover:hover){.foot a:hover,.foot .linkbtn:hover{color:var(--seal)}}
 .foot .brand p{margin:12px 0 0;max-width:30ch}
 .req{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;line-height:1.7}
 .req div{min-width:0}
@@ -805,7 +807,7 @@ header{position:relative;z-index:20;background:var(--bg)}
 .srail button.on{background:var(--seal)}
 .srail button.cur{transform:scale(1.35)}
 .srail button span{position:absolute;right:20px;top:50%;transform:translateY(-50%);white-space:nowrap;font:600 13px var(--f-body);color:var(--ink);background:var(--surface);padding:5px 10px;border-radius:999px;box-shadow:0 6px 18px -8px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s}
-.srail button:hover span,.srail button:focus-visible span{opacity:1}
+@media (hover:hover){.srail button:hover span,.srail button:focus-visible span{opacity:1}}
 .srail.top{opacity:0;pointer-events:none}
 @media (min-width:1100px) and (pointer:fine){.srail{display:block}.sprog{display:none}}
 body.invite-mode .sprog,body.invite-mode .srail{display:none!important}
@@ -856,11 +858,11 @@ body.invite-mode .sprog,body.invite-mode .srail{display:none!important}
 .ord-st.off{background:var(--soft);color:var(--muted)}
 .ord-link{display:flex;align-items:center;gap:4px;background:var(--soft);border-radius:12px;padding:5px;min-width:0}
 .ord-link a{flex:1;min-width:0;overflow-wrap:anywhere;font:600 14px var(--f-body);color:var(--ink);text-decoration:none;padding:0 8px;line-height:1.35}
-.ord-link a:hover{color:var(--seal)}
+@media (hover:hover){.ord-link a:hover{color:var(--seal)}}
 .cp{display:grid;place-items:center;flex:none;width:36px;height:36px;border:0;outline:0;border-radius:9px;background:var(--surface);color:var(--ink);padding:0;cursor:pointer;position:relative}
 .cp:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
 .cp span{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font:700 12px var(--f-body);padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
-.cp:hover span,.cp.done span{opacity:1}
+@media (hover:hover){.cp:hover span,.cp.done span{opacity:1}}
 .cp svg{width:17px;height:17px;display:block;grid-area:1/1;transform:translate(-1px,-1px)}.cp,.cp:focus{border:0!important;box-shadow:none!important}.cp:hover{background:var(--ink);color:var(--bg)}
 .cp.done{background:#2E7D4F;color:#fff}
 @media (max-width:760px){.ord{grid-template-columns:1fr;gap:12px}.ord-st{justify-self:start}}
@@ -939,14 +941,14 @@ section{padding-block:72px}
 .gnav{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:-6px 0 14px}
 .gnav-cnt{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;margin-right:auto}
 .gnav button{width:44px;height:44px;border-radius:50%;border:0;background:var(--soft);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:background .15s}
-.gnav button:hover:not(:disabled){background:var(--ink);color:var(--bg)}
+@media (hover:hover){.gnav button:hover:not(:disabled){background:var(--ink);color:var(--bg)}}
 .gnav button:disabled{opacity:.35;cursor:default}
 .gnav svg{width:20px;height:20px}
 
 .card{display:flex;flex-direction:column;gap:14px}
 .more{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:28px}
 .more-btn{display:inline-flex;align-items:center;gap:10px;border:0;border-radius:999px;padding:15px 28px 15px 32px;background:var(--ink);color:var(--bg);font:700 16px var(--f-body);cursor:pointer;transition:transform .15s,background .15s}
-.more-btn:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--ink) 88%,var(--seal))}
+@media (hover:hover){.more-btn:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--ink) 88%,var(--seal))}}
 .more-btn svg{width:20px;height:20px;transition:transform .25s}
 .more.all .more-btn{background:var(--soft);color:var(--ink)}
 .more.all .more-btn svg{transform:rotate(180deg)}
@@ -957,7 +959,7 @@ section{padding-block:72px}
 @media (prefers-reduced-motion:reduce){.card-in{animation:none}}
 
 .thumb{border-radius:var(--r);overflow:hidden;aspect-ratio:3/4;container-type:inline-size;border:0;cursor:pointer;position:relative;background:var(--soft);padding:0}
-.thumb:hover .inv{transform:scale(1.025)}
+@media (hover:hover){.thumb:hover .inv{transform:scale(1.025)}}
 .thumb .inv{transition:transform .35s;height:100%}
 .badge{position:absolute;top:12px;left:12px;z-index:2;background:var(--seal);color:var(--seal-ink);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;font-family:var(--f-body)}
 .meta{display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -1018,11 +1020,11 @@ html:has(dialog#dlg[open]){overflow:hidden}
 .cfg{display:flex;flex-direction:column;gap:16px;min-width:0}
 .cfg h2{font-size:26px}
 .close{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:0;background:transparent;color:var(--ink);font-size:24px;line-height:1;cursor:pointer}
-.close:hover{background:var(--soft)}
+@media (hover:hover){.close:hover{background:var(--soft)}}
 /* design dialog top bar: back arrow (from step 2) and close */
 .dlg-top{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;padding:10px 12px 0;background:var(--bg)}
 .ib{width:36px;height:36px;flex:none;border:0;border-radius:50%;background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
-.ib:hover{background:var(--soft)}
+@media (hover:hover){.ib:hover{background:var(--soft)}}
 .ib:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
 .ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #closeBtn{margin-left:auto}
@@ -1036,13 +1038,13 @@ html:has(dialog#dlg[open]){overflow:hidden}
 .bf .row3{display:grid;grid-template-columns:1fr 1fr 36px;gap:8px;align-items:center}
 @media (max-width:520px){.bf .row3{grid-template-columns:1fr 36px}.bf .row3 input:nth-child(2){grid-column:1}}
 .bf .rm{width:36px;height:36px;border:0;border-radius:10px;background:var(--soft);color:var(--muted);font-size:18px;line-height:1;cursor:pointer}
-.bf .rm:hover{color:var(--ink)}
+@media (hover:hover){.bf .rm:hover{color:var(--ink)}}
 .bf .add{justify-self:start;border:0;background:var(--soft);color:var(--ink);font-weight:700;font-size:14px;border-radius:999px;padding:8px 14px;cursor:pointer}
 .bf .swr{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .bf .swr label{display:block;width:44px;height:44px;border-radius:50%;overflow:hidden;position:relative;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
 .bf .swi{position:relative}
 .bf .sx{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);background:var(--ink);color:var(--bg);font-size:13px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer;opacity:0;transform:scale(.7);transition:opacity .15s,transform .15s}
-.bf .swi:hover .sx,.bf .sx:focus-visible{opacity:1;transform:none}
+@media (hover:hover){.bf .swi:hover .sx,.bf .sx:focus-visible{opacity:1;transform:none}}
 @media (hover:none){.bf .sx{opacity:1;transform:none}}
 .bf .swr input[type=color]{position:absolute;inset:-8px;width:60px;height:60px;border:0;padding:0;cursor:pointer;background:none}
 .bf .phs{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
@@ -1112,11 +1114,11 @@ html:has(dialog#dlg[open]){overflow:hidden}
 .addr-list{position:absolute;left:0;right:0;top:100%;z-index:5;margin:4px 0 0;padding:6px;list-style:none;background:var(--surface);border-radius:12px;box-shadow:0 14px 34px -14px rgba(36,27,32,.45);max-height:260px;overflow:auto}
 .addr-list li{padding:9px 10px;border-radius:8px;font-size:14px;cursor:pointer;color:var(--ink)}
 .addr-list li small{display:block;color:var(--muted);font-size:12px}
-.addr-list li[aria-selected="true"],.addr-list li:hover{background:var(--soft)}
+@media (hover:hover){.addr-list li[aria-selected="true"],.addr-list li:hover{background:var(--soft)}}
 .addr-list li.dd-credit{cursor:default;padding:8px 10px 4px;margin-top:4px;border-top:1px solid var(--soft);border-radius:0;font-size:11px;text-align:right}
-.addr-list li.dd-credit:hover{background:none}
+@media (hover:hover){.addr-list li.dd-credit:hover{background:none}}
 .addr-list li.dd-credit a{color:var(--muted);text-decoration:none}
-.addr-list li.dd-credit a:hover{color:var(--seal)}
+@media (hover:hover){.addr-list li.dd-credit a:hover{color:var(--seal)}}
 .addr-msg{margin:0;font-size:13px;color:var(--seal);font-weight:600}
 .pick-map{height:220px;border-radius:14px;overflow:hidden;background:var(--soft);position:relative;z-index:0;isolation:isolate}
 .pick-map .leaflet-bar{border:0;box-shadow:none;display:flex;flex-direction:column;gap:6px;margin:10px 10px 0 0}
@@ -1131,7 +1133,7 @@ input,select{font:inherit;font-size:15px;color:var(--ink);background:var(--surfa
 .preset{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;border-radius:14px;padding:12px 14px;background:var(--surface);color:var(--ink);cursor:pointer;text-align:left}
 .preset span{font:500 15px var(--f-disp)}
 .preset b{font:700 14px var(--f-body);color:var(--muted)}
-.preset:hover{background:color-mix(in srgb,var(--ink) 6%,var(--surface))}
+@media (hover:hover){.preset:hover{background:color-mix(in srgb,var(--ink) 6%,var(--surface))}}
 .preset[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .preset[aria-pressed="true"] b{color:color-mix(in srgb,var(--bg) 70%,transparent)}
 .tiers{display:grid;gap:6px;background:transparent;padding:0}
@@ -1194,13 +1196,13 @@ input,select{font:inherit;font-size:15px;color:var(--ink);background:var(--surfa
 .packs b{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:64px;text-align:right}
 .stepper{display:inline-flex;align-items:center;gap:2px;background:var(--soft);border-radius:999px;padding:3px}
 .stepper button{width:30px;height:30px;border:0;border-radius:50%;background:var(--surface);color:var(--ink);font:700 17px/1 var(--f-body);cursor:pointer;display:grid;place-items:center}
-.stepper button:hover:not(:disabled){background:var(--seal);color:var(--seal-ink)}
+@media (hover:hover){.stepper button:hover:not(:disabled){background:var(--seal);color:var(--seal-ink)}}
 .stepper button:disabled{opacity:.35;cursor:not-allowed}
 .stepper output{min-width:24px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
 .grow .dears{grid-column:2/3;display:flex;gap:2px;background:var(--soft);border-radius:999px;padding:3px;width:max-content;max-width:100%;margin-top:-2px}
 .grow .dears button{border:0;border-radius:999px;background:transparent;color:var(--muted);font:700 12px/1 var(--f-body);padding:7px 9px;white-space:nowrap;cursor:pointer}
 .grow .dears button[aria-pressed="true"]{background:var(--seal);color:var(--seal-ink)}
-.grow .dears button:hover:not([aria-pressed="true"]){color:var(--ink)}
+@media (hover:hover){.grow .dears button:hover:not([aria-pressed="true"]){color:var(--ink)}}
 .pk-more{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 @media (max-width:480px){.packs{padding-left:44px;flex-wrap:wrap;row-gap:6px}.packs .pk-t{flex-basis:100%}}
 .total{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:8px}
@@ -1295,7 +1297,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
 .ypin{background:none;border:0}
 .ymap .leaflet-bar{border:0;box-shadow:none;display:flex;flex-direction:column;gap:6px;margin:10px 10px 0 0}
 .ymap .leaflet-bar a{width:32px;height:32px;line-height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.95);color:#241B20;font:600 18px/30px var(--f-body);box-shadow:0 2px 8px -2px rgba(0,0,0,.3)}
-.ymap .leaflet-bar a:hover{background:#fff;color:#C62828}
+@media (hover:hover){.ymap .leaflet-bar a:hover{background:#fff;color:#C62828}}
 .ymap .leaflet-bar a.leaflet-disabled{color:#bbb;background:rgba(255,255,255,.8)}
 .ypin svg{width:34px;height:34px;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
 
@@ -1338,10 +1340,10 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
 /* ===== 1 Конверт ===== */
 .t-envelope{--t-disp:'Great Vibes',cursive;--t-body:'Tenor Sans','Manrope',sans-serif;font-family:var(--t-body)}
 .t-envelope .cover{justify-content:center;padding:8cqi 9cqi;background:radial-gradient(90cqi 60cqi at 50% 100%,color-mix(in srgb,var(--t-acc) 10%,transparent),transparent 70%)}
-.env{position:relative;width:80cqi;height:52cqi;margin-top:58cqi;flex:none;perspective:160cqi}
+.env{position:relative;width:80cqi;height:52cqi;margin-top:58cqi;flex:none;isolation:isolate}
 .env-back{position:absolute;inset:0;background:color-mix(in srgb,var(--t-acc) 82%,#000);border-radius:1.6cqi}
-.env-flap{position:absolute;left:0;right:0;top:0;height:58%;background:color-mix(in srgb,var(--t-acc) 90%,#000);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:rotateX(180deg);z-index:1;animation:envFlap 2.6s ease-in-out both}
-@keyframes envFlap{0%,25%{transform:rotateX(0);z-index:5}55%{transform:rotateX(180deg);z-index:1}}
+.env-flap{position:absolute;left:0;right:0;top:0;height:58%;background:color-mix(in srgb,var(--t-acc) 90%,#000);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:scaleY(-1);z-index:1;animation:envFlap 2.6s ease-in-out both}
+@keyframes envFlap{0%,25%{transform:scaleY(1);z-index:5}40%{z-index:5}41%{z-index:1}55%,100%{transform:scaleY(-1);z-index:1}}
 .env-card{position:absolute;left:5cqi;right:5cqi;bottom:5cqi;height:74cqi;background:var(--t-bg);border-radius:1cqi;box-shadow:0 0 0 .5cqi color-mix(in srgb,var(--t-a2) 60%,transparent) inset,0 2cqi 5cqi -2cqi #0004;
   display:flex;flex-direction:column;align-items:center;gap:1.8cqi;padding:6cqi 5cqi 0;transform:translateY(-28cqi);z-index:2;animation:envCard 2.6s cubic-bezier(.3,.6,.2,1) both}
 @keyframes envCard{0%,50%{transform:translateY(0)}}
@@ -2158,7 +2160,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
         </div>
         <div class="chips" id="chips" role="group" aria-label="Стиль"></div>
       </div>
-      <div class="gnav"><span class="gnav-cnt" id="gCnt"></span><button type="button" id="gPrev" aria-label="Назад"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" id="gNext" aria-label="Дальше"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="grid" id="grid"></div>
+      <div class="gnav"><span class="gnav-cnt" id="catCnt"></span><button type="button" id="gPrev" aria-label="Назад"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button type="button" id="gNext" aria-label="Дальше"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><div class="grid" id="grid"></div>
       
     </div>
   </section>
@@ -3002,10 +3004,11 @@ const STYLE_OF={envelope:'Классика',mono:'Классика',glass:'Кл�
 TPL.forEach(t=>{if(STYLE_OF[t.id])t.style=STYLE_OF[t.id];});
 const STYLE_ORDER=['Цветы','Картины','Классика','Минимализм','Современные','Темные'];
 
-const DEF_ORDER=['timer','program','map','dress','gallery','wishlist','rsvp'];
+const DEF_ORDER=['seating','timer','program','map','dress','gallery','wishlist','rsvp'];
+const withSeat=o=>o.includes('seating')?o:['seating',...o];
 let order=[...DEF_ORDER];
 function full(t,v,on,ord){
-  on=on||ALL;ord=ord||DEF_ORDER;const p=parts(v.date),T=v.time||'15:00',h=id=>on.has(id);
+  on=on||ALL;ord=withSeat(ord||DEF_ORDER);const tb=on.has('seating')&&on.has('named')?tableOf(v):'';const p=parts(v.date),T=v.time||'15:00',h=id=>on.has(id);
   const S={
     timer:()=>`${h('timer')?`<section><h4>До свадьбы</h4><div class="cd"><div>${p.days}<small>дней</small></div></div><p style="margin-top:4cqi">${p.long}</p></section>`:''}`,
     program:()=>`${h('program')?`<section><h4>Программа</h4>${progRows(progOf(v))}</section>`:''}`,
@@ -3013,11 +3016,10 @@ function full(t,v,on,ord){
     dress:()=>`${h('dress')?`<section><h4>Дресс-код</h4>${v.dressNote?`<p>${esc(v.dressNote)}</p>`:''}<div class="sw">${(v.sw||palOf(t,v).sw).map(c=>`<i style="background:${c}"></i>`).join('')}</div></section>`:''}`,
     gallery:()=>`${h('gallery')?`<section><h4>Наши фото</h4><div class="gal">${v.photos&&v.photos.length?v.photos.map(u=>`<img src="${u}" alt="">`).join(''):'<i></i><i></i><i></i><i></i>'}</div></section>`:''}`,
     wishlist:()=>`${h('wishlist')?`<section><h4>Вишлист</h4><div class="wish">${(v.wish||[]).filter(w=>w.n).map(w=>`<div><span>${w.u?`<a href="${esc(w.u)}" target="_blank" rel="noopener">${esc(w.n)}</a>`:esc(w.n)}</span><b>Свободно</b></div>`).join('')}</div></section>`:''}`,
+    seating:()=>tb?`<section class="seat"><h4>Ваш стол</h4><div class="cd"><div>${/^\d+$/.test(tb)?'№'+esc(tb):esc(tb)}</div></div></section>`:'',
     rsvp:()=>`${h('rsvp')?`<section><h4>Вы придёте?</h4><p style="margin-bottom:4cqi">${v.rsvpBy?`Ответьте, пожалуйста, до ${dayMonth(v.rsvpBy)}`:'Ответьте, пожалуйста'}</p><div class="rsvp" data-rsvp><input aria-label="Ваше имя" placeholder="Имя и фамилия"><div class="opts"><button type="button" data-o="1" aria-pressed="false">Приду</button><button type="button" data-o="0" aria-pressed="false">Не смогу</button></div><button type="button" class="ibtn fill" data-send>Отправить ответ</button></div></section>`:''}`
   };
-  const tb=on.has('seating')&&on.has('named')?tableOf(v):'';
   return `<div class="inv t-${t.id}" style="${palVars(t,v)}">${cover(t,v,on)}
-  ${tb?`<section class="seat"><h4>Ваш стол</h4><div class="cd"><div>${/^\d+$/.test(tb)?'№'+esc(tb):esc(tb)}</div></div></section>`:''}
   ${(()=>{if(!(v.events||[]).length)return ord.map(id=>S[id]?S[id]():'').join('');let done=false;
     return ord.map(id=>{if(id==='program'||id==='map'||id==='dress'){if(done)return '';done=true;return daysBlock(t,v,h,ord);}return S[id]?S[id]():'';}).join('');})()}
   <div class="sign">${esc(v.a||'')} и ${esc(v.b||'')}</div></div>`;
@@ -3048,7 +3050,7 @@ const chips=document.getElementById('chips'),grid=document.getElementById('grid'
 function drawChips(){chips.innerHTML=styles.map(s=>`<button class="chip" aria-pressed="${s==='Все'?!filt.size:filt.has(s)}" data-s="${s}">${s}</button>`).join('');}
 function drawGrid(){const list=TPL.filter(t=>!filt.size||filt.has(t.style));
   grid.innerHTML=list.map(t=>`<div class="card"><button class="thumb" data-open="${t.id}" aria-label="Открыть дизайн ${t.name}">${t.tag?`<span class="badge">${t.tag}</span>`:''}<div class="inv t-${t.id}" style="${palVars(t,{})}">${cover(t,data)}</div></button><div class="meta"><h3>${t.name}</h3><span class="pdots" aria-label="${t.pals.length} варианта цвета">${t.pals.map(p=>`<i style="background:linear-gradient(135deg,${p.bg} 50%,${p.acc} 50%)"></i>`).join('')}</span></div></div>`).join('');
-  grid.scrollLeft=0;document.getElementById('gCnt').textContent=`${plural(list.length,'дизайн','дизайна','дизайнов')} · листайте вправо`;gNav();}
+  grid.scrollLeft=0;document.getElementById('catCnt').textContent=`${plural(list.length,'дизайн','дизайна','дизайнов')} · листайте вправо`;gNav();}
 function gNav(){const max=grid.scrollWidth-grid.clientWidth-2;document.getElementById('gPrev').disabled=grid.scrollLeft<=2;document.getElementById('gNext').disabled=grid.scrollLeft>=max;}
 grid.addEventListener('scroll',()=>requestAnimationFrame(gNav),{passive:true});addEventListener('resize',gNav);
 document.getElementById('gPrev').addEventListener('click',()=>grid.scrollBy({left:-grid.clientWidth*.9,behavior:'smooth'}));
@@ -3129,7 +3131,7 @@ function drawBF(){const on=active(),parts=[],D=DY(),E=data.events||[];drawDayTab
   if(on.has('dress')&&curDay>0)P('day',`<label class="dayopt"><input type="checkbox" data-dopt="dress"${D.dress?' checked':''}><span>Свой дресс-код для этой вкладки<small>Бесплатно. Без него гости увидят дресс-код первой вкладки</small></span></label>`);
   const dressHere=on.has('dress')&&(curDay===0||D.dress);
     if(dressHere){const sw=DY().sw||(curDay&&data.sw)||palOf(cur,data).sw;P('day',`<div class="bf" data-bf="dress"><h5>Дресс-код<small>Нажмите на цвет, чтобы поменять</small></h5><div class="swr">${sw.map((c,i)=>`<div class="swi"><label style="background:${c}" aria-label="Цвет ${i+1}"><input type="color" data-k="sw" data-i="${i}" value="${c}"></label>${sw.length>1?`<button type="button" class="sx" data-rm="swc" data-i="${i}" aria-label="Удалить цвет ${i+1}">×</button>`:''}</div>`).join('')}${sw.length<6?'<button type="button" class="add" data-add="sw">+ Цвет</button>':''}</div><input data-k="dressNote" value="${esc(DY().dressNote||'')}" maxlength="120" placeholder="Текст для гостей" aria-label="Текст про дресс-код"></div>`);}
-  const ids=[...order.filter(x=>x!=='program'&&x!=='dress'&&x!=='map'),'named','seating'].filter(id=>on.has(id));
+  const ids=[...order.filter(x=>x!=='program'&&x!=='dress'&&x!=='map'&&x!=='seating'),'named','seating'].filter(id=>on.has(id));
   for(const id of ids){
     if(id==='gallery')P('more',`<div class="bf" data-bf="gallery"><h5>Фотогалерея<small>${data.photos.length} из 12</small></h5><div class="phs">${data.photos.map((u,i)=>`<div><img src="${u}" alt=""><button type="button" data-rm="photo" data-i="${i}" aria-label="Удалить фото">×</button></div>`).join('')}${data.photos.length<12?'<label class="up" aria-label="Добавить фото">+<input type="file" accept="image/*" multiple data-up></label>':''}</div></div>`);
     if(id==='wishlist')P('more',`<div class="bf" data-bf="wishlist"><h5>Вишлист</h5>${data.wish.map((w,i)=>`<div class="row3"><input data-k="wish.n" data-i="${i}" value="${esc(w.n)}" maxlength="60" placeholder="Подарок"><input data-k="wish.u" data-i="${i}" value="${esc(w.u)}" inputmode="url" placeholder="Ссылка (необязательно)"><button type="button" class="rm" data-rm="wish" data-i="${i}" aria-label="Удалить">×</button></div>`).join('')}<button type="button" class="add" data-add="wish">+ Подарок</button></div>`);
@@ -3178,7 +3180,12 @@ function seatForm(){const T=data.tables||[],named=data.guests.map((g,i)=>[g,i]).
     ${T.length&&named.length?`<div class="seatl"><div class="seatl-h">Кто где сидит</div>${named.map(([g,i])=>{const k=(data.seat||[])[i];return `<label class="sr"><span>${esc(g)}</span><select data-k="seat" data-i="${i}" aria-label="Стол для ${esc(g)}"><option value="-1">Без стола</option>${T.map((t,j)=>`<option value="${j}"${k===j?' selected':''}>Стол ${esc(tableLabel(data,j))}${t.s?` (${seatUse(j)}/${t.s})`:''}</option>`).join('')}</select></label>`;}).join('')}</div>`:(T.length?'<p class="note">Сначала впишите гостей в блоке «Именные ссылки».</p>':'')}
   </div>`;}
 function gCntText(){return `${guestList(data).length} из ${guestCap(data)}`;}
-function bfRefresh(redraw){if(redraw)drawBF();drawPv(true);}
+/* a tap on a button first blurs the field being edited; if that blur re-draws the form, the button under the finger is replaced and the tap is lost (felt as 'every button needs two taps' on phones). While a finger/mouse is down, hold the re-draw until the click has happened. */
+let ptrDown=false,bfLater=null;
+addEventListener('pointerdown',()=>{ptrDown=true;},true);
+addEventListener('pointerup',()=>{setTimeout(()=>{ptrDown=false;if(bfLater){const f=bfLater;bfLater=null;f();}},0);},true);
+addEventListener('pointercancel',()=>{ptrDown=false;if(bfLater){const f=bfLater;bfLater=null;f();}},true);
+function bfRefresh(redraw){if(redraw&&ptrDown){bfLater=()=>{drawBF();drawPv(true);};drawPv(true);return;}if(redraw)drawBF();drawPv(true);}
 bfEl.addEventListener('input',e=>{const el=e.target,k=el.dataset.k;if(!k)return;const i=+el.dataset.i;
   if(k==='prog.t'||k==='prog.x'){data.prog=progOf(data).map(r=>({...r}));data.prog[i][k==='prog.t'?'t':'x']=el.value;}
   else if(k==='sw'){const D=DY();D.sw=[...(D.sw||palOf(cur,data).sw)];D.sw[i]=el.value;el.parentNode.style.background=el.value;}
@@ -3324,7 +3331,7 @@ async function loadEdit(){const m=(location.hash||'').match(/^#edit=([\w-]+)/);i
     const o=await r.json(),D=o.data;editId=o.id;
     Object.assign(data,{prog:null,sw:null,photos:[],wish:[],guests:['','',''],tables:[],seat:[],events:[]},D.v);
     if(!Array.isArray(data.guests)||!data.guests.length)data.guests=['','',''];
-    sel=new Set(D.sel);order=D.order&&D.order.length?[...D.order]:[...DEF_ORDER];
+    sel=new Set(D.sel);order=withSeat(D.order&&D.order.length?[...D.order]:[...DEF_ORDER]);
     openT(D.tpl,'build');if(D.v.pal)data.pal=D.v.pal;
     if(typeof addrOk!=='undefined'&&data.addr)addrOk=true;
     document.getElementById('dlgTitle').textContent='Редактирование: '+(data.a||'')+' и '+(data.b||'');

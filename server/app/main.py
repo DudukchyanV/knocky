@@ -706,10 +706,13 @@ def day_titles(v: dict) -> list:
 
 
 def guests_of(c, inv_id, slug, d: dict | None = None):
-    rows = c.execute("SELECT g.*, (SELECT attend FROM rsvp WHERE guest_id=g.id ORDER BY updated DESC LIMIT 1) ans FROM guests g WHERE inv_id=? AND active=1 ORDER BY pos", (inv_id,)).fetchall()
+    rows = c.execute("SELECT g.*, (SELECT attend FROM rsvp WHERE guest_id=g.id ORDER BY updated DESC LIMIT 1) ans, "
+                     "(SELECT days FROM rsvp WHERE guest_id=g.id ORDER BY updated DESC LIMIT 1) ans_days "
+                     "FROM guests g WHERE inv_id=? AND active=1 ORDER BY pos", (inv_id,)).fetchall()
     tb = guest_tables(d) if d else {}
     return [{"name": g["name"], "link": f"{SITE_URL}/{slug}?g={g['token']}" if slug else None, "opens": g["opens"],
-             "first_open": g["first_open"], "answer": None if g["ans"] is None else bool(g["ans"]), "table": tb.get(g["name"])} for g in rows]
+             "first_open": g["first_open"], "answer": None if g["ans"] is None else bool(g["ans"]), "table": tb.get(g["name"]),
+             "days": json.loads(g["ans_days"]) if g["ans_days"] else None} for g in rows]
 
 
 @need_user
@@ -789,10 +792,18 @@ async def inv_export(req: Request):
     def fmt(ts):
         return dt.datetime.fromtimestamp(ts).strftime("%d.%m.%Y %H:%M") if ts else ""
     multi = len(dt_) > 1
-    ws.append(["Гость", "Ответ", "Сколько человек"] + (["Дни"] if multi else []) + ["Комментарий", "Именная ссылка", "Когда ответил"])
+
+    def per_day(attend, days):
+        """One column per day: Придет / Не придет (only when the invitation has several days)."""
+        if not multi:
+            return []
+        if attend is None:
+            return [""] * len(dt_)
+        return ["Придет" if attend and (days is None or i in days) else "Не придет" for i in range(len(dt_))]
+    ws.append(["Гость", "Ответ", "Сколько человек"] + dt_ * multi + ["Комментарий", "Именная ссылка", "Когда ответил"])
     for a in ans:
-        dcol = [", ".join(dt_[i] for i in (a["days"] if a["days"] is not None else range(len(dt_))) if i < len(dt_)) if a["attend"] else ""] if multi else []
-        ws.append([a["name"], "Придет" if a["attend"] else "Не сможет", a["people"] if a["attend"] else 0] + dcol + [a["comment"], a["guest"] or "", fmt(a["at"])])
+        ws.append([a["name"], "Придет" if a["attend"] else "Не сможет", a["people"] if a["attend"] else 0] + per_day(bool(a["attend"]), a["days"])
+                  + [a["comment"], a["guest"] or "", fmt(a["at"])])
     ws.append([])
     ws.append(["Итого придут", "", sum(a["people"] for a in ans if a["attend"])])
     if multi:
@@ -800,9 +811,18 @@ async def inv_export(req: Request):
             ws.append([t, "", sum(a["people"] for a in ans if a["attend"] and (a["days"] is None or i in a["days"]))])
     if gs:
         g2 = wb.create_sheet("Именные ссылки")
-        g2.append(["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ", "Стол"])
+        g2.append(["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ"] + dt_ * multi + ["Стол"])
         for g in gs:
-            g2.append([g["name"], g["link"] or "", g["opens"], fmt(g["first_open"]), "" if g["answer"] is None else ("Придет" if g["answer"] else "Не сможет"), g["table"] or ""])
+            g2.append([g["name"], g["link"] or "", g["opens"], fmt(g["first_open"]), "" if g["answer"] is None else ("Придет" if g["answer"] else "Не сможет")]
+                      + per_day(g["answer"], g["days"]) + [g["table"] or ""])
+    # guest texts like "=)" or "+7..." must stay text: a string starting with = becomes a broken formula and Excel offers to "repair" the file
+    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+    for sh in wb.worksheets:
+        for row in sh.iter_rows():
+            for cell in row:
+                if isinstance(cell.value, str):
+                    cell.value = ILLEGAL_CHARACTERS_RE.sub("", cell.value)
+                    cell.data_type = "s"
     for sh in wb.worksheets:
         for cell in sh[1]:
             cell.font, cell.fill = head, fill
@@ -1053,6 +1073,11 @@ async def pub_rsvp(req: Request):
                 return err("Отметьте, в какие дни вы придете")
         g = c.execute("SELECT id FROM guests WHERE inv_id=? AND token=?", (r["id"], tok)).fetchone() if tok else None
         prev = c.execute("SELECT id FROM rsvp WHERE inv_id=? AND guest_id=?", (r["id"], g["id"])).fetchone() if g else None
+        if not g:
+            # the same guest answering again from the common link: keep only the latest answer (matched by name)
+            key = name.casefold().replace("ё", "е")
+            prev = next((x for x in c.execute("SELECT id, name FROM rsvp WHERE inv_id=? AND guest_id IS NULL ORDER BY id DESC", (r["id"],))
+                         if x["name"].casefold().replace("ё", "е") == key), None)
         if prev:
             c.execute("UPDATE rsvp SET name=?, attend=?, people=?, comment=?, days=?, updated=? WHERE id=?",
                       (name, attend, people, comment, json.dumps(days) if days is not None else None, now(), prev["id"]))
@@ -1151,6 +1176,53 @@ def _render_chromium(payload: dict, fmt: str, out: Path) -> bool:
         return False
 
 
+def _print_pdf(inv_id: str, session: str, who: int | None) -> bytes | None:
+    """The printable version as a ready PDF (A5), made by the same Chromium from /print/<id> with the owner's session."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        return None
+    try:
+        with _RENDER_LOCK, sync_playwright() as pw:
+            b = pw.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
+            try:
+                ctx = b.new_context(viewport={"width": 900, "height": 1200})
+                ctx.add_cookies([{"name": "kn", "value": session, "url": f"http://127.0.0.1:{RENDER_PORT}"}])
+                pg = ctx.new_page()
+                pg.goto(f"http://127.0.0.1:{RENDER_PORT}/print/{inv_id}", wait_until="load", timeout=20000)
+                pg.wait_for_selector(".sheet", timeout=15000)
+                if who is not None and pg.query_selector("#who"):
+                    pg.select_option("#who", str(who))
+                pg.wait_for_function("document.fonts.status==='loaded' && [...document.images].every(i=>i.complete)", timeout=15000)
+                pg.wait_for_timeout(300)
+                return pg.pdf(prefer_css_page_size=True, print_background=True)
+            finally:
+                b.close()
+    except Exception as e:
+        print("print pdf failed:", e, flush=True)
+        return None
+
+
+@need_user
+async def inv_print_pdf(req: Request):
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
+        if not r:
+            return err("Приглашение не найдено", 404)
+        d = json.loads(r["data"])
+        if "print" not in d["sel"]:
+            return err("Печатная версия не подключена в этом приглашении", 403)
+    try:
+        who = int(req.query_params["i"]) if req.query_params.get("i", "") not in ("", "-1") else None
+    except ValueError:
+        who = None
+    pdf = await asyncio.to_thread(_print_pdf, r["id"], req.cookies.get("kn", ""), who)
+    if not pdf:
+        return err("Не получилось собрать PDF. Нажмите «Распечатать» и выберите «Сохранить как PDF»", 503)
+    fn = "knocky-" + (translit(inv_title(d)) or "priglashenie") + ".pdf"
+    return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{fn}"'})
+
+
 def _render_card(payload: dict, fmt: str, out: Path) -> bool:
     """Fallback without a browser: a plain card in the design colours."""
     try:
@@ -1182,11 +1254,11 @@ def _render_card(payload: dict, fmt: str, out: Path) -> bool:
     else:
         lines.append(("Приглашаем на свадьбу", font(int(30 * s)), acc))
     lines.append((f"{v.get('a') or ''} и {v.get('b') or ''}", font(int(78 * s), True), ink))
-    p = (v.get("date") or "").split("-")
+    p = (v.get("date") or "").split("-") if fmt != "og" else []
     months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
     if len(p) == 3 and p[1].isdigit() and 1 <= int(p[1]) <= 12:
         lines.append((f"{int(p[2])} {months[int(p[1]) - 1]} {p[0]}" + (f", {v['time']}" if v.get("time") else ""), font(int(34 * s)), ink))
-    if v.get("venue"):
+    if v.get("venue") and fmt != "og":
         lines.append((v["venue"], font(int(28 * s)), ink))
     hs = [dr.textbbox((0, 0), t, font=f) for t, f, _ in lines]
     total = sum(b[3] - b[1] for b in hs) + int(26 * s) * (len(lines) - 1)
@@ -1284,10 +1356,8 @@ async def page_guest(req: Request):
             ver = render_hash(render_payload(d, g["name"] if g else None), "og")[:10]
             img = f"{APP_URL}/og/{slug.lower()}.png?" + (f"g={tok}&" if g else "") + f"v={ver}"
             title = f"{inv_title({'v': v})} - приглашение на свадьбу"
-            p = (v.get("date") or "").split("-")
-            months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
-            if len(p) == 3 and p[1].isdigit() and 1 <= int(p[1]) <= 12:
-                desc = f"{int(p[2])} {months[int(p[1]) - 1]} {p[0]}" + (f", {v['venue']}" if v.get("venue") else "")
+            # no date or place in the preview text: messengers keep old previews, and the details may change
+            desc = "Дата, место и программа - в приглашении"
     meta = (f'<title>{h_esc(title)}</title><meta property="og:title" content="{h_esc(title)}">'
             f'<meta property="og:description" content="{h_esc(desc)}"><meta name="description" content="{h_esc(desc)}">')
     if img:
@@ -1492,6 +1562,7 @@ routes = [
     Route("/api/invitations/{id}/pay", inv_pay, methods=["POST"]),
     Route("/api/pay/result", pay_result, methods=["GET", "POST"]),
     Route("/pay/{kind:str}", pay_back),
+    Route("/api/invitations/{id}/print.pdf", inv_print_pdf),
     Route("/api/invitations/{id}/print", inv_print),
     Route("/api/public/{slug}", pub_get),
     Route("/api/public/{slug}/rsvp", pub_rsvp, methods=["POST"]),

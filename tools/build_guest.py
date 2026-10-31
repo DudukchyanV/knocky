@@ -71,7 +71,7 @@ body.print{background:#E9E4E5}
 .pbar .warn{background:#F3EEEE;border-radius:12px;padding:10px 12px}
 .pbar .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .pbar select{flex:0 1 auto;font:inherit;padding:10px 12px;border-radius:12px;border:0;background:#F3EEEE;color:#241B20;max-width:100%}
-.pbar button{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer}
+.pbar button,.pbar #dl{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}.pbar button.soft{background:#F3EEEE;color:#241B20}.pbar #dl[aria-busy=true]{opacity:.6;pointer-events:none}
 .pbar .n{color:#6F6068;font-size:13px}
 .sheets{display:grid;gap:24px;justify-content:center;padding:24px 12px 48px}
 .sheet{width:148mm;height:210mm;container-type:inline-size;overflow:hidden;position:relative;background:#fff;box-shadow:0 6px 30px rgba(36,27,32,.18)}
@@ -199,8 +199,8 @@ function printView(D){
   const opts=D.cards.length>1?`<select id="who" aria-label="Для кого"><option value="-1">Все гости (${D.cards.length})</option>${D.cards.map((c,i)=>`<option value="${i}">${esc(c.guest)}</option>`).join('')}</select>`:'';
   V.innerHTML=`<div class="pbar"><div class="in"><h1>Печатная версия, формат A5</h1>
     <div class="warn">В печатной версии только обложка, дата, адрес${on.has('program')?', программа':''}${on.has('dress')?', дресс-код':''}.${online.length?` Здесь нет: ${esc(online.join(', '))}. Гость откроет это по QR-коду на обороте.`:''}${D.published?'':' <b>QR-коды появятся после публикации приглашения.</b>'}</div>
-    <div class="row">${opts}<button type="button" id="pr">Сохранить PDF</button></div>
-    <div class="n">В окне печати выберите «Сохранить как PDF». Каждое приглашение - 2 страницы: лицевая сторона и оборот. Для печати дома на A4 выберите «2 страницы на листе».</div></div></div>
+    <div class="row">${opts}<a id="dl" href="/api/invitations/${encodeURIComponent(KEY)}/print.pdf">Скачать PDF</a><button type="button" id="pr" class="soft">Распечатать</button></div>
+    <div class="n">«Скачать PDF» - готовый файл, сборка занимает до 20 секунд. Каждое приглашение - 2 страницы: лицевая сторона и оборот. Для печати дома на A4 выберите «2 страницы на листе».</div></div></div>
     <div class="sheets" id="sh"></div>`;
   /* the back side shrinks as a whole when the program is long, so everything fits on one A5 page */
   const fitAll=()=>document.querySelectorAll('.sheet.back').forEach(sh=>{const f=sh.querySelector('.fit');f.style.width='100%';
@@ -211,7 +211,9 @@ function printView(D){
   function zoomIt(){const sh=document.getElementById('sh'),f=sh.querySelector('.sheet');if(!f)return;sh.style.zoom='';const z=Math.min(1,(innerWidth-24)/f.offsetWidth);sh.style.zoom=z<1?z.toFixed(3):'';}
   addEventListener('resize',zoomIt);
   fill(-1);
-  const w=document.getElementById('who');if(w)w.onchange=()=>fill(+w.value);
+  const w=document.getElementById('who'),dl=document.getElementById('dl'),base=dl.getAttribute('href');
+  if(w)w.onchange=()=>{fill(+w.value);dl.href=base+(+w.value>=0?'?i='+w.value:'');};
+  dl.onclick=()=>{dl.setAttribute('aria-busy','true');dl.textContent='Собираем PDF…';setTimeout(()=>{dl.removeAttribute('aria-busy');dl.textContent='Скачать PDF';},20000);};
   document.getElementById('pr').onclick=()=>window.print();}
 /* server-side picture of the cover: link preview 1200x630 or stories 1080x1920 */
 function renderView(R){
@@ -219,6 +221,11 @@ function renderView(R){
   const box=document.createElement('div');box.innerHTML=full(t,R.v,new Set(R.sel||[]),DEF_ORDER);
   const inv=box.firstElementChild,cov=inv.querySelector('.cover');while(inv.firstChild)inv.removeChild(inv.firstChild);inv.appendChild(cov);
   V.innerHTML=`<div class="rn rn-${R.fmt}" style="${inv.getAttribute('style')}"><div class="rn-c">${inv.outerHTML}</div></div>`;
+  /* link preview: no date, time or place on the picture (messengers keep old previews, the details may change) */
+  if(R.fmt==='og'){const vn=[R.v.venue,R.v.addr].filter(Boolean).map(x=>String(x).trim().toLowerCase()).filter(x=>x.length>2);
+    const rx=/\d|январ|феврал|март|апрел|мая|май|июн|июл|август|сентябр|октябр|ноябр|декабр|понедельник|вторник|сред|четверг|пятниц|суббот|воскресень/i;
+    V.querySelectorAll('.cover *').forEach(el=>{if(el.closest('.names'))return;if([...el.children].some(c=>!/^(i|br|b|span)$/i.test(c.tagName)))return;
+      const tx=(el.textContent||'').trim().toLowerCase();if(!tx)return;if(rx.test(tx)||vn.some(x=>tx.includes(x)||x.includes(tx)&&tx.length>4))el.style.visibility='hidden';});}
   const imgs=[...V.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;}));
   requestAnimationFrame(()=>requestAnimationFrame(()=>Promise.all([document.fonts?document.fonts.ready:0,...imgs]).then(()=>setTimeout(()=>{window.RENDER_DONE=true;},150))));}
 (async()=>{
