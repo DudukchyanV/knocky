@@ -71,7 +71,8 @@ body.print{background:#E9E4E5}
 .pbar .warn{background:#F3EEEE;border-radius:12px;padding:10px 12px}
 .pbar .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .pbar select{flex:0 1 auto;font:inherit;padding:10px 12px;border-radius:12px;border:0;background:#F3EEEE;color:#241B20;max-width:100%}
-.pbar button,.pbar #dl,.pbar #zip{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}.pbar button.soft,.pbar #zip{background:#F3EEEE;color:#241B20}.pbar #zip[aria-busy=true]{opacity:.6;pointer-events:none}.pbar #dl[aria-busy=true]{opacity:.6;pointer-events:none}
+.pbar button,.pbar #dl,.pbar #zip{font:inherit;font-weight:700;padding:11px 20px;border-radius:999px;border:0;background:#C62828;color:#fff;cursor:pointer;text-decoration:none;display:inline-block}.pbar button.soft,.pbar #zip{background:#F3EEEE;color:#241B20}.pbar #zip[aria-busy=true]{opacity:.6;pointer-events:none}.pbar #dl[aria-busy=true]{opacity:.6;pointer-events:none}.pbar #dl[aria-disabled=true],.pbar #zip[aria-disabled=true]{opacity:.45;pointer-events:none}
+.who{width:100%;background:#fff;border-radius:14px;padding:10px 14px}.who>b{display:block;margin-bottom:6px}.who .ls{max-height:190px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px 14px}.pbar .who label{display:flex;flex-direction:row;justify-content:flex-start;text-align:left;gap:8px;align-items:center;padding:5px 0;margin:0;cursor:pointer;font-weight:400;font-size:15px;color:#241B20}.pbar .who input{margin:0}.pbar .who .all{font-weight:700}.who input{accent-color:#C62828;width:18px;height:18px;flex:none}.who .all{font-weight:700;border-bottom:1px solid #F3EEEE;margin-bottom:4px}.zipn{font-size:13px;opacity:.7;align-self:center}
 .pbar .n{color:#6F6068;font-size:13px}
 .sheets{display:grid;gap:24px;justify-content:center;padding:24px 12px 48px}
 .sheet{width:148mm;height:210mm;container-type:inline-size;overflow:hidden;position:relative;background:#fff;box-shadow:0 6px 30px rgba(36,27,32,.18)}
@@ -196,25 +197,36 @@ function printView(D){
     inv.querySelector('.sign').insertAdjacentHTML('beforebegin',tail);
     const fit=document.createElement('div');fit.className='fit';while(inv.firstChild)fit.appendChild(inv.firstChild);inv.appendChild(fit);
     return `<div class="sheet front">${front.outerHTML}</div><div class="sheet back">${inv.outerHTML}</div>`;};
-  const opts=D.cards.length>1?`<select id="who" aria-label="Для кого"><option value="-1">Все гости (${D.cards.length})</option>${D.cards.map((c,i)=>`<option value="${i}">${esc(c.guest)}</option>`).join('')}</select>`:'';
+  const many=D.cards.length>1;
+  const opts=many?`<div class="who"><b>Для кого</b><label class="all"><input type="checkbox" id="wall" checked>Все гости (${D.cards.length})</label><div class="ls">${D.cards.map((c,i)=>`<label><input type="checkbox" class="wg" value="${i}" checked>${esc(c.guest)}</label>`).join('')}</div></div>`:'';
   V.innerHTML=`<div class="pbar"><div class="in"><h1>Печатная версия, формат A5</h1>
     <div class="warn">В печатной версии только обложка, дата, адрес${on.has('program')?', программа':''}${on.has('dress')?', дресс-код':''}.${online.length?` Здесь нет: ${esc(online.join(', '))}. Гость откроет это по QR-коду на обороте.`:''}${D.published?'':' <b>QR-коды появятся после публикации приглашения.</b>'}</div>
-    <div class="row">${opts}<a id="dl" href="/api/invitations/${encodeURIComponent(KEY)}/print.pdf">Скачать PDF</a>${D.cards.length>1?`<a id="zip" class="soft" href="/api/invitations/${encodeURIComponent(KEY)}/print.zip">Архив: PDF на каждого гостя</a>`:''}<button type="button" id="pr" class="soft">Распечатать</button></div>
+    <div class="row">${opts}<a id="dl" href="/api/invitations/${encodeURIComponent(KEY)}/print.pdf">Скачать PDF</a>${many?`<a id="zip" class="soft" href="/api/invitations/${encodeURIComponent(KEY)}/print.zip">Архив: PDF на каждого гостя</a><span class="zipn" id="zipn" hidden>Для архива выберите хотя бы 2 гостей</span>`:''}<button type="button" id="pr" class="soft">Распечатать</button></div>
     <div class="n">«Скачать PDF» - готовый файл, сборка занимает до 20 секунд. Каждое приглашение - 2 страницы: лицевая сторона и оборот. Для печати дома на A4 выберите «2 страницы на листе».</div></div></div>
     <div class="sheets" id="sh"></div>`;
   /* the back side shrinks as a whole when the program is long, so everything fits on one A5 page */
   const fitAll=()=>document.querySelectorAll('.sheet.back').forEach(sh=>{const f=sh.querySelector('.fit');f.style.width='100%';
     for(let k=0;k<3;k++){const H=sh.clientHeight*.97,h=f.scrollHeight;if(h<=H)break;f.style.width=(parseFloat(f.style.width)*H/h).toFixed(2)+'%';}});
-  const fill=i=>{document.getElementById('sh').innerHTML=(i<0?D.cards:[D.cards[i]]).map(sheet).join('');fitAll();zoomIt();};
+  const fill=ids=>{document.getElementById('sh').innerHTML=ids.map(i=>sheet(D.cards[i])).join('');fitAll();zoomIt();};
   if(document.fonts)document.fonts.ready.then(fitAll);
   /* phones: shrink the preview on screen only (print uses real A5) */
   function zoomIt(){const sh=document.getElementById('sh'),f=sh.querySelector('.sheet');if(!f)return;sh.style.zoom='';const z=Math.min(1,(innerWidth-24)/f.offsetWidth);sh.style.zoom=z<1?z.toFixed(3):'';}
   addEventListener('resize',zoomIt);
-  fill(-1);
-  const w=document.getElementById('who'),dl=document.getElementById('dl'),base=dl.getAttribute('href');
-  if(w)w.onchange=()=>{fill(+w.value);dl.href=base+(+w.value>=0?'?i='+w.value:'');};
-  dl.onclick=()=>{dl.setAttribute('aria-busy','true');dl.textContent='Собираем PDF…';setTimeout(()=>{dl.removeAttribute('aria-busy');dl.textContent='Скачать PDF';},20000);};
-  const zp=document.getElementById('zip');if(zp)zp.onclick=()=>{zp.setAttribute('aria-busy','true');const t0=zp.textContent;zp.textContent='Собираем архив, до 2-3 минут…';setTimeout(()=>{zp.removeAttribute('aria-busy');zp.textContent=t0;},120000);};
+  const dl=document.getElementById('dl'),zp=document.getElementById('zip'),base=dl.getAttribute('href'),zbase=zp?zp.getAttribute('href'):'';
+  const allIds=D.cards.map((c,i)=>i);
+  /* selected guests -> preview, PDF link (?i=0,3,5) and archive (needs 2+) */
+  window.pick=ids=>{ids=ids.filter(i=>i>=0&&i<D.cards.length);fill(ids);
+    document.querySelectorAll('.wg').forEach(x=>{x.checked=ids.includes(+x.value);});
+    const wa=document.getElementById('wall');if(wa){wa.checked=ids.length===D.cards.length;wa.indeterminate=ids.length>0&&ids.length<D.cards.length;}
+    const q=ids.length===D.cards.length?'':'?i='+ids.join(',');
+    dl.href=base+q;dl.setAttribute('aria-disabled',ids.length?'false':'true');dl.textContent=ids.length?'Скачать PDF'+(many&&ids.length<D.cards.length?` (${ids.length})`:''):'Выберите гостей';
+    if(zp){const ok=ids.length>=2;zp.href=zbase+q;zp.setAttribute('aria-disabled',ok?'false':'true');zp.textContent='Архив: PDF на каждого гостя'+(ok&&ids.length<D.cards.length?` (${ids.length})`:'');document.getElementById('zipn').hidden=ok;}};
+  const cur=()=>[...document.querySelectorAll('.wg')].filter(x=>x.checked).map(x=>+x.value);
+  document.querySelectorAll('.wg').forEach(x=>x.onchange=()=>pick(cur()));
+  const wa=document.getElementById('wall');if(wa)wa.onchange=()=>pick(wa.checked?allIds:[]);
+  pick(allIds);
+  dl.onclick=()=>{dl.setAttribute('aria-busy','true');const t0=dl.textContent;dl.textContent='Собираем PDF…';setTimeout(()=>{dl.removeAttribute('aria-busy');dl.textContent=t0;},20000);};
+  if(zp)zp.onclick=()=>{zp.setAttribute('aria-busy','true');const t0=zp.textContent;zp.textContent='Собираем архив, до 2-3 минут…';setTimeout(()=>{zp.removeAttribute('aria-busy');zp.textContent=t0;},120000);};
   document.getElementById('pr').onclick=()=>window.print();}
 /* server-side picture of the cover: link preview 1200x630 or stories 1080x1920 */
 function renderView(R){

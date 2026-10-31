@@ -773,10 +773,73 @@ async def inv_print(req: Request):
                          "published": bool(link)}, headers={"Cache-Control": "no-store"})
 
 
+def _xcol(i: int) -> str:
+    s = ""
+    i += 1
+    while i:
+        i, r = divmod(i - 1, 26)
+        s = chr(65 + r) + s
+    return s
+
+
+_XBAD = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]")
+
+
+def xlsx_bytes(sheets: list) -> bytes:
+    """Minimal, strict .xlsx writer (texts as inline strings, header row bold white on red).
+    Written by hand so the file is the same whatever library version the server has."""
+    from xml.sax.saxutils import escape as xe
+    import zipfile
+    def cell(ref, v, st):
+        sa = ' s="1"' if st else ""
+        if v is None or v == "":
+            return f'<c r="{ref}"{sa}/>' if st else ""
+        if isinstance(v, bool):
+            v = int(v)
+        if isinstance(v, (int, float)):
+            return f'<c r="{ref}"{sa}><v>{v}</v></c>'
+        t = xe(_XBAD.sub("", str(v)))[:32000]
+        return f'<c r="{ref}"{sa} t="inlineStr"><is><t xml:space="preserve">{t}</t></is></c>'
+    out = io.BytesIO()
+    z = zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED)
+    n = len(sheets)
+    z.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+               '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>'
+               '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+               '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+               + "".join(f'<Override PartName="/xl/worksheets/sheet{i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' for i in range(n))
+               + '</Types>')
+    z.writestr("_rels/.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+               '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
+    z.writestr("xl/workbook.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+               + "".join(f'<sheet name="{xe(nm[:31])}" sheetId="{i+1}" r:id="rId{i+1}"/>' for i, (nm, _) in enumerate(sheets)) + '</sheets></workbook>')
+    z.writestr("xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+               + "".join(f'<Relationship Id="rId{i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{i+1}.xml"/>' for i in range(n))
+               + f'<Relationship Id="rId{n+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')
+    z.writestr("xl/styles.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+               '<fonts count="2"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font></fonts>'
+               '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC62828"/><bgColor indexed="64"/></patternFill></fill></fills>'
+               '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+               '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+               '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>'
+               '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>')
+    for i, (_, rows) in enumerate(sheets):
+        ncol = max([len(r) for r in rows] + [1])
+        widths = [min(60, max(12, max([len(str(r[j])) if j < len(r) and r[j] is not None else 0 for r in rows] + [0]) + 2)) for j in range(ncol)]
+        cols = "".join(f'<col min="{j+1}" max="{j+1}" width="{w}" customWidth="1"/>' for j, w in enumerate(widths))
+        body = []
+        for ri, r in enumerate(rows):
+            cs = "".join(cell(f"{_xcol(j)}{ri+1}", v, ri == 0) for j, v in enumerate(r))
+            if cs:
+                body.append(f'<row r="{ri+1}">{cs}</row>')
+        z.writestr(f"xl/worksheets/sheet{i+1}.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                   f'<cols>{cols}</cols><sheetData>{"".join(body)}</sheetData></worksheet>')
+    z.close()
+    return out.getvalue()
+
+
 @need_user
 async def inv_export(req: Request):
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill
     with db() as c:
         r = own_inv(c, req, req.path_params["id"])
         if not r:
@@ -784,11 +847,6 @@ async def inv_export(req: Request):
         ans, gs = answers_of(c, r["id"]), guests_of(c, r["id"], r["slug"], json.loads(r["data"]))
         dt_ = day_titles(json.loads(r["data"])["v"])
         title = inv_title(json.loads(r["data"]))
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Ответы"
-    head = Font(bold=True, color="FFFFFF")
-    fill = PatternFill("solid", fgColor="C62828")
     def fmt(ts):
         return dt.datetime.fromtimestamp(ts).strftime("%d.%m.%Y %H:%M") if ts else ""
     multi = len(dt_) > 1
@@ -800,42 +858,24 @@ async def inv_export(req: Request):
         if attend is None:
             return [""] * len(dt_)
         return ["Придет" if attend and (days is None or i in days) else "Не придет" for i in range(len(dt_))]
-    ws.append(["Гость", "Ответ", "Сколько человек"] + dt_ * multi + ["Комментарий", "Именная ссылка", "Когда ответил"])
+    rows = [["Гость", "Ответ", "Сколько человек"] + dt_ * multi + ["Комментарий", "Именная ссылка", "Когда ответил"]]
     for a in ans:
-        ws.append([a["name"], "Придет" if a["attend"] else "Не сможет", a["people"] if a["attend"] else 0] + per_day(bool(a["attend"]), a["days"])
-                  + [a["comment"], a["guest"] or "", fmt(a["at"])])
-    ws.append([])
-    ws.append(["Итого придут", "", sum(a["people"] for a in ans if a["attend"])])
+        rows.append([a["name"], "Придет" if a["attend"] else "Не сможет", a["people"] if a["attend"] else 0] + per_day(bool(a["attend"]), a["days"])
+                    + [a["comment"], a["guest"] or "", fmt(a["at"])])
+    rows.append([])
+    rows.append(["Итого придут", "", sum(a["people"] or 0 for a in ans if a["attend"])])
     if multi:
         for i, t in enumerate(dt_):
-            ws.append([t, "", sum(a["people"] for a in ans if a["attend"] and (a["days"] is None or i in a["days"]))])
+            rows.append([t, "", sum(a["people"] or 0 for a in ans if a["attend"] and (a["days"] is None or i in a["days"]))])
+    sheets = [("Ответы", rows)]
     if gs:
-        g2 = wb.create_sheet("Именные ссылки")
-        g2.append(["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ"] + dt_ * multi + ["Стол"])
+        g2 = [["Гость", "Ссылка", "Открывал", "Первое открытие", "Ответ"] + dt_ * multi + ["Стол"]]
         for g in gs:
             g2.append([g["name"], g["link"] or "", g["opens"], fmt(g["first_open"]), "" if g["answer"] is None else ("Придет" if g["answer"] else "Не сможет")]
                       + per_day(g["answer"], g["days"]) + [g["table"] or ""])
-    # guest texts like "=)" must stay text (not a formula), and empty texts must be empty cells, otherwise Excel offers to "repair" the file
-    from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
-    for sh in wb.worksheets:
-        for row in sh.iter_rows():
-            for cell in row:
-                if isinstance(cell.value, str):
-                    txt = ILLEGAL_CHARACTERS_RE.sub("", cell.value)
-                    # an empty text cell is written as <c t="inlineStr"></c>, which Excel calls broken: leave it truly empty
-                    cell.value = txt or None
-                    if txt:
-                        cell.data_type = "s"
-    for sh in wb.worksheets:
-        for cell in sh[1]:
-            cell.font, cell.fill = head, fill
-        for col in sh.columns:
-            w = max(len(str(x.value or "")) for x in col)
-            sh.column_dimensions[col[0].column_letter].width = min(60, max(12, w + 2))
-    buf = io.BytesIO()
-    wb.save(buf)
+        sheets.append(("Именные ссылки", g2))
     fn = "knocky-" + (translit(title) or "otvety") + ".xlsx"
-    return Response(buf.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    return Response(xlsx_bytes(sheets), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{fn}"'})
 
 
@@ -1182,7 +1222,14 @@ def _render_chromium(payload: dict, fmt: str, out: Path) -> bool:
         return False
 
 
-def _print_pdf(inv_id: str, session: str, who: int | None) -> bytes | None:
+def _who(req: Request) -> list | None:
+    """?i=0,3,5 -> [0, 3, 5]; nothing -> all guests."""
+    raw = req.query_params.get("i", "")
+    ids = sorted({int(x) for x in raw.split(",") if x.strip().isdigit()})
+    return ids or None
+
+
+def _print_pdf(inv_id: str, session: str, who: list | None) -> bytes | None:
     """The printable version as a ready PDF (A5), made by the same Chromium from /print/<id> with the owner's session."""
     try:
         from playwright.sync_api import sync_playwright
@@ -1197,8 +1244,8 @@ def _print_pdf(inv_id: str, session: str, who: int | None) -> bytes | None:
                 pg = ctx.new_page()
                 pg.goto(f"http://127.0.0.1:{RENDER_PORT}/print/{inv_id}", wait_until="load", timeout=20000)
                 pg.wait_for_selector(".sheet", timeout=15000)
-                if who is not None and pg.query_selector("#who"):
-                    pg.select_option("#who", str(who))
+                if who is not None:
+                    pg.evaluate("ids=>window.pick&&window.pick(ids)", who)
                 pg.wait_for_function("document.fonts.status==='loaded' && [...document.images].every(i=>i.complete)", timeout=15000)
                 pg.wait_for_timeout(300)
                 return pg.pdf(prefer_css_page_size=True, print_background=True)
@@ -1209,7 +1256,7 @@ def _print_pdf(inv_id: str, session: str, who: int | None) -> bytes | None:
         return None
 
 
-def _print_zip(inv_id: str, session: str) -> bytes | None:
+def _print_zip(inv_id: str, session: str, who: list | None = None) -> bytes | None:
     """One PDF per named guest, all in a zip: easier than downloading 100 files one by one."""
     import zipfile
     try:
@@ -1226,12 +1273,14 @@ def _print_zip(inv_id: str, session: str) -> bytes | None:
                 pg = ctx.new_page()
                 pg.goto(f"http://127.0.0.1:{RENDER_PORT}/print/{inv_id}", wait_until="load", timeout=20000)
                 pg.wait_for_selector(".sheet", timeout=15000)
-                names = pg.eval_on_selector_all("#who option", "o=>o.map(x=>[x.value,x.textContent])") if pg.query_selector("#who") else []
-                names = [(v, t) for v, t in names if v != "-1"] or [("-1", "Приглашение")]
+                names = pg.eval_on_selector_all(".wg", "o=>o.map(x=>[+x.value,x.parentNode.textContent])")
+                if who is not None:
+                    names = [(v, t) for v, t in names if v in who]
+                names = names or [(-1, "Приглашение")]
                 used = set()
                 for k, (val, name) in enumerate(names, 1):
-                    if val != "-1":
-                        pg.select_option("#who", val)
+                    if val != -1:
+                        pg.evaluate("ids=>window.pick(ids)", [val])
                     pg.wait_for_function("document.fonts.status==='loaded' && [...document.images].every(i=>i.complete)", timeout=15000)
                     pg.wait_for_timeout(150)
                     fn = re.sub(r'[\\/:*?"<>|]+', " ", name).strip()[:60] or "Гость"
@@ -1257,7 +1306,7 @@ async def inv_print_zip(req: Request):
         d = json.loads(r["data"])
         if "print" not in d["sel"]:
             return err("Печатная версия не подключена в этом приглашении", 403)
-    data = await asyncio.to_thread(_print_zip, r["id"], req.cookies.get("kn", ""))
+    data = await asyncio.to_thread(_print_zip, r["id"], req.cookies.get("kn", ""), _who(req))
     if not data:
         return err("Не получилось собрать архив. Попробуйте еще раз через минуту", 503)
     fn = "knocky-" + (translit(inv_title(d)) or "priglasheniya") + ".zip"
@@ -1273,10 +1322,7 @@ async def inv_print_pdf(req: Request):
         d = json.loads(r["data"])
         if "print" not in d["sel"]:
             return err("Печатная версия не подключена в этом приглашении", 403)
-    try:
-        who = int(req.query_params["i"]) if req.query_params.get("i", "") not in ("", "-1") else None
-    except ValueError:
-        who = None
+    who = _who(req)
     pdf = await asyncio.to_thread(_print_pdf, r["id"], req.cookies.get("kn", ""), who)
     if not pdf:
         return err("Не получилось собрать PDF. Нажмите «Распечатать» и выберите «Сохранить как PDF»", 503)
