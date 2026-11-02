@@ -435,6 +435,9 @@ async def auth_request(req: Request):
         return err("Введите почту, например anna@mail.ru")
     if not d.get("agree"):
         return JSONResponse({"error": "Нужно согласие на обработку персональных данных", "need_agree": True}, status_code=400)
+    # administrators sign in with a password: the form switches to the password field, no code is sent
+    if email in ADMINS and not d.get("force_code") and load_secrets().get("admin_pw", {}).get(email):
+        return JSONResponse({"password": True})
     ip = client_ip(req)
     if not rate("ip:" + ip, 10, 3600) or not rate("mail:" + email, 5, 3600):
         return err("Слишком много попыток. Попробуйте через час", 429)

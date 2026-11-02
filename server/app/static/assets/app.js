@@ -57,28 +57,25 @@ function loginView(){
         <label class="check" id="agreeRow"><input type="checkbox" id="agree"><span>Согласен(на) с <a href="${SITE}/#doc-privacy" target="_blank" rel="noopener">политикой обработки персональных данных</a> и даю <a href="${SITE}/#doc-consent" target="_blank" rel="noopener">согласие на обработку</a></span></label>
         <p class="err" id="er" role="alert" hidden></p>
         <button class="btn btn-seal btn-xl" id="sb">Получить код</button>
-        <button type="button" class="lnk" id="toPw" style="justify-self:center">Вход для администратора по паролю</button>
       </form></section>`;
-      $('#toPw').onclick=()=>{email=$('#em').value.trim().toLowerCase();step='pw';draw();};
       const f=$('#f'),em=$('#em'),er=$('#er');em.focus();
       f.onsubmit=async e=>{e.preventDefault();er.hidden=true;email=em.value.trim().toLowerCase();
         if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){er.hidden=false;er.textContent='Введите почту, например anna@mail.ru';em.focus();return;}
         if(!$('#agree').checked){er.hidden=false;er.textContent='Отметьте согласие на обработку персональных данных';$('#agree').focus();return;}
         const b=$('#sb');b.disabled=true;b.textContent='Отправляем код…';
-        try{await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:$('#agree').checked})});step='code';timer=60;draw();}
+        try{const j=await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:$('#agree').checked})});if(j&&j.password){step='pw';draw();return;}step='code';timer=60;draw();}
         catch(x){if(x.data&&x.data.already){step='code';timer=Math.max(1,x.data.wait||50);draw();return;}b.disabled=false;b.textContent='Получить код';er.hidden=false;er.textContent=x.data&&x.data.need_agree?'Отметьте согласие на обработку персональных данных':x.message;}};
     }else if(step==='pw'){
       app.innerHTML=`<section class="auth"><form class="auth-card" id="f" novalidate>
         <h1>Вход по паролю</h1>
-        <p class="note">Для администраторов. Пароль задается на странице настройки сервера.</p>
-        <label class="field"><span>Почта</span><input class="inp" id="em" type="email" autocomplete="username" value="${esc(email||'me@dudukchyan.ru')}"></label>
+        <label class="field"><span>Почта</span><input class="inp" id="em" type="email" autocomplete="username" value="${esc(email||'')}"></label>
         <label class="field"><span>Пароль</span><input class="inp" id="pw" type="password" autocomplete="current-password"></label>
         <p class="err" id="er" role="alert" hidden></p>
         <button class="btn btn-seal btn-xl" id="sb">Войти</button>
         <button type="button" class="lnk" id="toMail" style="justify-self:center">Войти по коду из письма</button>
       </form></section>`;
       const er=$('#er');$('#pw').focus();
-      $('#toMail').onclick=()=>{step='mail';draw();};
+      $('#toMail').onclick=async()=>{er.hidden=true;try{await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:true,force_code:true})});step='code';timer=60;draw();}catch(x){if(x.data&&x.data.already){step='code';timer=Math.max(1,x.data.wait||50);draw();return;}er.hidden=false;er.textContent=x.message;}};
       $('#f').onsubmit=async e=>{e.preventDefault();er.hidden=true;const b=$('#sb');email=$('#em').value.trim().toLowerCase();
         if(!$('#pw').value){er.hidden=false;er.textContent='Введите пароль';return;}
         b.disabled=true;b.textContent='Проверяем…';
@@ -100,7 +97,7 @@ function loginView(){
       upd();clearInterval(tick);tick=setInterval(()=>{if(timer>0){timer--;upd();}},1000);
       cd.oninput=()=>{cd.value=cd.value.replace(/\D/g,'').slice(0,6);if(cd.value.length===6)$('#f').requestSubmit();};
       $('#chg').onclick=()=>{clearInterval(tick);step='mail';draw();};
-      ag.onclick=async()=>{if(timer>0)return;try{await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:true})});timer=60;upd();toast('Новый код отправлен');}catch(x){er.hidden=false;er.textContent=x.message;}};
+      ag.onclick=async()=>{if(timer>0)return;try{await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:true,force_code:true})});timer=60;upd();toast('Новый код отправлен');}catch(x){er.hidden=false;er.textContent=x.message;}};
       $('#f').onsubmit=async e=>{e.preventDefault();er.hidden=true;const b=$('#sb');
         if(cd.value.length!==6){er.hidden=false;er.textContent='Введите 6 цифр из письма';return;}
         b.disabled=true;b.textContent='Проверяем…';
