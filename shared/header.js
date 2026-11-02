@@ -2,6 +2,8 @@
 (function(){
   var root=document.documentElement,$=function(i){return document.getElementById(i);};
   var page=/^app\./.test(location.hostname)||location.port==='8000'?'cab':'home',API=page==='cab'?'/api':'https://app.knocky.ru/api';
+  /* on the main page the menu links scroll smoothly to the blocks (the page's own #anchor handler) */
+  if(page==='home')document.querySelectorAll('.kh a[href^="https://knocky.ru/"]').forEach(function(a){var h=a.getAttribute('href').replace('https://knocky.ru/','');a.setAttribute('href',h||'#top');});
   document.querySelectorAll('.kh [data-k]').forEach(function(a){if(a.getAttribute('data-k')===page)a.setAttribute('aria-current','page');});
   /* theme: one setting for knocky.ru and app.knocky.ru (cookie on the whole domain) */
   function readTheme(){var c;try{c=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]||localStorage.getItem('knocky-theme');}catch(e){}return c==='dark'?'dark':'light';}
