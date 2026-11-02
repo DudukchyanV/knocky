@@ -682,7 +682,7 @@ button,a,input,select,textarea,label,summary,[role=button]{touch-action:manipula
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Manrope:wght@500;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Cormorant+Unicase:wght@400;600&family=Forum&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Yeseva+One&family=Bad+Script&family=Poiret+One&family=Lora:ital,wght@0,400;0,500;1,400&family=Great+Vibes&family=Tenor+Sans&family=Oranienbaum&family=Caveat:wght@500;700&family=Dela+Gothic+One&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Spectral:wght@300;400;600&family=Prata&family=Alice&family=Ruslan+Display&family=Marck+Script&family=Comfortaa:wght@300;500;700&family=Neucha&family=Amatic+SC:wght@400;700&family=Montserrat+Alternates:wght@500;600&family=Rubik+Mono+One&family=Bellota:wght@400;700&display=swap">
 <style>
-/* Layout: storefront for web-invitations — sticky header, hero with live phone, filterable template grid, one-time pricing, configurator in a dialog */
+/* Layout: storefront for web-invitations - sticky header, hero with live phone, filterable template grid, one-time pricing, configurator in a dialog */
 :root{
   --bg:#F7F4F4; --surface:#FFFFFF; --soft:#F3EEEE; --ink:#241B20; --muted:#6F6068; --line:#E6D6D6;
   --seal:#C62828; --seal-ink:#FFFFFF; --seal-soft:#FBE6E6; --ok:#241B20;
@@ -743,6 +743,8 @@ header{position:relative;z-index:20;background:var(--bg)}
 .menu-nav a,.menu-row{display:flex;align-items:center;justify-content:flex-end;gap:10px;background:none;border:0;padding:9px 0;color:var(--ink);font:600 17px var(--f-body);text-decoration:none}
 @media (hover:hover){.menu-nav a:hover,.menu-row:hover{color:var(--seal)}}
 .menu-side{display:flex;flex-direction:column;align-items:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);min-width:140px}
+.me-row{display:flex;flex-direction:column;align-items:flex-end}.me-row[hidden]{display:none}.me-mail{font-size:13px;color:var(--muted,#6b5f63);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.me-bar{margin-top:8px;font-size:14px;color:var(--muted,#6b5f63);overflow-wrap:anywhere}.me-bar[hidden]{display:none}.me-bar b{color:var(--ink);font-weight:600}
 .menu-side .adm-pill{margin:6px 0}
 .menu .theme svg{width:16px;height:16px;flex:none}
 @media (prefers-reduced-motion:reduce){.menu,.menu.open{transition:none}}
@@ -998,7 +1000,7 @@ section{padding-block:72px}
 details{background:var(--surface);border:0;border-radius:12px;padding:0;cursor:pointer}
 summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:16px;padding:16px 20px;border-radius:12px}
 summary::after{content:"+";font-family:var(--f-disp);color:var(--seal)}
-details[open] summary::after{content:"–"}
+details[open] summary::after{content:"-"}
 details p{margin:-6px 0 0;padding:0 20px 16px;color:var(--muted);max-width:calc(80ch + 40px)}
 
 
@@ -1248,7 +1250,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
 .wish div{display:flex;justify-content:space-between;gap:3cqi;font-size:3.8cqi;padding-bottom:2.4cqi;border-bottom:1px solid color-mix(in srgb,var(--t-ink) 14%,transparent)}
 .wish b{color:var(--t-acc);font-weight:600;white-space:nowrap}
 .wish b.taken{opacity:.5}
-/* ============ invitation templates (fixed palettes — they are the product) ============ */
+/* ============ invitation templates (fixed palettes - they are the product) ============ */
 .inv{background:var(--t-bg);color:var(--t-ink);font-family:var(--t-body,'Manrope',sans-serif);min-height:100%;text-align:center;position:relative}
 .cover{aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3cqi;padding:12cqi 9cqi;position:relative;overflow:hidden}
 .screen .cover{aspect-ratio:auto;min-height:calc(100cqi * 2.05)}
@@ -2130,7 +2132,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
       <nav class="menu-nav" aria-label="Разделы">
         <a href="#templates">Дизайны</a><a href="#prices">Тарифы</a><a href="#faq">Вопросы</a>
       </nav>
-      <div class="menu-side"><button class="menu-row" id="loginBtn" type="button">Войти</button>
+      <div class="menu-side"><button class="menu-row" id="loginBtn" type="button">Войти</button><div class="me-row" id="meRow" hidden><span class="me-mail" id="meEmail"></span><button class="menu-row" id="logoutBtn" type="button">Выйти</button></div>
         </div>
       </div>
     </div>
@@ -2141,7 +2143,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
   <div class="wrap hero">
     <div>
       <h1>Онлайн-приглашения</h1>
-      <p class="lead">Выберите дизайн, соберите нужные блоки и отправьте ссылку гостям. Они ответят в один клик, а кто придёт — вы увидите в личном кабинете.</p>
+      <p class="lead">Выберите дизайн, соберите нужные блоки и отправьте ссылку гостям. Они ответят в один клик, а кто придет - вы увидите в личном кабинете.</p>
       <div class="cta">
         <a class="btn btn-seal btn-xl" href="#templates">Выбрать приглашение</a>
       </div>
@@ -2195,10 +2197,10 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
       <div class="head"><div><h2>Вопросы</h2></div></div>
       <div class="faq">
         <details><summary>Как гости подтвердят присутствие?</summary><p>Внизу приглашения есть анкета: имя, «приду / не смогу», сколько будет человек и пожелания по меню. Регистрироваться гостям не нужно.</p></details>
-        <details><summary>Можно поменять время или адрес после отправки?</summary><p>Да. Вы правите страницу в кабинете, а ссылка у гостей остаётся той же. Рассылать приглашение заново не придётся.</p></details>
-        <details><summary>Что такое именные приглашения?</summary><p>У каждого гостя или семьи своя ссылка, и приглашение начинается с обращения: «Дорогие Ольга и Сергей!». Вы видите, кто открыл приглашение и кто ещё не ответил.</p></details>
-        <details><summary>Сколько работает ссылка?</summary><p>В основе 3 месяца с момента оплаты. Продлить до 12 месяцев можно блоком за 150 ₽, в тарифах «Оптимум» и «Всё сразу» это уже входит.</p></details>
-        <details><summary>Как оплатить и можно ли вернуть деньги?</summary><p>Картой «Мир», Visa, Mastercard или через СБП, разово, без подписки. Пока приглашение не опубликовано, вернём всю сумму. Подробно в документе <button type="button" class="linkbtn" data-doc="refund">«Оплата и возврат»</button>.</p></details>
+        <details><summary>Можно поменять время или адрес после отправки?</summary><p>Да. Вы правите страницу в кабинете, а ссылка у гостей остается той же. Рассылать приглашение заново не придется.</p></details>
+        <details><summary>Что такое именные приглашения?</summary><p>У каждого гостя или семьи своя ссылка, и приглашение начинается с обращения: «Дорогие Ольга и Сергей!». Вы видите, кто открыл приглашение и кто еще не ответил.</p></details>
+        <details><summary>Сколько работает ссылка?</summary><p>В основе 3 месяца с момента оплаты. Продлить до 12 месяцев можно блоком за 150 ₽, в тарифах «Оптимум» и «Все сразу» это уже входит.</p></details>
+        <details><summary>Как оплатить и можно ли вернуть деньги?</summary><p>Картой «Мир», Visa, Mastercard или через СБП, разово, без подписки. Пока приглашение не опубликовано, вернем всю сумму. Подробно в документе <button type="button" class="linkbtn" data-doc="refund">«Оплата и возврат»</button>.</p></details>
       </div>
     </div>
   </section>
@@ -2285,7 +2287,8 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
       <form class="cfg" id="orderForm" novalidate>
         <div>
           <div class="eyebrow" id="dlgStyle">Шаблон</div>
-          <h2 id="dlgTitle" tabindex="-1" autofocus style="margin-top:6px;outline:none">Белый лён</h2>
+          <h2 id="dlgTitle" tabindex="-1" autofocus style="margin-top:6px;outline:none">Белый лен</h2>
+          <div class="me-bar" id="meBar" hidden>Вы вошли: <b id="meBarEmail"></b> <button type="button" class="linkbtn" id="meOut">Выйти</button></div>
         </div>
         <div class="steps-bar" id="stepsBar" aria-live="polite"></div>
         <div class="stp" data-step="pick">
@@ -2306,7 +2309,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
             <p class="addr-msg" id="addrMsg" hidden></p></div>
           <div class="full pick" id="pickWrap" data-sub="who" hidden>
             <div class="pick-map" id="pickMap" role="application" aria-label="Карта для выбора точки"></div>
-            <p class="pick-hint">Нажмите на карту или перетащите печать, чтобы отметить точное место. Гости увидят точку здесь, а кнопки маршрута откроют её в Яндекс Картах и 2ГИС.</p>
+            <p class="pick-hint">Нажмите на карту или перетащите печать, чтобы отметить точное место. Гости увидят точку здесь, а кнопки маршрута откроют ее в Яндекс Картах и 2ГИС.</p>
           </div>
           <div class="full" id="blockFields" style="display:grid;gap:12px"></div>
         </div>
@@ -2346,7 +2349,7 @@ const fmt=n=>n.toLocaleString('ru-RU')+' ₽';
 const PLANS=[
   {id:'card',name:'Минимум',sub:'Обложка, таймер и карта',blocks:['timer','map'],note:'Ссылка работает 3 месяца'},
   {id:'site',name:'Оптимум',sub:'С программой и анкетой гостей',hot:true,blocks:['timer','program','map','dress','rsvp','year'],note:'Ссылка работает 12 месяцев'},
-  {id:'named',name:'Всё сразу',sub:'Все блоки и именные ссылки',blocks:BLOCKS.map(b=>b.id),note:'Ссылка работает 12 месяцев'}
+  {id:'named',name:'Все сразу',sub:'Все блоки и именные ссылки',blocks:BLOCKS.map(b=>b.id),note:'Ссылка работает 12 месяцев'}
 ];
 PLANS.forEach(p=>p.price=blocksSum(p.blocks));
 const M=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -2454,11 +2457,11 @@ const TPL=[
     {n:'Красный',bg:'#FFFFFF',ink:'#151515',acc:'#B3261E',a2:'#E9E6E1',sw:['#B3261E','#151515','#FFFFFF']},
     {n:'Кобальт',bg:'#F3F3F1',ink:'#12182A',acc:'#2340B0',a2:'#DDE2F2',sw:['#2340B0','#12182A','#F3F3F1']},
     {n:'Ночной выпуск',bg:'#14161B',ink:'#F2EFE8',acc:'#E1C068',a2:'#2A2D35',sw:['#14161B','#E1C068','#F2EFE8'],dark:1}]},
-  {id:'deco',name:'Ар-деко',style:'Тёмные',pals:[
-    {n:'Чёрное золото',bg:'#0E0E10',ink:'#EADDBA',acc:'#C9A657',a2:'#3A3226',sw:['#0E0E10','#C9A657','#EADDBA'],dark:1},
+  {id:'deco',name:'Ар-деко',style:'Темные',pals:[
+    {n:'Черное золото',bg:'#0E0E10',ink:'#EADDBA',acc:'#C9A657',a2:'#3A3226',sw:['#0E0E10','#C9A657','#EADDBA'],dark:1},
     {n:'Изумруд',bg:'#0F2A24',ink:'#ECE2C4',acc:'#D1B26F',a2:'#1E4A40',sw:['#0F2A24','#D1B26F','#ECE2C4'],dark:1},
     {n:'Сапфир',bg:'#111C33',ink:'#EAE1C8',acc:'#CFB06A',a2:'#24365C',sw:['#111C33','#CFB06A','#EAE1C8'],dark:1}]},
-  {id:'stars',name:'Созвездие',style:'Тёмные',pals:[
+  {id:'stars',name:'Созвездие',style:'Темные',pals:[
     {n:'Полночь',bg:'#0C1630',ink:'#EDE6CF',acc:'#E6D29A',a2:'#22335E',sw:['#0C1630','#E6D29A','#22335E'],dark:1},
     {n:'Слива',bg:'#1D1430',ink:'#EEE6F2',acc:'#D8C29A',a2:'#3A2B57',sw:['#1D1430','#D8C29A','#3A2B57'],dark:1},
     {n:'Хвоя',bg:'#0F201B',ink:'#E8EEE2',acc:'#D9CFA0',a2:'#21413A',sw:['#0F201B','#D9CFA0','#21413A'],dark:1}]},
@@ -2485,7 +2488,7 @@ const TPL=[
   {id:'mono',name:'Монограмма',style:'Классика',pals:[
     {n:'Шампань',bg:'#EFE8DC',ink:'#2E2A24',acc:'#9C7B45',a2:'#E2D6C0',sw:['#9C7B45','#E2D6C0','#2E2A24']},
     {n:'Бархат',bg:'#3B111B',ink:'#F1E4D2',acc:'#DDBE86',a2:'#55202C',sw:['#3B111B','#DDBE86','#F1E4D2'],dark:1},
-    {n:'Кость и чёрный',bg:'#F7F5F0',ink:'#151515',acc:'#151515',a2:'#E4E0D7',sw:['#151515','#E4E0D7','#F7F5F0']}]}
+    {n:'Кость и черный',bg:'#F7F5F0',ink:'#151515',acc:'#151515',a2:'#E4E0D7',sw:['#151515','#E4E0D7','#F7F5F0']}]}
 ];
 const palOf=(t,v)=>(v&&v.pal&&v.pal.id===t.id&&t.pals[v.pal.i])||t.pals[0];
 function palVars(t,v){const p=palOf(t,v);
@@ -2566,7 +2569,7 @@ function cover(t,v,on){
   case 'mag': {const L=Math.max(A.length,B.length),fs=Math.max(10,Math.min(22,118/L));
     return `<div class="cover"><div class="mg-head"><div class="mg-mast">Свадьба</div><div class="mg-issue">${named?kick:`Выпуск № 1<br>${p.mn} ${p.y}`}</div></div>
     <h3 class="names" style="font-size:${fs.toFixed(1)}cqi"><span>${A}</span><span class="amp">и</span><span>${B}</span></h3>
-    <ul class="mg-lines"><li><b>${p.dn} ${p.mon}</b>${p.wd}${T?`, ${T}`:''}</li><li><b>${ven||'Место'}</b>Ждём вас лично</li></ul>${barcode((p.dn*37+L*11)|0)}</div>`;}
+    <ul class="mg-lines"><li><b>${p.dn} ${p.mon}</b>${p.wd}${T?`, ${T}`:''}</li><li><b>${ven||'Место'}</b>Ждем вас лично</li></ul>${barcode((p.dn*37+L*11)|0)}</div>`;}
   case 'deco': return `<div class="cover"><svg class="dc-frame" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><path d="M8 14 H14 V8 H86 V14 H92 V126 H86 V132 H14 V126 H8Z"/><path class="dc-in" d="M12 17 H17 V12 H83 V17 H88 V123 H83 V128 H17 V123 H12Z"/></svg>
     <svg class="dc-fan" viewBox="0 0 100 52" aria-hidden="true">${Array.from({length:19},(_,i)=>{const a=Math.PI*(i/18);const x=50-Math.cos(a)*48,y=50-Math.sin(a)*48;return `<line x1="50" y1="50" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" style="animation-delay:${(.1+Math.abs(i-9)*.05).toFixed(2)}s"/>`;}).join('')}<path class="dc-arc" d="M14 50 A36 36 0 0 1 86 50"/><path class="dc-arc" d="M26 50 A24 24 0 0 1 74 50"/><circle cx="50" cy="50" r="9"/></svg>
     <div class="kick">${kick}</div><h3 class="names">${A}<span class="amp">и</span>${B}</h3><div class="dc-rule"><i></i><b></b><i></i></div><div class="dt">${ld}</div><div class="pl">${ven}</div></div>`;
@@ -2602,7 +2605,7 @@ function cover(t,v,on){
 }
 /* ===== designs, batch 2 ===== */
 TPL.push(
-  {id:'curtain',name:'Занавес',style:'Тёмные',pals:[
+  {id:'curtain',name:'Занавес',style:'Темные',pals:[
     {n:'Бордо',bg:'#1A1214',ink:'#F3E7D3',acc:'#7B1622',a2:'#E0BE76',sw:['#7B1622','#E0BE76','#1A1214'],dark:1},
     {n:'Изумруд',bg:'#0D1714',ink:'#EEE6D2',acc:'#0F4A3A',a2:'#D9B970',sw:['#0F4A3A','#D9B970','#0D1714'],dark:1},
     {n:'Полночь',bg:'#0E1020',ink:'#ECEEF4',acc:'#22306A',a2:'#D5D9E4',sw:['#22306A','#D5D9E4','#0E1020'],dark:1}]},
@@ -2624,7 +2627,7 @@ TPL.push(
     {n:'Шторм',bg:'#EDEEEE',ink:'#1E2328',acc:'#3E4A55',a2:'#C9CED3',sw:['#3E4A55','#C9CED3','#EDEEEE']}]},
   {id:'mail',name:'Авиапочта',style:'Яркие',pals:[
     {n:'Классика',bg:'#F4EFE4',ink:'#1E2A4A',acc:'#C1272D',a2:'#1F3F8F',sw:['#C1272D','#1F3F8F','#F4EFE4']},
-    {n:'Зелёная почта',bg:'#F2EFE3',ink:'#1F3326',acc:'#2E6B4F',a2:'#C9A227',sw:['#2E6B4F','#C9A227','#F2EFE3']},
+    {n:'Зеленая почта',bg:'#F2EFE3',ink:'#1F3326',acc:'#2E6B4F',a2:'#C9A227',sw:['#2E6B4F','#C9A227','#F2EFE3']},
     {n:'Сепия',bg:'#EFE6D6',ink:'#3A2C22',acc:'#8A5A3B',a2:'#2F4858',sw:['#8A5A3B','#2F4858','#EFE6D6']}]},
   {id:'meadow',name:'Луг',style:'Ботаника',pals:[
     {n:'Июнь',bg:'#F7F3E8',ink:'#2D3B22',acc:'#D2452F',a2:'#3C64B1',a3:'#6C8A3E',sw:['#D2452F','#3C64B1','#6C8A3E']},
@@ -2635,7 +2638,7 @@ TPL.push(
     {n:'Синька',bg:'#1D3A6B',ink:'#E8EEF6',acc:'#F2C14E',a2:'#35588F',sw:['#1D3A6B','#F2C14E','#E8EEF6'],dark:1},
     {n:'Сепия',bg:'#EDE3D0',ink:'#3A2B20',acc:'#8A3B2E',a2:'#D6C6A8',sw:['#8A3B2E','#D6C6A8','#3A2B20']}]},
   {id:'paper',name:'Бумага',style:'Нежные',pals:[
-    {n:'Мёд',bg:'#F6EBD9',ink:'#4A3A26',acc:'#D98E4A',a2:'#E7B45C',a3:'#8BA16E',sw:['#E7B45C','#D98E4A','#8BA16E']},
+    {n:'Мед',bg:'#F6EBD9',ink:'#4A3A26',acc:'#D98E4A',a2:'#E7B45C',a3:'#8BA16E',sw:['#E7B45C','#D98E4A','#8BA16E']},
     {n:'Мята',bg:'#E6F0EA',ink:'#24403A',acc:'#6E9A86',a2:'#FFFFFF',a3:'#BFD8CB',sw:['#6E9A86','#BFD8CB','#FFFFFF']},
     {n:'Синева',bg:'#E3E9F3',ink:'#22304A',acc:'#5D7DB8',a2:'#9DB4D9',a3:'#A9B8A0',sw:['#5D7DB8','#9DB4D9','#A9B8A0']}]},
   {id:'vinyl',name:'Винил',style:'Современные',pals:[
@@ -2703,7 +2706,7 @@ const COVER2={
   lace:c=>`<div class="cover"><div class="lc-wrap">${DOILY}<div class="lc-txt"><div class="kick">${c.kick}</div><h3 class="names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="dt">${c.p.d}.${c.p.m}.${c.p.y}</div></div></div><div class="pl">${c.ven}${c.T?`, ${c.T}`:''}</div></div>`,
   surf:c=>`<div class="cover"><div class="sf-sun"></div><div class="sf-txt"><div class="kick">${c.kick}</div><h3 class="names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="dt">${c.p.d}.${c.p.m}.${c.p.y}</div><div class="pl">${c.ven}</div></div>
     <svg class="waves2" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true"><g class="wv wv1"><path d="M0 22Q25 10 50 22T100 22T150 22T200 22T250 22T300 22T350 22T400 22V60H0Z"/></g><g class="wv wv2"><path d="M0 32Q25 22 50 32T100 32T150 32T200 32T250 32T300 32T350 32T400 32V60H0Z"/></g><g class="wv wv3"><path d="M0 42Q25 34 50 42T100 42T150 42T200 42T250 42T300 42T350 42T400 42V60H0Z"/></g></svg></div>`,
-  mail:c=>{const city=(c.v.addr||'').match(/г\.?\s*([А-ЯЁ][а-яё-]+)/);const town=(city?city[1]:'Москва').toUpperCase();const id='pm'+(++UID);
+  mail:c=>{const city=(c.v.addr||'').match(/г\.?\s*([А-ЯЕ][а-яе-]+)/);const town=(city?city[1]:'Москва').toUpperCase();const id='pm'+(++UID);
     const to=c.named?`Кому: ${c.guest}`:'Кому: нашим гостям';
     return `<div class="cover"><svg class="ml-stamp" viewBox="0 0 48 58" aria-hidden="true"><defs><mask id="${id}m"><rect width="48" height="58" fill="#fff"/>${Array.from({length:12},(_,i)=>`<circle cx="${2+i*4}" cy="0" r="1.3"/><circle cx="${2+i*4}" cy="58" r="1.3"/>`).join('')}${Array.from({length:15},(_,i)=>`<circle cx="0" cy="${1+i*4}" r="1.3"/><circle cx="48" cy="${1+i*4}" r="1.3"/>`).join('')}</mask></defs>
     <g mask="url(#${id}m)"><rect width="48" height="58" fill="#fff"/></g><rect x="4" y="4" width="40" height="40" class="ml-sky"/><circle cx="32" cy="15" r="5" class="ml-sun"/><path d="M4 34Q14 26 24 32T44 30V44H4Z" class="ml-hill"/><path d="M11 21l8-2.4 6.5 1.2-6.5 2.4z" class="ml-plane"/><text x="24" y="53" text-anchor="middle" class="ml-st-t">${c.p.dn} ${c.p.mon.slice(0,3)} ${c.p.y}</text></svg>
@@ -2732,7 +2735,7 @@ TPL.push(
   {id:'poppy',name:'Маки',style:'Классика',pals:[
     {n:'Алые',bg:'#EEEBE6',ink:'#2E2A28',acc:'#C42B30',a2:'#E2643C',a3:'#6F8A4E',sw:['#C42B30','#E2643C','#6F8A4E']},
     {n:'Васильки',bg:'#EEEDE8',ink:'#26293A',acc:'#3E5FA8',a2:'#7C93C9',a3:'#6F8A4E',sw:['#3E5FA8','#7C93C9','#6F8A4E']},
-    {n:'Жёлтые',bg:'#F1EDE3',ink:'#33291C',acc:'#D99A1F',a2:'#EBC250',a3:'#6F8A4E',sw:['#D99A1F','#EBC250','#6F8A4E']}]},
+    {n:'Желтые',bg:'#F1EDE3',ink:'#33291C',acc:'#D99A1F',a2:'#EBC250',a3:'#6F8A4E',sw:['#D99A1F','#EBC250','#6F8A4E']}]},
   {id:'engrave',name:'Гравюра',style:'Классика',pals:[
     {n:'Сепия',bg:'#EFE7DA',ink:'#3D3128',acc:'#5A4A3C',a2:'#D9CBB5',sw:['#5A4A3C','#D9CBB5','#EFE7DA']},
     {n:'Графит',bg:'#EDEDEA',ink:'#24262A',acc:'#3C3F45',a2:'#D3D4D2',sw:['#3C3F45','#D3D4D2','#EDEDEA']},
@@ -2745,7 +2748,7 @@ TPL.push(
     {n:'Крафт',bg:'#DDD8CC',ink:'#1C1B19',acc:'#1C1B19',a2:'#C9C2B1',sw:['#DDD8CC','#1C1B19','#C9C2B1']},
     {n:'Бумага',bg:'#F2F0EA',ink:'#232220',acc:'#232220',a2:'#DEDAD0',sw:['#F2F0EA','#232220','#DEDAD0']},
     {n:'Ночь',bg:'#1E1F22',ink:'#ECE8DF',acc:'#ECE8DF',a2:'#33353A',sw:['#1E1F22','#ECE8DF','#33353A'],dark:1}]},
-  {id:'mille',name:'Миллефлёр',style:'Ботаника',pals:[
+  {id:'mille',name:'Миллефлер',style:'Ботаника',pals:[
     {n:'Полевой',bg:'#FBF6EC',ink:'#3A2E24',acc:'#C8483A',a2:'#4B6FB0',a3:'#5E8A4A',a4:'#E7B93C',sw:['#C8483A','#4B6FB0','#5E8A4A']},
     {n:'Сад',bg:'#F7F7EF',ink:'#2B3324',acc:'#D9822B',a2:'#8A6BB0',a3:'#4F7A40',a4:'#F0D04A',sw:['#D9822B','#8A6BB0','#4F7A40']},
     {n:'Голубой',bg:'#F5F7F8',ink:'#24324A',acc:'#3F6FB5',a2:'#86A8D8',a3:'#6E8F6A',a4:'#E9C66A',sw:['#3F6FB5','#86A8D8','#6E8F6A']}]},
@@ -2753,20 +2756,20 @@ TPL.push(
     {n:'Сливки',bg:'#F2EEE2',ink:'#2B2A26',acc:'#B9443A',a2:'#C9A35A',sw:['#B9443A','#C9A35A','#F2EEE2']},
     {n:'Хвоя',bg:'#EEF0EA',ink:'#22301F',acc:'#3E6B4A',a2:'#B8A06A',sw:['#3E6B4A','#B8A06A','#EEF0EA']},
     {n:'Ночь',bg:'#1B1E2A',ink:'#EDE8DC',acc:'#D2B26E',a2:'#8D93A8',sw:['#1B1E2A','#D2B26E','#EDE8DC'],dark:1}]},
-  {id:'velvet',name:'Бархат',style:'Тёмные',pals:[
+  {id:'velvet',name:'Бархат',style:'Темные',pals:[
     {n:'Бордо',bg:'#3A1018',ink:'#F3E6CF',acc:'#D9B565',a2:'#6E7A3A',sw:['#3A1018','#D9B565','#6E7A3A'],dark:1},
     {n:'Изумруд',bg:'#10302A',ink:'#F1E8D2',acc:'#D8B86A',a2:'#8C6A3A',sw:['#10302A','#D8B86A','#8C6A3A'],dark:1},
     {n:'Сапфир',bg:'#16203F',ink:'#EEE8D8',acc:'#D4B26A',a2:'#5E7A5A',sw:['#16203F','#D4B26A','#5E7A5A'],dark:1}]},
   {id:'flourish',name:'Вензель',style:'Классика',pals:[
     {n:'Голубой',bg:'#F7F6F2',ink:'#3F5576',acc:'#5D7AA6',a2:'#DCE3EE',sw:['#5D7AA6','#DCE3EE','#F7F6F2']},
     {n:'Золото',bg:'#F6F1E7',ink:'#4A3B26',acc:'#A8844A',a2:'#EDE2CC',sw:['#A8844A','#EDE2CC','#F6F1E7']},
-    {n:'Чёрный',bg:'#F5F4F0',ink:'#1E1E1E',acc:'#2E2E2E',a2:'#E2E0DA',sw:['#2E2E2E','#E2E0DA','#F5F4F0']}]},
+    {n:'Черный',bg:'#F5F4F0',ink:'#1E1E1E',acc:'#2E2E2E',a2:'#E2E0DA',sw:['#2E2E2E','#E2E0DA','#F5F4F0']}]},
   {id:'tuscany',name:'Тоскана',style:'Ботаника',pals:[
     {n:'Лето',bg:'#F7F2E8',ink:'#3A3326',acc:'#A8863F',a2:'#7E9A5C',a3:'#3E5A33',sw:['#A8863F','#7E9A5C','#3E5A33']},
     {n:'Закат',bg:'#F8EFE4',ink:'#43311F',acc:'#B0703A',a2:'#A3A05C',a3:'#4D5A33',sw:['#B0703A','#A3A05C','#4D5A33']},
     {n:'Утро',bg:'#F2F3EE',ink:'#2F3A33',acc:'#6D8C9A',a2:'#93AE86',a3:'#3D5A44',sw:['#6D8C9A','#93AE86','#3D5A44']}]},
   {id:'supper',name:'Ужин',style:'Нежные',pals:[
-    {n:'Синий и зелёный',bg:'#FAF6EE',ink:'#2B3A2E',acc:'#3E5CA8',a2:'#2F7A4E',a3:'#E9A65A',sw:['#3E5CA8','#2F7A4E','#E9A65A']},
+    {n:'Синий и зеленый',bg:'#FAF6EE',ink:'#2B3A2E',acc:'#3E5CA8',a2:'#2F7A4E',a3:'#E9A65A',sw:['#3E5CA8','#2F7A4E','#E9A65A']},
     {n:'Красный',bg:'#F8F1E7',ink:'#3A2420',acc:'#B83A2E',a2:'#B83A2E',a3:'#E3B05A',sw:['#B83A2E','#E3B05A','#F8F1E7']},
     {n:'Олива',bg:'#F6F4EA',ink:'#2F3322',acc:'#5E6E36',a2:'#9A6A3A',a3:'#D9B45A',sw:['#5E6E36','#9A6A3A','#D9B45A']}]}
 );
@@ -2775,7 +2778,7 @@ TPL.push(
 function clsText(c,o={}){const d=c.p;
   return `<div class="cl-txt">${o.pre!==false?`<div class="cl-pre">${c.named?`${c.dear} ${c.guest}!<br>`:''}Приглашаем вас на свадьбу</div>`:''}
   <h3 class="names cl-names"><span>${c.A}</span><span class="amp">и</span><span>${c.B}</span></h3>
-  ${o.block?`<div class="cl-mon">${d.mn} ${d.y}</div><div class="cl-blk"><span>${d.wd}</span><b>${d.dn}</b><span>${c.T||'—'}</span></div>`:`<div class="cl-date">${d.d}<i></i>${d.m}<i></i>${d.y}</div>${c.T?`<div class="cl-time">в ${c.T}</div>`:''}`}
+  ${o.block?`<div class="cl-mon">${d.mn} ${d.y}</div><div class="cl-blk"><span>${d.wd}</span><b>${d.dn}</b><span>${c.T||'-'}</span></div>`:`<div class="cl-date">${d.d}<i></i>${d.m}<i></i>${d.y}</div>${c.T?`<div class="cl-time">в ${c.T}</div>`:''}`}
   <div class="cl-ven">${c.ven}</div></div>`;}
 
 /* hand-drawn wobbly frame + bow */
@@ -2886,7 +2889,7 @@ Object.assign(COVER2,{
   poppy:c=>`<div class="cover"><svg class="pp-art" viewBox="0 0 100 205" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${poppies('pf'+(++UID))}</svg><div class="cl-arc"><svg viewBox="0 0 100 24" aria-hidden="true"><defs><path id="pa${UID}" d="M14 22Q50 2 86 22"/></defs><text><textPath href="#pa${UID}" startOffset="50%" text-anchor="middle">${c.named?`${c.dear} ${c.guest}!`:'С радостью приглашаем вас'}</textPath></text></svg></div>${clsText(c,{pre:false})}</div>`,
   engrave:c=>`<div class="cover"><svg class="eg-art" viewBox="0 0 100 205" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${ENGRAVE}</svg>${clsText(c)}</div>`,
   delft:c=>`<div class="cover"><svg class="dl-art" viewBox="0 0 100 205" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${DELFT}</svg>
-    <div class="cl-txt"><div class="cl-pre">${c.named?`${c.dear} ${c.guest}!`:'Приглашаем на свадьбу'}</div><h3 class="names dl-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'—'}</span></div><div class="cl-ven">${c.ven}</div></div></div>`,
+    <div class="cl-txt"><div class="cl-pre">${c.named?`${c.dear} ${c.guest}!`:'Приглашаем на свадьбу'}</div><h3 class="names dl-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'-'}</span></div><div class="cl-ven">${c.ven}</div></div></div>`,
   sketch:c=>`<div class="cover"><div class="sk-head"><h3 class="names"><span>${c.A}</span><span class="amp">&amp;</span><span>${c.B}</span></h3><div class="sk-dt">${c.p.d}.${c.p.m}.${c.p.y}</div></div><svg class="sk-art" viewBox="18 58 70 142" aria-hidden="true">${SKETCH}</svg><div class="sk-foot">${c.named?`${c.dear} ${c.guest}!<br>`:''}Приглашаем вас разделить с нами день свадьбы<br>${c.ven}${c.T?`, ${c.T}`:''}</div></div>`,
   mille:c=>`<div class="cover"><svg class="ml-art" viewBox="0 0 100 205" preserveAspectRatio="none" aria-hidden="true">${MILLE}</svg><div class="ml-panel">${clsText(c,{block:false})}</div></div>`,
   numbers:c=>`<div class="cover"><div class="nb"><span>${c.p.d}</span><span>${c.p.m}</span><span>${c.p.y.slice(2)}</span></div><div class="nb-txt"><div class="cl-pre">${c.named?`${c.dear} ${c.guest}!`:'Сохраните дату'}</div><h3 class="names">${c.A} и ${c.B}</h3><div class="cl-ven">${c.p.wd}, ${c.ld}${c.T?`, ${c.T}`:''}<br>${c.ven}</div></div></div>`,
@@ -2933,7 +2936,7 @@ function picCover(t){return c=>{const pre=c.named?`${c.dear} ${c.guest}!`:'Пр�
   const art=t.lay==='arch'
     ?`<div class="pc-arch"><img src="${src}" alt="" loading="lazy" decoding="async"></div>`
     :`<div class="pc-top"><img src="${src}" alt="" loading="lazy" decoding="async"></div>`;
-  return `<div class="cover pc-${t.lay}-c">${art}<div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div><h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'—'}</span></div><div class="cl-ven">${c.ven}</div></div></div>`;};}
+  return `<div class="cover pc-${t.lay}-c">${art}<div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div><h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'-'}</span></div><div class="cl-ven">${c.ven}</div></div></div>`;};}
 TPL.filter(t=>t.img).forEach(t=>{COVER2[t.id]=picCover(t);});
 /* ===== designs, batch 5: watercolour flowers (Leonardo) ===== */
 const FL5=(n,bg,ink,acc,a2)=>({n,bg,ink,acc,a2,sw:[acc,a2,bg]});
@@ -2957,8 +2960,8 @@ TPL.push(
 /* flower cover: wreath with the names inside, bouquet on top, frame around the text, garland, or meadow band */
 function flCover(t){return c=>{const pre=c.named?`${c.dear} ${c.guest}!`:'Приглашаем на свадьбу',src=IMGB+t.img+'.webp',img=`<img src="${src}" alt="" loading="lazy" decoding="async">`;
   const names=`<h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3>`;
-  const rest=`<div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'—'}</span></div><div class="cl-ven">${c.ven}</div>`;
-  const blk=`<div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'—'}</span></div><div class="cl-ven">${c.ven}</div>`;
+  const rest=`<div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'-'}</span></div><div class="cl-ven">${c.ven}</div>`;
+  const blk=`<div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'-'}</span></div><div class="cl-ven">${c.ven}</div>`;
   if(t.lay==='wreath')return `<div class="cover fl-c fl-wreath"><div class="fl-wr">${img}<div class="fl-in"><b>${c.p.dn}</b><span>${c.p.mn}</span><span>${c.p.y}</span></div></div><div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div>${names}<div class="cl-ven">${c.p.wd}${c.T?`, ${c.T}`:''}<br>${c.ven}</div></div></div>`;
   if(t.lay==='corner'||t.lay==='frame')return `<div class="cover fl-c fl-frame fl-${t.lay}"><div class="fl-fr">${img}<div class="fl-in">${t.lay==='corner'?`<div class="cl-pre">${pre}</div>`:''}${names}</div></div><div class="cl-txt pc-txt">${t.lay==='frame'?`<div class="cl-pre">${pre}</div>`:''}<div class="cl-mon">${c.p.mn} ${c.p.y}</div>${blk}</div></div>`;
   if(t.lay==='garl')return `<div class="cover fl-c fl-garl"><div class="fl-g">${img}</div><div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div>${names}${rest}</div><div class="fl-g fl-g2">${img}</div></div>`;
@@ -2972,11 +2975,11 @@ TPL.push(
   {id:'lemonp',name:'Лимонный узор',style:'Узоры',img:'p_lemon',lay:'pat',pals:[FL5('Лимон','#FFFFFF','#2A3022','#B88A0E','#F2E7C0'),FL5('Листья','#FFFFFF','#22301F','#3F6B35','#DCE8D6'),FL5('Синий','#FFFFFF','#1F2C4A','#2F4F8E','#DDE4F2')]},
   {id:'azul',name:'Азулежу',style:'Узоры',img:'p_azul',lay:'pat',pals:[FL5('Кобальт','#FFFFFF','#14245A','#1E3C9A','#DCE3F5'),FL5('Небо','#F8FAFD','#1E2E52','#3D63B0','#E0E8F5'),FL5('Белый','#FFFFFF','#222630','#3A4256','#E4E6EC')]},
   {id:'eucap',name:'Листья эвкалипта',style:'Узоры',img:'p_euca',lay:'pat',pals:[FL5('Шалфей','#FFFFFF','#24332B','#4E7A66','#D9E8E0'),FL5('Мята','#FAFCFB','#22332E','#5E9A86','#DCEEE7'),FL5('Беж','#FBF9F4','#2E3029','#7E7A5E','#E8E4D6')]},
-  {id:'emerald',name:'Изумруд',style:'Тёмные',img:'f_velvet',lay:'fab',pals:[
+  {id:'emerald',name:'Изумруд',style:'Темные',img:'f_velvet',lay:'fab',pals:[
     {n:'Золото',bg:'#0F2A24',ink:'#F3EBD6',acc:'#D8B66A',a2:'#2E5A4C',sw:['#0F2A24','#D8B66A','#7A1F2B'],dark:1},
     {n:'Шампань',bg:'#0F2A24',ink:'#F6F1E6',acc:'#E9D7B0',a2:'#2E5A4C',sw:['#0F2A24','#E9D7B0','#7A1F2B'],dark:1},
     {n:'Серебро',bg:'#0F2A24',ink:'#EEF0EE',acc:'#C9CFCB',a2:'#2E5A4C',sw:['#0F2A24','#C9CFCB','#7A1F2B'],dark:1}]},
-  {id:'silk',name:'Шелк',style:'Тёмные',img:'f_silk',lay:'fab',pals:[
+  {id:'silk',name:'Шелк',style:'Темные',img:'f_silk',lay:'fab',pals:[
     {n:'Золото',bg:'#2E0E16',ink:'#F5E9DA',acc:'#D9B46E',a2:'#5A1E2A',sw:['#2E0E16','#D9B46E','#F5E9DA'],dark:1},
     {n:'Розовое золото',bg:'#2E0E16',ink:'#F7ECE6',acc:'#E2B49A',a2:'#5A1E2A',sw:['#2E0E16','#E2B49A','#F7ECE6'],dark:1},
     {n:'Жемчуг',bg:'#2E0E16',ink:'#F4F1EC',acc:'#E8E2D6',a2:'#5A1E2A',sw:['#2E0E16','#E8E2D6','#F4F1EC'],dark:1}]},
@@ -2987,11 +2990,11 @@ TPL.push(
   {id:'roses',name:'Розы',style:'Классика',img:'l_roses',lay:'top',pals:[FL5('Сепия','#F6F0E4','#2E2822','#3A322A','#E4DACA'),FL5('Белый','#FDFCF9','#222222','#333333','#E6E4E0'),FL5('Бордо','#F8F2EC','#2A1A1C','#6E1E28','#E9DAD6')]}
 );
 function patCover(t){return c=>{const pre=c.named?`${c.dear} ${c.guest}!`:'Приглашаем на свадьбу';
-  return `<div class="cover pt-c" style="--pt:url(${IMGB+t.img}.webp)"><div class="pt-card"><div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div><h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'—'}</span></div><div class="cl-ven">${c.ven}</div></div></div></div>`;};}
+  return `<div class="cover pt-c" style="--pt:url(${IMGB+t.img}.webp)"><div class="pt-card"><div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div><h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'-'}</span></div><div class="cl-ven">${c.ven}</div></div></div></div>`;};}
 function sealCover(t){return c=>{const pre=c.named?`${c.dear} ${c.guest}!`:'Приглашаем на свадьбу';
   const seal=`<div class="sl-seal"><img src="${IMGB}o_seal.webp" alt="" loading="lazy" decoding="async"><span>${c.a0}<i>&amp;</i>${c.b0}</span></div>`;
   const fab=t.lay==='fab'?`<img class="fb-bg" src="${IMGB+t.img}.webp" alt="" loading="lazy" decoding="async">`:'';
-  return `<div class="cover sl-c ${t.lay==='fab'?'fb-c':''}">${fab}${seal}<div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div><h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'—'}</span></div><div class="cl-ven">${c.ven}</div></div></div>`;};}
+  return `<div class="cover sl-c ${t.lay==='fab'?'fb-c':''}">${fab}${seal}<div class="cl-txt pc-txt"><div class="cl-pre">${pre}</div><h3 class="names pc-names">${c.A}<span class="amp">и</span>${c.B}</h3><div class="cl-mon">${c.p.mn} ${c.p.y}</div><div class="cl-blk"><span>${c.p.wd}</span><b>${c.p.dn}</b><span>${c.T||'-'}</span></div><div class="cl-ven">${c.ven}</div></div></div>`;};}
 TPL.filter(t=>t.lay&&!COVER2[t.id]).forEach(t=>{COVER2[t.id]=t.lay==='pat'?patCover(t):(t.lay==='fab'||t.lay==='seal')?sealCover(t):flCover(t);});
 
 /* catalog filters: 6 clear groups */
@@ -3017,7 +3020,7 @@ function full(t,v,on,ord){
     gallery:()=>`${h('gallery')?`<section><h4>Наши фото</h4><div class="gal">${v.photos&&v.photos.length?v.photos.map(u=>`<img src="${u}" alt="">`).join(''):'<i></i><i></i><i></i><i></i>'}</div></section>`:''}`,
     wishlist:()=>`${h('wishlist')?`<section><h4>Вишлист</h4><div class="wish">${(v.wish||[]).filter(w=>w.n).map(w=>`<div><span>${w.u?`<a href="${esc(w.u)}" target="_blank" rel="noopener">${esc(w.n)}</a>`:esc(w.n)}</span><b>Свободно</b></div>`).join('')}</div></section>`:''}`,
     seating:()=>tb?`<section class="seat"><h4>Ваш стол</h4><div class="cd"><div>${/^\d+$/.test(tb)?'№'+esc(tb):esc(tb)}</div></div></section>`:'',
-    rsvp:()=>`${h('rsvp')?`<section><h4>Вы придёте?</h4><p style="margin-bottom:4cqi">${v.rsvpBy?`Ответьте, пожалуйста, до ${dayMonth(v.rsvpBy)}`:'Ответьте, пожалуйста'}</p><div class="rsvp" data-rsvp><input aria-label="Ваше имя" placeholder="Имя и фамилия"><div class="opts"><button type="button" data-o="1" aria-pressed="false">Приду</button><button type="button" data-o="0" aria-pressed="false">Не смогу</button></div><button type="button" class="ibtn fill" data-send>Отправить ответ</button></div></section>`:''}`
+    rsvp:()=>`${h('rsvp')?`<section><h4>Вы придете?</h4><p style="margin-bottom:4cqi">${v.rsvpBy?`Ответьте, пожалуйста, до ${dayMonth(v.rsvpBy)}`:'Ответьте, пожалуйста'}</p><div class="rsvp" data-rsvp><input aria-label="Ваше имя" placeholder="Имя и фамилия"><div class="opts"><button type="button" data-o="1" aria-pressed="false">Приду</button><button type="button" data-o="0" aria-pressed="false">Не смогу</button></div><button type="button" class="ibtn fill" data-send>Отправить ответ</button></div></section>`:''}`
   };
   return `<div class="inv t-${t.id}" style="${palVars(t,v)}">${cover(t,v,on)}
   ${(()=>{if(!(v.events||[]).length)return ord.map(id=>S[id]?S[id]():'').join('');let done=false;
@@ -3063,7 +3066,7 @@ let mode='build',plan='site',sel=new Set(['timer','program','map','dress','rsvp'
 const planOf=id=>PLANS.find(p=>p.id===id);
 document.getElementById('plans').innerHTML=PLANS.map(p=>{const tot=blocksSum(p.blocks);return `<div class="plan${p.hot?' hot':''}"><h3>${p.name}</h3><div class="price">${fmt(p.price)}</div><ul><li>Обложка с именами, датой и местом</li>${p.blocks.map(id=>`<li>${BK[id].name}</li>`).join('')}</ul><div class="note">${p.note}</div><a class="btn ${p.hot?'btn-seal':'btn-line'}" href="#templates" data-plan="${p.id}">Выбрать дизайн</a></div>`;}).join('');
 document.getElementById('plans').addEventListener('click',e=>{const b=e.target.closest('[data-plan]');if(b){pendingPreset=b.dataset.plan;}});
-document.getElementById('buildList').innerHTML=`<div class="bl base"><span>Основа — обложка с именами, датой и местом, ссылка на 3 месяца</span><b>${fmt(BASE)}</b></div>`+BLOCKS.map(b=>`<div class="bl"><span>${b.name}<small>${b.desc}</small></span><b>+${fmt(b.price)}</b></div>`).join('');
+document.getElementById('buildList').innerHTML=`<div class="bl base"><span>Основа - обложка с именами, датой и местом, ссылка на 3 месяца</span><b>${fmt(BASE)}</b></div>`+BLOCKS.map(b=>`<div class="bl"><span>${b.name}<small>${b.desc}</small></span><b>+${fmt(b.price)}</b></div>`).join('');
 document.getElementById('buildBtn').addEventListener('click',()=>openT(TPL[0].id));
 (()=>{const btn=document.getElementById('menuBtn'),menu=document.getElementById('menu');
   const isOpen=()=>menu.classList.contains('open');const set=o=>{menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);btn.querySelector('span').textContent=o?'Закрыть':'Меню';};
@@ -3283,7 +3286,7 @@ function applyRoute(){const h=(location.hash||'').slice(1),on=h==='invite'||h.st
   document.body.classList.toggle('invite-mode',on);const v=document.getElementById('inviteView');v.hidden=!on;
   if(!on){v.innerHTML='';return;}
   const t=TPL.find(x=>'invite-'+x.id===h)||TPL[0];
-  v.innerHTML=`<div class="page">${full(t,data,new Set(BLOCKS.map(b=>b.id).filter(id=>id!=='named')))}</div><nav class="ipick" aria-label="Другие дизайны">${TPL.map(x=>`<a href="#invite-${x.id}" aria-current="${x===t}">${x.name}</a>`).join('')}</nav><p class="made">Приглашение сделано на Knocky. <a href="#top">Создать своё</a></p>`;
+  v.innerHTML=`<div class="page">${full(t,data,new Set(BLOCKS.map(b=>b.id).filter(id=>id!=='named')))}</div><nav class="ipick" aria-label="Другие дизайны">${TPL.map(x=>`<a href="#invite-${x.id}" aria-current="${x===t}">${x.name}</a>`).join('')}</nav><p class="made">Приглашение сделано на Knocky. <a href="#top">Создать свое</a></p>`;
   window.scrollTo(0,0);}
 window.addEventListener('hashchange',applyRoute);applyRoute();
 
@@ -3299,11 +3302,22 @@ document.addEventListener('click',e=>{
 });
 
 /* admin (prototype: client-side only) */
-const TR={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ы:'y',э:'e',ю:'yu',я:'ya'};
+const TR={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',е:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ы:'y',э:'e',ю:'yu',я:'ya'};
 function slugOf(){return((data.a||'anna')+'-'+(data.b||'ilya')).toLowerCase().split('').map(c=>TR[c]??c).join('').replace(/[^a-z0-9-]/g,'');}
 const isAdmin=false;
 const SITE='https://knocky.ru/';
 document.getElementById('loginBtn').onclick=()=>{location.href='https://app.knocky.ru/';};
+/* signed in on app.knocky.ru: show the email and "Выйти" here too, and save straight to the cabinet */
+let ME=null;
+function drawMe(){const on=!!ME,$i=x=>document.getElementById(x);
+  $i('loginBtn').textContent=on?'Кабинет':'Войти';$i('meRow').hidden=!on;$i('meBar').hidden=!on;
+  $i('meEmail').textContent=$i('meBarEmail').textContent=on?ME:'';
+  if(!editId){$i('fEmailRow').hidden=on;if(on)$i('fEmail').value=ME;}}
+async function loadMe(){try{const r=await fetch('https://app.knocky.ru/api/me',{credentials:'include'});const j=await r.json();ME=j&&j.user?j.user.email:null;}catch(e){ME=null;}drawMe();}
+async function logout(){try{await fetch('https://app.knocky.ru/api/auth/logout',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:'{}'});}catch(e){}
+  ME=null;const em=document.getElementById('fEmail');if(em)em.value='';drawMe();}
+document.getElementById('logoutBtn').onclick=logout;document.getElementById('meOut').onclick=logout;
+loadMe();addEventListener('pageshow',e=>{if(e.persisted)loadMe();});
 
 /* order: save to the cabinet on app.knocky.ru (payment arrives with Robokassa) */
 const APP='https://app.knocky.ru';let editId=null;
@@ -3364,19 +3378,19 @@ const REQS=`<ul><li>${SELLER_NAME}</li><li>ОГРНИП: ${OGRNIP}</li>${INN?`<l
 const DOCS={
 offer:{t:'Публичная оферта на оказание услуг',b:`
 <h3>1. Общие положения</h3>
-<p>1.1. ${SELLER} (далее — Исполнитель) предлагает любому дееспособному лицу (далее — Заказчик) заключить договор на оказание услуг на условиях этой оферты.</p>
-<p>1.2. Оферта размещена на сайте ${LSITE} (далее — Сайт). Акцептом считается оплата заказа, а при бесплатной публикации — отметка о согласии с офертой при оформлении заказа (п. 3 ст. 438 ГК РФ). С момента акцепта договор считается заключённым.</p>
-<p>1.3. Термины: <b>Сервис</b> — Сайт и программное обеспечение Knocky; <b>Приглашение</b> — веб-страница праздника, созданная Заказчиком в Сервисе; <b>Дизайн</b> — оформление Приглашения; <b>Блок</b> — функциональная часть Приглашения (таймер, программа, карта, дресс-код, анкета, фотогалерея, вишлист, именные ссылки); <b>Тариф</b> — готовый набор Блоков; <b>Гость</b> — человек, которому Заказчик отправил ссылку на Приглашение.</p>
+<p>1.1. ${SELLER} (далее - Исполнитель) предлагает любому дееспособному лицу (далее - Заказчик) заключить договор на оказание услуг на условиях этой оферты.</p>
+<p>1.2. Оферта размещена на сайте ${LSITE} (далее - Сайт). Акцептом считается оплата заказа, а при бесплатной публикации - отметка о согласии с офертой при оформлении заказа (п. 3 ст. 438 ГК РФ). С момента акцепта договор считается заключенным.</p>
+<p>1.3. Термины: <b>Сервис</b> - Сайт и программное обеспечение Knocky; <b>Приглашение</b> - веб-страница праздника, созданная Заказчиком в Сервисе; <b>Дизайн</b> - оформление Приглашения; <b>Блок</b> - функциональная часть Приглашения (таймер, программа, карта, дресс-код, анкета, фотогалерея, вишлист, именные ссылки); <b>Тариф</b> - готовый набор Блоков; <b>Гость</b> - человек, которому Заказчик отправил ссылку на Приглашение.</p>
 <h3>2. Предмет договора</h3>
 <p>2.1. Исполнитель предоставляет Заказчику возможность создать Приглашение в выбранном Дизайне с выбранными Блоками, публикует его по уникальной ссылке вида ${LSITE}/имя и обеспечивает доступ к нему в течение оплаченного срока.</p>
 <p>2.2. Состав услуги определяется выбранным Тарифом или Блоками и указан в заказе перед оплатой. Содержание Приглашения (тексты, фото, данные о празднике) Заказчик заполняет сам.</p>
 <h3>3. Стоимость и порядок оплаты</h3>
 <p>3.1. Стоимость указана на Сайте в рублях на момент оформления заказа и складывается из стоимости основы и выбранных Блоков. Цена тарифа равна сумме входящих в него Блоков. В Блок «Именные ссылки» входит 100 именных ссылок; дополнительные ссылки приобретаются пакетами по 100 по цене, указанной на Сайте. Блок «Рассадка» доступен только вместе с Блоком «Именные ссылки». В Блок «Печатная версия» переносится только часть Приглашения: обложка, дата, адрес, программа и дресс-код; остальные Блоки доступны Гостю по QR-коду. Дополнительные дни праздника добавляются бесплатно; дресс-код для них бесплатный, карта для дополнительного дня оплачивается отдельно по цене, указанной на Сайте.</p>
-<p>3.2. Оплата 100% вперёд банковской картой («Мир», Visa, Mastercard) или через СБП. Платежи принимает платёжный сервис Robokassa (ООО «Робокасса»); данные карты Исполнитель не получает и не хранит.</p>
+<p>3.2. Оплата 100% вперед банковской картой («Мир», Visa, Mastercard) или через СБП. Платежи принимает платежный сервис Robokassa (ООО «Робокасса»); данные карты Исполнитель не получает и не хранит.</p>
 <p>3.3. Кассовый чек по 54-ФЗ направляется на email Заказчика.</p>
 <h3>4. Порядок оказания услуг</h3>
 <p>4.1. После оплаты Приглашение публикуется, ссылка на него приходит на email Заказчика и отображается в личном кабинете.</p>
-<p>4.2. Срок доступа к Приглашению — 3 месяца с момента оплаты, а при выборе Блока «Ссылка на 12 месяцев» или тарифа, который его включает, — 12 месяцев. По окончании срока Приглашение перестаёт открываться.</p>
+<p>4.2. Срок доступа к Приглашению - 3 месяца с момента оплаты, а при выборе Блока «Ссылка на 12 месяцев» или тарифа, который его включает, - 12 месяцев. По окончании срока Приглашение перестает открываться.</p>
 <p>4.3. В течение срока доступа Заказчик может менять тексты, время, адрес и другие данные Приглашения; ссылка при этом не меняется.</p>
 <p>4.4. Услуга считается оказанной в момент публикации Приглашения. Акт не составляется.</p>
 <h3>5. Права и обязанности сторон</h3>
@@ -3384,21 +3398,21 @@ offer:{t:'Публичная оферта на оказание услуг',b:`
 <p>5.2. Исполнитель вправе: проводить профилактические работы; приостановить или удалить Приглашение, нарушающее закон или права третьих лиц, после уведомления Заказчика.</p>
 <p>5.3. Заказчик обязуется: указывать достоверный email; размещать только законный контент, на который у него есть права; вносить данные Гостей (имена) только с их согласия; не использовать Сервис для рассылки рекламы и спама.</p>
 <h3>6. Контент Заказчика и данные Гостей</h3>
-<p>6.1. Заказчик гарантирует, что у него есть права на загружаемые фото и тексты и согласие изображённых людей. Исключительные права на контент остаются у Заказчика; Исполнитель использует его только для показа Приглашения.</p>
-<p>6.2. Если правообладатель или изображённое лицо пожалуется на контент, Исполнитель вправе скрыть спорный материал до урегулирования и сообщает об этом Заказчику.</p>
+<p>6.1. Заказчик гарантирует, что у него есть права на загружаемые фото и тексты и согласие изображенных людей. Исключительные права на контент остаются у Заказчика; Исполнитель использует его только для показа Приглашения.</p>
+<p>6.2. Если правообладатель или изображенное лицо пожалуется на контент, Исполнитель вправе скрыть спорный материал до урегулирования и сообщает об этом Заказчику.</p>
 <p>6.3. Заказчик поручает Исполнителю обработку персональных данных Гостей (имена, ответы в анкете) в целях работы Приглашения (ч. 3 ст. 6 152-ФЗ). Исполнитель обрабатывает эти данные только по поручению Заказчика, соблюдает конфиденциальность и меры защиты по ст. 19 152-ФЗ и удаляет их в сроки, указанные в Политике.</p>
 <h3>7. Ответственность</h3>
 <p>7.1. Стороны отвечают за неисполнение обязательств в соответствии с законодательством РФ.</p>
-<p>7.2. Исполнитель не отвечает за содержание Приглашения, за сбои у операторов связи, платёжных сервисов и картографических сервисов, а также за действия Гостей.</p>
+<p>7.2. Исполнитель не отвечает за содержание Приглашения, за сбои у операторов связи, платежных сервисов и картографических сервисов, а также за действия Гостей.</p>
 <p>7.3. Ответственность Исполнителя перед Заказчиком ограничена суммой, уплаченной за соответствующий заказ, если иное не предусмотрено законом о защите прав потребителей.</p>
 <h3>8. Возврат и отказ от услуги</h3>
 <p>Порядок возврата описан в документе «Оплата и возврат», который является частью этой оферты.</p>
 <h3>9. Споры</h3>
 <p>9.1. Претензии направляются на ${LMAILTO}. Исполнитель отвечает в течение 10 дней.</p>
-<p>9.2. Если спор не решён, он рассматривается в суде по правилам законодательства РФ; Заказчик-потребитель вправе обратиться в суд по месту своего жительства (ст. 17 Закона «О защите прав потребителей»).</p>
+<p>9.2. Если спор не решен, он рассматривается в суде по правилам законодательства РФ; Заказчик-потребитель вправе обратиться в суд по месту своего жительства (ст. 17 Закона «О защите прав потребителей»).</p>
 <h3>10. Прочие условия</h3>
 <p>10.1. Исполнитель вправе менять оферту, публикуя новую редакцию на Сайте. Для оплаченных заказов действует редакция на момент оплаты.</p>
-<p>10.2. Оферта действует бессрочно до её отзыва.</p>
+<p>10.2. Оферта действует бессрочно до ее отзыва.</p>
 <h3>11. Реквизиты Исполнителя</h3>${REQS}`},
 privacy:{t:'Политика обработки персональных данных',b:`
 <h3>1. Общие положения</h3>
@@ -3421,57 +3435,57 @@ privacy:{t:'Политика обработки персональных дан�
 <li>статистика посещений и улучшение Сайта (только с согласия на аналитические cookie).</li>
 </ul>
 <h3>4. Правовые основания</h3>
-<p>Договор с Заказчиком (п. 5 ч. 1 ст. 6 152-ФЗ); согласие субъекта (п. 1 ч. 1 ст. 6); поручение Заказчика на обработку данных Гостей (ч. 3 ст. 6); обязанности по налоговому учёту и закону 54-ФЗ о применении ККТ.</p>
+<p>Договор с Заказчиком (п. 5 ч. 1 ст. 6 152-ФЗ); согласие субъекта (п. 1 ч. 1 ст. 6); поручение Заказчика на обработку данных Гостей (ч. 3 ст. 6); обязанности по налоговому учету и закону 54-ФЗ о применении ККТ.</p>
 <h3>5. Действия с данными</h3>
 <p>Сбор, запись, систематизация, накопление, хранение, уточнение, извлечение, использование, передача (предоставление, доступ), блокирование, удаление, уничтожение, с использованием средств автоматизации и без них.</p>
 <h3>6. Кому передаются данные</h3>
-<p>Данные передаются только в объёме, нужном для работы Сервиса:</p>
+<p>Данные передаются только в объеме, нужном для работы Сервиса:</p>
 <ul>
-<li>ООО «Робокасса» — приём платежей и формирование чеков;</li>
-<li>ООО «Таймвэб.Клауд» (Timeweb Cloud) — хостинг: серверы и хранилище в России;</li>
-<li>Unisender Go — отправка писем: коды входа, ссылки, чеки;</li>
-<li>ООО «Дадата» — подсказки адресов площадки (передаётся только вводимый адрес);</li>
-<li>ООО «Яндекс» — показ карты в Приглашении и Яндекс Метрика (только с согласия на аналитические cookie);</li>
-<li>государственные органы — по законному запросу.</li>
+<li>ООО «Робокасса» - прием платежей и формирование чеков;</li>
+<li>ООО «Таймвэб.Клауд» (Timeweb Cloud) - хостинг: серверы и хранилище в России;</li>
+<li>Unisender Go - отправка писем: коды входа, ссылки, чеки;</li>
+<li>ООО «Дадата» - подсказки адресов площадки (передается только вводимый адрес);</li>
+<li>ООО «Яндекс» - показ карты в Приглашении и Яндекс Метрика (только с согласия на аналитические cookie);</li>
+<li>государственные органы - по законному запросу.</li>
 </ul>
 <p>Трансграничная передача персональных данных не осуществляется.</p>
 <h3>7. Хранение и сроки</h3>
 <ul>
 <li>Данные граждан РФ записываются, систематизируются и хранятся в базах данных на территории России (ч. 5 ст. 18 152-ФЗ).</li>
 <li>Данные Гостей и содержимое Приглашения хранятся в течение срока доступа к Приглашению и удаляются в течение 30 дней после его окончания или раньше по запросу Заказчика.</li>
-<li>Данные Заказчика хранятся до удаления аккаунта или отзыва согласия; данные об оплатах — столько, сколько требует налоговое и бухгалтерское законодательство.</li>
-<li>Технические данные и cookie — до 12 месяцев.</li>
+<li>Данные Заказчика хранятся до удаления аккаунта или отзыва согласия; данные об оплатах - столько, сколько требует налоговое и бухгалтерское законодательство.</li>
+<li>Технические данные и cookie - до 12 месяцев.</li>
 </ul>
 <h3>8. Защита данных</h3>
-<p>Соединение с Сайтом шифруется (HTTPS), доступ к данным есть только у Оператора и администраторов по индивидуальным учётным записям, ведётся резервное копирование, данные карт не хранятся.</p>
+<p>Соединение с Сайтом шифруется (HTTPS), доступ к данным есть только у Оператора и администраторов по индивидуальным учетным записям, ведется резервное копирование, данные карт не хранятся.</p>
 <h3>9. Права субъекта</h3>
-<p>Вы можете получить сведения об обработке своих данных, потребовать их уточнения, блокирования или удаления, отозвать согласие и обжаловать действия Оператора в Роскомнадзоре или суде. Запрос направляется на ${LMAILTO}; ответ — в течение 10 рабочих дней (ст. 14 152-ФЗ).</p>
-<p>Гость может обратиться к Заказчику, отправившему Приглашение, или напрямую к Оператору — его запрос передаётся Заказчику и исполняется.</p>
+<p>Вы можете получить сведения об обработке своих данных, потребовать их уточнения, блокирования или удаления, отозвать согласие и обжаловать действия Оператора в Роскомнадзоре или суде. Запрос направляется на ${LMAILTO}; ответ - в течение 10 рабочих дней (ст. 14 152-ФЗ).</p>
+<p>Гость может обратиться к Заказчику, отправившему Приглашение, или напрямую к Оператору - его запрос передается Заказчику и исполняется.</p>
 <h3>10. Изменение политики</h3>
 <p>Новая редакция действует с момента публикации на Сайте.</p>`},
 consent:{t:'Согласие на обработку персональных данных',b:`
-<p>Отмечая согласие на Сайте ${LSITE}, я свободно, своей волей и в своём интересе даю ${SELLER} (далее — Оператор), email: ${LMAILTO}, согласие на обработку моих персональных данных на следующих условиях.</p>
+<p>Отмечая согласие на Сайте ${LSITE}, я свободно, своей волей и в своем интересе даю ${SELLER} (далее - Оператор), email: ${LMAILTO}, согласие на обработку моих персональных данных на следующих условиях.</p>
 <h3>Данные</h3><p>Email, имя, данные заказа и платежа (без данных карты), содержимое моего Приглашения, технические данные (IP-адрес, cookie, данные браузера).</p>
 <h3>Цели</h3><p>Заключение и исполнение договора, создание и публикация Приглашения, вход в личный кабинет, отправка ссылки и кассового чека, связь по заказу и обращениям.</p>
 <h3>Действия</h3><p>Сбор, запись, систематизация, накопление, хранение, уточнение, извлечение, использование, передача (предоставление, доступ) лицам, указанным в Политике обработки персональных данных, блокирование, удаление, уничтожение, с использованием средств автоматизации и без них.</p>
 <h3>Срок и отзыв</h3><p>Согласие действует до достижения целей обработки или до его отзыва. Отозвать согласие можно письмом на ${LMAILTO}; после отзыва данные удаляются в течение 30 дней, кроме тех, которые Оператор обязан хранить по закону.</p>
 <p>Я подтверждаю, что ознакомился с Политикой обработки персональных данных. Если я указываю данные Гостей (имена), я подтверждаю, что получил их согласие.</p>`},
 cookies:{t:'Политика использования cookie',b:`
-<p>Cookie — небольшие файлы, которые сайт сохраняет в браузере. Похожие технологии (localStorage) используются так же.</p>
+<p>Cookie - небольшие файлы, которые сайт сохраняет в браузере. Похожие технологии (localStorage) используются так же.</p>
 <h3>Какие cookie используются</h3>
-<ul><li><b>Обязательные.</b> Запоминают тему оформления, выбор по cookie, вход в кабинет и данные незавершённого заказа. Без них Сайт не работает, согласие на них не требуется. Срок — до 12 месяцев.</li>
-<li><b>Аналитические.</b> Яндекс Метрика (ООО «Яндекс»): статистика посещений, чтобы понимать, что улучшить. Включаются только если вы нажали «Принять все». Срок — до 12 месяцев.</li></ul>
+<ul><li><b>Обязательные.</b> Запоминают тему оформления, выбор по cookie, вход в кабинет и данные незавершенного заказа. Без них Сайт не работает, согласие на них не требуется. Срок - до 12 месяцев.</li>
+<li><b>Аналитические.</b> Яндекс Метрика (ООО «Яндекс»): статистика посещений, чтобы понимать, что улучшить. Включаются только если вы нажали «Принять все». Срок - до 12 месяцев.</li></ul>
 <p>Рекламные cookie не используются.</p>
-<h3>Как управлять</h3><p>Выбор можно изменить в любой момент по ссылке «Настройки cookie» внизу Сайта или удалить cookie в настройках браузера. Вопросы — на ${LMAILTO}.</p>`},
+<h3>Как управлять</h3><p>Выбор можно изменить в любой момент по ссылке «Настройки cookie» внизу Сайта или удалить cookie в настройках браузера. Вопросы - на ${LMAILTO}.</p>`},
 refund:{t:'Оплата и возврат',b:`
 <h3>Оплата</h3>
 <ul><li>Принимаем карты «Мир», Visa, Mastercard и оплату через СБП.</li>
-<li>Платёж проходит на защищённой странице Robokassa (ООО «Робокасса»). Данные карты вводятся только там и Исполнителю не передаются.</li>
+<li>Платеж проходит на защищенной странице Robokassa (ООО «Робокасса»). Данные карты вводятся только там и Исполнителю не передаются.</li>
 <li>Оплата разовая, без подписки и автосписаний. Кассовый чек приходит на email.</li>
 <li>Если оплата прошла, а ссылка не пришла в течение 15 минут, проверьте папку «Спам» и напишите на ${LMAILTO}.</li></ul>
 <h3>Возврат</h3>
 <ul><li>Вы вправе отказаться от услуги в любой момент (ст. 32 Закона «О защите прав потребителей»).</li>
-<li>Если Приглашение ещё не опубликовано, возвращаем всю сумму.</li>
+<li>Если Приглашение еще не опубликовано, возвращаем всю сумму.</li>
 <li>Если Приглашение опубликовано, услуга считается оказанной (п. 4.4 оферты). Возврат возможен, если Приглашение не работает по вине Исполнителя и это не исправлено в течение 3 дней после обращения.</li>
 <li>Возврат делается в течение 10 дней с даты запроса тем же способом, которым была оплата. Срок зачисления на карту зависит от банка.</li></ul>
 <h3>Как запросить</h3><p>Напишите на ${LMAILTO} с email, на который оформлен заказ, и ссылкой на Приглашение или номером заказа.</p>
