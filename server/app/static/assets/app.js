@@ -26,7 +26,7 @@ let ME=null,DESIGNS={};
 async function api(path,opt={}){
   const r=await fetch('/api'+path,{credentials:'same-origin',...opt,headers:{'content-type':'application/json',...(opt.headers||{})}});
   let j={};try{j=await r.json()}catch(e){}
-  if(!r.ok){const e=new Error(j.error||'Нет связи с сервером. Попробуйте ещё раз');e.status=r.status;e.data=j;throw e;}
+  if(!r.ok){const e=new Error(j.error||'Нет связи с сервером. Попробуйте еще раз');e.status=r.status;e.data=j;throw e;}
   return j;}
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600);}
 async function copy(t){try{await navigator.clipboard.writeText(t);toast('Ссылка скопирована');}catch(e){prompt('Скопируйте ссылку',t);}}
@@ -52,7 +52,7 @@ function loginView(){
     if(step==='mail'){
       app.innerHTML=`<section class="auth"><form class="auth-card" id="f" novalidate>
         <h1>Вход в кабинет</h1>
-        <p class="note">${claim?'Приглашение сохранено. Войдите, чтобы оно появилось в кабинете.':'Здесь ваши приглашения, ссылки для гостей и их ответы.'} Пароль не нужен: пришлём код на почту.</p>
+        <p class="note">${claim?'Приглашение сохранено. Войдите, чтобы оно появилось в кабинете.':'Здесь ваши приглашения, ссылки для гостей и их ответы.'} Пароль не нужен: пришлем код на почту.</p>
         <label class="field"><span>Почта</span><input class="inp" id="em" type="email" inputmode="email" autocomplete="email" placeholder="anna@mail.ru" value="${esc(email)}" required></label>
         <label class="check" id="agreeRow"><input type="checkbox" id="agree"><span>Согласен(на) с <a href="${SITE}/#doc-privacy" target="_blank" rel="noopener">политикой обработки персональных данных</a> и даю <a href="${SITE}/#doc-consent" target="_blank" rel="noopener">согласие на обработку</a></span></label>
         <p class="err" id="er" role="alert" hidden></p>
@@ -63,6 +63,7 @@ function loginView(){
       const f=$('#f'),em=$('#em'),er=$('#er');em.focus();
       f.onsubmit=async e=>{e.preventDefault();er.hidden=true;email=em.value.trim().toLowerCase();
         if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){er.hidden=false;er.textContent='Введите почту, например anna@mail.ru';em.focus();return;}
+        if(!$('#agree').checked){er.hidden=false;er.textContent='Отметьте согласие на обработку персональных данных';$('#agree').focus();return;}
         const b=$('#sb');b.disabled=true;b.textContent='Отправляем код…';
         try{await api('/auth/request',{method:'POST',body:JSON.stringify({email,agree:$('#agree').checked})});step='code';timer=60;draw();}
         catch(x){if(x.data&&x.data.already){step='code';timer=Math.max(1,x.data.wait||50);draw();return;}b.disabled=false;b.textContent='Получить код';er.hidden=false;er.textContent=x.data&&x.data.need_agree?'Отметьте согласие на обработку персональных данных':x.message;}};
@@ -95,7 +96,7 @@ function loginView(){
         <div class="row spread"><button type="button" class="lnk" id="chg">Другая почта</button><button type="button" class="lnk" id="again"></button></div>
       </form></section>`;
       const cd=$('#cd'),er=$('#er'),ag=$('#again');cd.focus();
-      const upd=()=>{ag.disabled=timer>0;ag.textContent=timer>0?`Новый код через ${timer} с`:'Отправить код ещё раз';ag.style.opacity=timer>0?.55:1;};
+      const upd=()=>{ag.disabled=timer>0;ag.textContent=timer>0?`Новый код через ${timer} с`:'Отправить код еще раз';ag.style.opacity=timer>0?.55:1;};
       upd();clearInterval(tick);tick=setInterval(()=>{if(timer>0){timer--;upd();}},1000);
       cd.oninput=()=>{cd.value=cd.value.replace(/\D/g,'').slice(0,6);if(cd.value.length===6)$('#f').requestSubmit();};
       $('#chg').onclick=()=>{clearInterval(tick);step='mail';draw();};
@@ -110,7 +111,7 @@ function loginView(){
 
 /* ---------- list ---------- */
 function status(o){
-  if(o.status==='published'&&o.expired)return'<span class="chip red"><i></i>Срок истёк</span>';
+  if(o.status==='published'&&o.expired)return'<span class="chip red"><i></i>Срок истек</span>';
   if(o.status==='published')return'<span class="chip pub"><i></i>Опубликовано</span>';
   return'<span class="chip"><i></i>Черновик</span>';}
 function swatch(o){const d=DESIGNS[o.tpl]||{n:'',bg:'#F3EEEE',ink:'#241B20',acc:'#C62828'};
@@ -159,7 +160,7 @@ async function invView(id){
       <p class="note" style="margin-top:12px">${o.expired?'Срок действия ссылки закончился '+esc(tsDate(o.expires_at))+'.':'Ссылка работает до '+esc(tsDate(o.expires_at))+'.'} Тексты, время и адрес можно менять до праздника, ссылка у гостей не изменится.</p></div>`
     :`<div class="panel"><h2>Публикация</h2>
       <label class="field"><span>Адрес ссылки</span><div class="slug"><span>knocky.ru/</span><input class="inp" id="slug" value="${esc(o.slug||'')}" placeholder="anna-ilya" maxlength="40" autocomplete="off" spellcheck="false"></div></label>
-      <p class="note" style="margin-top:8px">Латинские буквы, цифры и дефис. Если оставить пустым, адрес соберём из имён.</p>
+      <p class="note" style="margin-top:8px">Латинские буквы, цифры и дефис. Если оставить пустым, адрес соберем из имен.</p>
       <p class="err" id="slugEr" hidden></p>
       <div class="acts" style="margin-top:14px"><button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>${ME.admin?`<button class="btn btn-soft" id="pubBtn">Опубликовать без оплаты</button>`:''}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
       <div id="priceBox" style="margin-top:12px"></div>
@@ -178,7 +179,7 @@ async function invView(id){
       ${!pub||ME.admin?`<button class="btn btn-ghost" id="delBtn">Удалить</button>`:''}${ME.admin&&pub?`<button class="btn btn-ghost" id="unpubBtn">Снять с публикации</button>`:''}</div></div>
     ${linkBlock}
     ${rsvpOn||namedOn?`<div class="stats">
-      <div class="stat yes"><b>${a.people||0}</b><span>${a.people===1?'гость придёт':'гостей придут'}</span></div>
+      <div class="stat yes"><b>${a.people||0}</b><span>${a.people===1?'гость придет':'гостей придут'}</span></div>
       <div class="stat"><b>${a.no||0}</b><span>не смогут</span></div>
       ${namedOn?`<div class="stat"><b>${opened}<small style="font-size:15px;color:var(--muted)"> / ${ans.guests.length}</small></b><span>открыли ссылку</span></div>`:`<div class="stat"><b>${a.total||0}</b><span>всего ответов</span></div>`}</div>`:''}
     ${tabs.length?`<div class="panel"><div class="row spread" style="margin-bottom:14px"><div class="tabs" role="tablist">${tabs.map((t,i)=>`<button role="tab" aria-selected="${i===0}" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div>
@@ -223,7 +224,7 @@ async function invView(id){
   const slugIn=$('#slug'),slugEr=$('#slugEr');
   if(slugIn)slugIn.oninput=()=>{slugIn.value=slugIn.value.toLowerCase().replace(/[^a-z0-9-]/g,'');};
   const saveSlug=async()=>{slugEr.hidden=true;try{await api('/invitations/'+o.id,{method:'PUT',body:JSON.stringify({slug:slugIn.value})});return true;}catch(x){slugEr.hidden=false;slugEr.textContent=x.message;return false;}};
-  if($('#slugSave'))$('#slugSave').onclick=async()=>{if(!slugIn.value){slugEr.hidden=false;slugEr.textContent='Впишите адрес или опубликуйте - соберём его из имён';return;}if(await saveSlug())toast('Адрес сохранён');};
+  if($('#slugSave'))$('#slugSave').onclick=async()=>{if(!slugIn.value){slugEr.hidden=false;slugEr.textContent='Впишите адрес или опубликуйте - соберем его из имен';return;}if(await saveSlug())toast('Адрес сохранен');};
   if($('#pubBtn'))$('#pubBtn').onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;
     try{await api('/invitations/'+o.id+'/publish',{method:'POST'});toast('Опубликовано');invView(id);}catch(x){slugEr.hidden=false;slugEr.textContent=x.message;}};
   if($('#payBtn')){const pb=$('#payBtn');

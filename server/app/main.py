@@ -44,7 +44,7 @@ ROBOKASSA_URL = "https://auth.robokassa.ru/Merchant/Index.aspx"
 RENDER_PORT = int(os.environ.get("KNOCKY_PORT", "8000"))
 RENDER_SIZES = {"og": (1200, 630)}
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
-TR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
+TR = dict(zip("абвгдеежзийклмнопрстуфхцчшщъыьэюя",
               ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sch","","y","","e","yu","ya"]))
 RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print", "og", "render", "pay"}
 
@@ -433,9 +433,7 @@ async def auth_request(req: Request):
     email = str(d.get("email", "")).strip().lower()
     if not EMAIL_RE.match(email):
         return err("Введите почту, например anna@mail.ru")
-    with db() as c:
-        known = c.execute("SELECT consent_at FROM users WHERE email=?", (email,)).fetchone()
-    if not (known and known["consent_at"]) and not d.get("agree"):
+    if not d.get("agree"):
         return JSONResponse({"error": "Нужно согласие на обработку персональных данных", "need_agree": True}, status_code=400)
     ip = client_ip(req)
     if not rate("ip:" + ip, 10, 3600) or not rate("mail:" + email, 5, 3600):
@@ -1118,9 +1116,9 @@ async def pub_rsvp(req: Request):
         prev = c.execute("SELECT id FROM rsvp WHERE inv_id=? AND guest_id=?", (r["id"], g["id"])).fetchone() if g else None
         if not g:
             # the same guest answering again from the common link: keep only the latest answer (matched by name)
-            key = name.casefold().replace("ё", "е")
+            key = name.casefold().replace("е", "е")
             prev = next((x for x in c.execute("SELECT id, name FROM rsvp WHERE inv_id=? AND guest_id IS NULL ORDER BY id DESC", (r["id"],))
-                         if x["name"].casefold().replace("ё", "е") == key), None)
+                         if x["name"].casefold().replace("е", "е") == key), None)
         if prev:
             c.execute("UPDATE rsvp SET name=?, attend=?, people=?, comment=?, days=?, updated=? WHERE id=?",
                       (name, attend, people, comment, json.dumps(days) if days is not None else None, now(), prev["id"]))
