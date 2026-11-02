@@ -1093,13 +1093,21 @@ def rk_check(oid: int) -> str:
     login = s.get("login")
     if not (login and p2):
         return "no settings"
-    q = urllib.parse.urlencode({"MerchantLogin": login, "InvoiceID": oid, "Signature": rk_sign(login, oid, p2)})
-    try:
-        with urllib.request.urlopen("https://auth.robokassa.ru/Merchant/WebService/Service.asmx/OpStateExt?" + q, timeout=8) as r:
-            x = r.read().decode("utf-8", "replace")
-    except Exception as e:
-        paylog(oid, f"opstate error: {e}")
-        return "error"
+    # the docs do not say which hash this method wants: try the shop's SHA256 first, then MD5
+    x = ""
+    for algo in ("sha256", "md5"):
+        sig = getattr(hashlib, algo)(f"{login}:{oid}:{p2}".encode()).hexdigest()
+        q = urllib.parse.urlencode({"MerchantLogin": login, "InvoiceID": oid, "Signature": sig})
+        try:
+            with urllib.request.urlopen("https://auth.robokassa.ru/Merchant/WebService/Service.asmx/OpStateExt?" + q, timeout=8) as r:
+                x = r.read().decode("utf-8", "replace")
+        except Exception as e:
+            paylog(oid, f"opstate error: {e}")
+            return "error"
+        if "<Code>1</Code>" not in x.split("</Result>")[0]:
+            if algo != "sha256":
+                paylog(oid, f"opstate works with {algo}")
+            break
     try:
         root = ET.fromstring(x)
         val = lambda path: next((el.text for el in root.iter() if el.tag.endswith(path)), None)
