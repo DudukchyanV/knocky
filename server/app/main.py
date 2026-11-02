@@ -27,6 +27,8 @@ APP_URL = os.environ.get("KNOCKY_APP_URL", "https://app.knocky.ru")
 SITE_URL = "https://knocky.ru"
 ORIGINS = {APP_URL, SITE_URL, "https://www.knocky.ru"} | ({"http://127.0.0.1:8765", "http://localhost:8765"} if DEV else set())
 ADMINS = {"me@dudukchyan.ru", "polina.demyanenko.2004@bk.ru"}
+# the owners' own test accounts: left out of the business stats
+STATS_SKIP = {"reddle777@mail.ru"}
 MAIL_FROM = "hello@knocky.ru"
 DOC_VERSION = "15.10.2026"
 # sha256 of the one-time setup token (the token itself is given to the owner, never stored here)
@@ -930,7 +932,7 @@ async def stats_csv(req: Request):
     if not key or not hmac.compare_digest(req.query_params.get("key", ""), key):
         return HTMLResponse("Нет доступа", status_code=403)
     t = req.query_params.get("t", "daily")
-    adm = tuple(ADMINS)
+    adm = tuple(ADMINS | STATS_SKIP)
     q = ",".join("?" * len(adm))
     with db() as c:
         inv = c.execute(f"SELECT i.tpl, i.data, i.created, i.published_at, i.paid_via FROM invitations i LEFT JOIN users u ON u.id=i.user_id "
