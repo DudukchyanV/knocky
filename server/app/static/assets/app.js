@@ -30,7 +30,7 @@ async function api(path,opt={}){
   return j;}
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600);}
 async function copy(t){try{await navigator.clipboard.writeText(t);toast('Ссылка скопирована');}catch(e){prompt('Скопируйте ссылку',t);}}
-function go(p,replace){history[replace?'replaceState':'pushState']({},'',p);route();}
+function go(p,replace){history[replace?'replaceState':'pushState']({},'',p);route();if(!replace&&window.KH)KH.hit(location.href);}
 document.addEventListener('click',e=>{const a=e.target.closest('a[data-go]');if(a&&!e.metaKey&&!e.ctrlKey){e.preventDefault();go(a.getAttribute('href'));}});
 window.addEventListener('popstate',route);
 
@@ -224,10 +224,10 @@ async function invView(id){
     api('/invitations/'+o.id+'/price').then(pr=>{if(!pr.ready){pb.textContent='Прием оплаты откроется в ближайшие дни';pb.disabled=true;pb.setAttribute('aria-disabled','true');}else{pb.textContent=`Оплатить ${pr.total.toLocaleString('ru-RU')} ₽ и получить ссылку${pr.test?' (тест)':''}`;pb.removeAttribute('aria-disabled');}
       const box=$('#priceBox');if(box)box.innerHTML=`${pr.ready?'':'<p style="margin:0 0 8px;color:var(--muted,#6E5F68)">Приглашение сохранено. Вернитесь сюда, когда откроется оплата.</p>'}<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${i.price.toLocaleString('ru-RU')} ₽</td></tr>`).join('')}</tbody></table></div></details>`;}).catch(()=>{});
     pb.onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;pb.disabled=true;
-      try{const j=await api('/invitations/'+o.id+'/pay',{method:'POST'});location.href=j.url;setTimeout(()=>{pb.disabled=false;},4000);}catch(x){pb.disabled=false;slugEr.hidden=false;slugEr.textContent=x.message;}};
+      try{if(window.KH)KH.goal('pay_click');const j=await api('/invitations/'+o.id+'/pay',{method:'POST'});location.href=j.url;setTimeout(()=>{pb.disabled=false;},4000);}catch(x){pb.disabled=false;slugEr.hidden=false;slugEr.textContent=x.message;}};
     addEventListener('pageshow',()=>{if(pb.getAttribute('aria-disabled')!=='true')pb.disabled=false;});}
   const qs=new URLSearchParams(location.search);
-  if(qs.get('paid')){history.replaceState({},'',location.pathname);if(!pub){toast('Оплата прошла. Публикуем приглашение…');setTimeout(()=>invView(id),4000);}else toast('Оплата прошла, приглашение опубликовано');}
+  if(qs.get('paid')){if(window.KH)KH.goal('paid');history.replaceState({},'',location.pathname);if(!pub){toast('Оплата прошла. Публикуем приглашение…');setTimeout(()=>invView(id),4000);}else toast('Оплата прошла, приглашение опубликовано');}
   if(qs.get('payfail')){history.replaceState({},'',location.pathname);toast('Оплата не прошла. Попробуйте еще раз');}
   if($('#unpubBtn'))$('#unpubBtn').onclick=async()=>{if(!(await ask('Снять с публикации?','Гости перестанут видеть приглашение по ссылке, пока вы не опубликуете его снова.','Снять')))return;
     try{await api('/invitations/'+o.id+'/unpublish',{method:'POST'});invView(id);}catch(x){toast(x.message);}};

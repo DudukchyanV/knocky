@@ -2216,7 +2216,21 @@ html{scrollbar-gutter:stable}
     try{document.dispatchEvent(new CustomEvent('kh-user',{detail:email||null}));}catch(e){}}
   function loadUser(){fetch(API+'/me',{credentials:'include'}).then(function(r){return r.json();}).then(function(j){setUser(j&&j.user?j.user.email:null);}).catch(function(){setUser(null);});}
   $('khOut').addEventListener('click',function(){fetch(API+'/auth/logout',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:'{}'}).catch(function(){}).then(function(){setUser(null);try{document.dispatchEvent(new CustomEvent('kh-logout'));}catch(e){}});});
-  window.KH={setUser:setUser,reload:loadUser,page:page};
+  /* Yandex Metrika: only after "Принять все" in the cookie bar (one choice for knocky.ru and app.knocky.ru),
+     never on guest invitations; Webvisor only on the main page (the cabinet shows guests' names) */
+  var YM=114013158;
+  function ckChoice(){var c;try{c=(document.cookie.match(/(?:^|; )knocky-cookies=(all|necessary)/)||[])[1]||localStorage.getItem('knocky-cookies');}catch(e){}return c||null;}
+  function loadYm(){
+    if(window.ym||ckChoice()!=='all'||/^#invite/.test(location.hash)||/^\/i\//.test(location.pathname))return;
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a);})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id='+YM,'ym');
+    ym(YM,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:page==='home'});
+  }
+  function setConsent(v){try{localStorage.setItem('knocky-cookies',v);document.cookie='knocky-cookies='+v+';path=/;max-age=31536000;samesite=lax'+(/knocky\.ru$/.test(location.hostname)?';domain=knocky.ru':'');}catch(e){}if(v==='all')loadYm();}
+  function goal(n){try{if(window.ym)ym(YM,'reachGoal',n);}catch(e){}}
+  function hit(url){try{if(window.ym)ym(YM,'hit',url||location.href);}catch(e){}}
+  window.KH={setUser:setUser,reload:loadUser,page:page,consent:ckChoice,setConsent:setConsent,goal:goal,hit:hit};
+  loadYm();
   loadUser();addEventListener('pageshow',function(e){if(e.persisted)loadUser();});
 })();
 </script><!--KH:end-->
@@ -2361,7 +2375,7 @@ html{scrollbar-gutter:stable}
   </div>
 </dialog>
 
-<dialog id="dlg" aria-labelledby="dlgTitle">
+<dialog id="dlg" class="ym-hide-content" aria-labelledby="dlgTitle">
   <div style="position:relative">
     <div class="dlg-top"><button class="ib" id="topBack" type="button" aria-label="Назад" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button><button class="ib" id="closeBtn" type="button" aria-label="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button></div>
     <div class="dlg">
@@ -3348,10 +3362,13 @@ document.getElementById('backBtn').addEventListener('click',goBack);
 document.getElementById('topBack').addEventListener('click',goBack);
 
 pick.addEventListener('click',e=>{if(e.target.tagName==='INPUT')return;const c=e.target.closest('.pk');if(c&&matchMedia('(hover:none)').matches){document.querySelectorAll('.pk.flip').forEach(x=>x!==c&&x.classList.remove('flip'));c.classList.toggle('flip');}});
-function openT(id,m){const nt=TPL.find(t=>t.id===id);if(!data.pal||data.pal.id!==nt.id){data.pal={id:nt.id,i:0};data.sw=null;}cur=nt;mode='build';if(pendingPreset){sel=new Set(PLANS.find(p=>p.id===pendingPreset).blocks);pendingPreset=null;}document.getElementById('dlgTitle').textContent=cur.name;document.getElementById('dlgStyle').textContent='Дизайн · '+cur.style;
+function editing(){try{return !!editId;}catch(e){return false;}}
+function openT(id,m){if(window.KH&&!editing())KH.goal('design_open');const nt=TPL.find(t=>t.id===id);if(!data.pal||data.pal.id!==nt.id){data.pal={id:nt.id,i:0};data.sw=null;}cur=nt;mode='build';if(pendingPreset){sel=new Set(PLANS.find(p=>p.id===pendingPreset).blocks);pendingPreset=null;}document.getElementById('dlgTitle').textContent=cur.name;document.getElementById('dlgStyle').textContent='Дизайн · '+cur.style;
   document.getElementById('done').hidden=true;drawPick();showStep(0);pv.scrollTop=0;
   if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b)openT(b.dataset.open);});
+/* goal: the first change in the constructor (once per page) */
+(()=>{let done=false;const f=document.getElementById('orderForm');['input','change'].forEach(ev=>f.addEventListener(ev,()=>{if(!done&&window.KH&&!editing()){done=true;KH.goal('build_start');}},true));})();
 document.getElementById('closeBtn').onclick=()=>dlg.close();
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
 const map={fA:'a',fB:'b',fDate:'date',fTime:'time',fVenue:'venue',fAddr:'addr'};
@@ -3405,6 +3422,7 @@ document.getElementById('orderForm').addEventListener('submit',async e=>{e.preve
     const j=await r.json().catch(()=>({}));
     if(r.status===401){bad('');d.innerHTML=`Войдите в кабинет, чтобы сохранить изменения: <a href="${APP}/" target="_blank" rel="noopener">открыть кабинет</a>.`;pb.disabled=false;pb.textContent=old;return;}
     if(!r.ok)throw new Error(j.error||'Не получилось сохранить');
+    if(!editId&&window.KH)KH.goal('saved');
     location.href=editId?APP+'/inv/'+encodeURIComponent(editId):j.next+(j.claim?'&email='+encodeURIComponent(em.value.trim()):'');
   }catch(x){pb.disabled=false;pb.textContent=old;bad((x&&x.message&&x.message!=='Failed to fetch'?x.message:'Нет связи с сервером.')+' Попробуйте еще раз.');}});
 /* edit an invitation from the cabinet: knocky.ru/#edit=<id> */
@@ -3430,9 +3448,9 @@ const root=document.documentElement;
 
 /* cookie consent */
 const ck=document.getElementById('cookieBar');
-let ckSaved=null;try{ckSaved=localStorage.getItem('knocky-cookies')}catch(e){}
+let ckSaved=window.KH?KH.consent():null;
 if(!ckSaved)ck.hidden=false;
-function saveCk(v){try{localStorage.setItem('knocky-cookies',v)}catch(e){}ck.hidden=true;}
+function saveCk(v){if(window.KH)KH.setConsent(v);ck.hidden=true;}
 document.getElementById('ckAll').onclick=()=>saveCk('all');
 document.getElementById('ckNeed').onclick=()=>saveCk('necessary');
 document.getElementById('cookieSettings').onclick=()=>{ck.hidden=false;document.getElementById('ckNeed').focus();};
