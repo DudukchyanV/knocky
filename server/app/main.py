@@ -839,6 +839,86 @@ def xlsx_bytes(sheets: list) -> bytes:
     return out.getvalue()
 
 
+# ---------------------------------------------------------------- business stats for the owner's Google Sheet (no personal data)
+TPL_NAMES = {"arch": "Арка", "autumn": "Осень", "azul": "Азулежу", "banquet": "Банкет", "bow": "Бант", "burg": "Бордо", "card": "Минимум", "curtain": "Занавес", "damask": "Дамаск", "deco": "Ар-деко", "delft": "Гортензия", "doves": "Голуби", "emerald": "Изумруд", "engrave": "Гравюра", "enso": "Тушь", "envelope": "Конверт", "estate": "Усадьба", "euca": "Эвкалипт", "eucap": "Листья эвкалипта", "farch": "Цветочная арка", "fcorner": "Уголок", "field": "Полевые цветы", "flourish": "Вензель", "garden": "Церемония", "garland": "Гирлянда", "glass": "Витраж", "hydra": "Гортензии", "lace": "Кружево", "lavender": "Лаванда", "lemon": "Лимоны", "lemonb": "Лимонная ветка", "lemonp": "Лимонный узор", "lily": "Ландыши", "mag": "Обложка", "mail": "Авиапочта", "meadow": "Луг", "mille": "Миллефлер", "mono": "Монограмма", "numbers": "Цифры", "olive": "Оливы", "paper": "Бумага", "pine": "Зимний венок", "polar": "Полароид", "poppy": "Маки", "poster": "Плакат", "rings": "Кольца", "roses": "Розы", "route": "Маршрут", "seal": "Сургуч", "silk": "Шелк", "site": "Оптимум", "sketch": "Эскиз", "snow": "Снег", "sprig": "Веточки", "stars": "Созвездие", "supper": "Ужин", "surf": "Прибой", "terrace": "Терраса", "tuscany": "Тоскана", "velvet": "Бархат", "villa": "Вилла", "vine": "Виноградник", "vinyl": "Винил", "wc": "Акварель", "wheat": "Маки и пшеница", "winter": "Зимний лес", "wpeony": "Белые пионы"}
+BLOCK_NAMES = {"timer": "Таймер до праздника", "program": "Программа дня", "map": "Карта и маршрут", "dress": "Дресс-код", "rsvp": "Анкета гостя", "gallery": "Фотогалерея", "wishlist": "Вишлист", "named": "Именные ссылки", "seating": "Рассадка", "print": "Печатная версия", "year": "Ссылка на 12 месяцев"}
+MSK = dt.timezone(dt.timedelta(hours=3))
+
+
+def _csv(rows: list) -> Response:
+    import csv
+    b = io.StringIO()
+    csv.writer(b).writerows(rows)
+    return Response(b.getvalue(), media_type="text/csv; charset=utf-8", headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+async def stats_csv(req: Request):
+    """Aggregate numbers only: /api/stats.csv?key=...&t=daily|designs|blocks. Admins' own test data is left out."""
+    key = load_secrets().get("stats_key")
+    if not key or not hmac.compare_digest(req.query_params.get("key", ""), key):
+        return HTMLResponse("Нет доступа", status_code=403)
+    t = req.query_params.get("t", "daily")
+    adm = tuple(ADMINS)
+    q = ",".join("?" * len(adm))
+    with db() as c:
+        inv = c.execute(f"SELECT i.tpl, i.data, i.created, i.published_at, i.paid_via FROM invitations i LEFT JOIN users u ON u.id=i.user_id "
+                        f"WHERE u.email IS NULL OR u.email NOT IN ({q})", adm).fetchall()
+        users = c.execute(f"SELECT created FROM users WHERE email NOT IN ({q})", adm).fetchall()
+        orders = c.execute(f"SELECT o.amount, o.paid_at FROM orders o LEFT JOIN users u ON u.id=o.user_id "
+                           f"WHERE o.status='paid' AND o.test=0 AND (u.email IS NULL OR u.email NOT IN ({q}))", adm).fetchall()
+        ok_inv = f"inv_id IN (SELECT i.id FROM invitations i LEFT JOIN users u ON u.id=i.user_id WHERE u.email IS NULL OR u.email NOT IN ({q}))"
+        rs = c.execute(f"SELECT created FROM rsvp WHERE {ok_inv}", adm).fetchall()
+        gs = c.execute(f"SELECT first_open FROM guests WHERE first_open IS NOT NULL AND {ok_inv}", adm).fetchall()
+    paid = lambda r: r["paid_via"] in ("robokassa",)
+    if t == "designs":
+        agg = {}
+        for r in inv:
+            a = agg.setdefault(r["tpl"], [0, 0, 0])
+            a[0] += 1
+            a[1] += 1 if r["published_at"] else 0
+            a[2] += 1 if paid(r) else 0
+        rows = sorted(agg.items(), key=lambda x: -x[1][0])
+        return _csv([["Дизайн", "Код", "Сохранено", "Опубликовано", "Оплачено"]] + [[TPL_NAMES.get(k, k), k] + v for k, v in rows])
+    if t == "blocks":
+        agg = {b: [0, 0] for b in BLOCK_NAMES}
+        for r in inv:
+            try:
+                sel = json.loads(r["data"]).get("sel") or []
+            except Exception:
+                sel = []
+            for b in sel:
+                if b in agg:
+                    agg[b][0] += 1
+                    agg[b][1] += 1 if paid(r) else 0
+        rows = sorted(agg.items(), key=lambda x: -x[1][0])
+        return _csv([["Блок", "Код", "В сохраненных", "В оплаченных"]] + [[BLOCK_NAMES.get(k, k), k] + v for k, v in rows])
+    day = lambda ts: dt.datetime.fromtimestamp(ts, MSK).date() if ts else None
+    cols = {}
+    def add(ts, i, v=1):
+        d = day(ts)
+        if d:
+            cols.setdefault(d, [0] * 7)[i] += v
+    for r in users:
+        add(r["created"], 0)
+    for r in inv:
+        add(r["created"], 1)
+        add(r["published_at"], 2)
+    for r in orders:
+        add(r["paid_at"], 3)
+        add(r["paid_at"], 4, r["amount"])
+    for r in rs:
+        add(r["created"], 5)
+    for r in gs:
+        add(r["first_open"], 6)
+    out = [["Дата", "Новые пользователи", "Сохранено приглашений", "Опубликовано", "Оплат", "Выручка, руб", "Ответов гостей", "Гостей открыли именную ссылку"]]
+    if cols:
+        d, end = min(cols), dt.datetime.now(MSK).date()
+        while d <= end:
+            out.append([d.strftime("%Y-%m-%d")] + cols.get(d, [0] * 7))
+            d += dt.timedelta(days=1)
+    return _csv(out)
+
+
 @need_user
 async def inv_export(req: Request):
     with db() as c:
@@ -1556,6 +1636,7 @@ async def page_setup(req: Request):
         return HTMLResponse("Ссылка недействительна", status_code=404)
     s = load_secrets()
     s["render_key"] = hashlib.sha256(("knocky-render:" + t).encode()).hexdigest()
+    s["stats_key"] = hashlib.sha256(("knocky-stats:" + t).encode()).hexdigest()[:32]
     msgs = []
     ae, ap = str(form.get("admin_email") or "").strip().lower(), str(form.get("admin_pw") or "")
     if ap:
@@ -1664,6 +1745,7 @@ routes = [
     Route("/api/invitations/{id}/unpublish", inv_unpublish, methods=["POST"]),
     Route("/api/invitations/{id}/answers", inv_answers),
     Route("/api/invitations/{id}/export.xlsx", inv_export),
+    Route("/api/stats.csv", stats_csv),
     Route("/api/invitations/{id}/preview", preview_get),
     Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
     Route("/api/invitations/{id}/price", inv_price),
