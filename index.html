@@ -3650,6 +3650,8 @@ async function reverseAddr(lat,lng){try{const r=await dd('geolocate/address',{la
 (()=>{const reduce=matchMedia('(prefers-reduced-motion: reduce)');let anim=0;
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   function glide(y){cancelAnimationFrame(anim);const y0=scrollY,dy=y-y0;if(Math.abs(dy)<2)return;
+    /* the browser's own smooth scroll runs off the main thread: no stutter on a heavy page */
+    if(!reduce.matches&&'scrollBehavior' in document.documentElement.style){scrollTo({top:y,behavior:'smooth'});return;}
     /* owner wants a visible glide even with "reduce motion": keep it, but shorter */
     const dur=reduce.matches?Math.max(200,Math.min(380,180+Math.abs(dy)*.06)):Math.max(300,Math.min(750,250+Math.abs(dy)*.12)),t0=performance.now();
     const step=now=>{const k=Math.min(1,(now-t0)/dur);scrollTo(0,y0+dy*ease(k));if(k<1)anim=requestAnimationFrame(step);};anim=requestAnimationFrame(step);}
@@ -3666,7 +3668,7 @@ async function reverseAddr(lat,lng){try{const r=await dd('geolocate/address',{la
   rail.insertAdjacentHTML('beforeend',secs.map(x=>`<button type="button" data-go="${x.id}" aria-label="${x.n}"><span>${x.n}</span></button>`).join(''));
   const dots=[...rail.querySelectorAll('button')];let max=1,pos=[];
   function layout(){max=Math.max(1,document.documentElement.scrollHeight-innerHeight);pos=secs.map(x=>Math.min(1,Math.max(0,(x.el.getBoundingClientRect().top+scrollY-innerHeight*.25)/max)));dots.forEach((d,i)=>d.style.top=(pos[i]*100)+'%');upd();}
-  function upd(){const p=Math.min(1,Math.max(0,scrollY/max));document.documentElement.style.setProperty('--p',p.toFixed(4));
+  function upd(){const p=Math.min(1,Math.max(0,scrollY/max));bar.style.setProperty('--p',p.toFixed(4));rail.style.setProperty('--p',p.toFixed(4));
     let cur=-1;pos.forEach((q,i)=>{if(p>=q-.002)cur=i;});dots.forEach((d,i)=>{d.classList.toggle('on',p>=pos[i]-.002);d.classList.toggle('cur',i===cur);});
     rail.classList.toggle('top',scrollY<innerHeight*.35);}
   let raf=0;addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(()=>{raf=0;upd();});},{passive:true});
