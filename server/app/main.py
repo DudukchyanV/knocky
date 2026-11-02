@@ -1090,7 +1090,7 @@ async def inv_pay(req: Request):
                           "payment_method": "full_payment", "payment_object": "service", "tax": "none"}]}, ensure_ascii=False, separators=(",", ":"))
     rq = quote(receipt, safe="")
     sig = rk_sign(conf["login"], out_sum, oid, rq, conf["p1"])
-    params = {"MerchantLogin": conf["login"], "OutSum": out_sum, "InvId": oid, "Description": "Приглашение Knocky",
+    params = {"MerchantLogin": conf["login"], "OutSum": out_sum, "InvId": oid, "Description": ("Онлайн-приглашение Knocky: " + inv_title(d))[:100],
               "Receipt": rq, "SignatureValue": sig, "Email": u["email"], "Culture": "ru", "Encoding": "utf-8"}
     if conf["test"]:
         params["IsTest"] = 1
