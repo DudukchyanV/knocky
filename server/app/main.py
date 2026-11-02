@@ -638,6 +638,21 @@ async def admin_markpaid(req: Request):
     return JSONResponse({"ok": True, "order": oid, "invitation": o["inv_id"]})
 
 
+@need_user
+async def inv_refunded(req: Request):
+    """Admin: the money for this invitation was returned in Robokassa - switch the link off."""
+    if not is_admin(req.state.user):
+        return err("Только для администратора", 403)
+    iid = req.path_params["id"]
+    with db() as c:
+        rows = c.execute("SELECT id FROM orders WHERE inv_id=? AND status='paid'", (iid,)).fetchall()
+        if not rows:
+            c.execute("UPDATE invitations SET status='draft', paid_via=NULL, expires_at=NULL, updated=? WHERE id=?", (now(), iid))
+    for r in rows:
+        unpublish_refunded(r["id"], "admin button")
+    return JSONResponse({"ok": True})
+
+
 async def admin_refunded(req: Request):
     """Owner's manual switch-off after a refund: /api/admin/refunded?t=<setup token>&oid=<order number>"""
     if not setup_token_ok(req.query_params.get("t", "")):
@@ -1915,6 +1930,7 @@ routes = [
     Route("/api/admin/paylog", admin_paylog),
     Route("/api/admin/markpaid", admin_markpaid),
     Route("/api/admin/refunded", admin_refunded),
+    Route("/api/invitations/{id}/refunded", inv_refunded, methods=["POST"]),
     Route("/api/invitations/{id}/preview", preview_get),
     Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
     Route("/api/invitations/{id}/price", inv_price),
@@ -1954,7 +1970,8 @@ def refund_sweep():
         time.sleep(900)
 
 
-if not DEV:
-    threading.Thread(target=refund_sweep, daemon=True).start()
+# OpStateExt keeps state 100 after a refund, so a sweep can't see refunds; the admin button in the cabinet does it
+# if not DEV:
+#     threading.Thread(target=refund_sweep, daemon=True).start()
 
 app = Guard(Starlette(routes=routes))

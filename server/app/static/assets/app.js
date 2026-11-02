@@ -149,7 +149,7 @@ async function invView(id){
       <div class="link"><a href="${esc(o.link)}" target="_blank" rel="noopener">${esc(o.link.replace('https://',''))}</a><button class="btn btn-seal btn-sm" data-copy="${esc(o.link)}">${IC.copy}Копировать</button></div>
       <div class="acts" style="margin-top:12px"><a class="btn btn-soft btn-sm" href="https://t.me/share/url?url=${encodeURIComponent(o.link)}&text=${encodeURIComponent(shareText)}" target="_blank" rel="noopener">Отправить в Telegram</a>
       <a class="btn btn-soft btn-sm" href="https://wa.me/?text=${encodeURIComponent(shareText+' '+o.link)}" target="_blank" rel="noopener">Отправить в WhatsApp</a>
-      <a class="btn btn-ghost btn-sm" href="${esc(o.link)}" target="_blank" rel="noopener">${IC.ext}Открыть</a></div>
+      <a class="btn btn-ghost btn-sm" href="${esc(o.link)}" target="_blank" rel="noopener">${IC.ext}Открыть</a></div>${ME.admin?`<div class="acts" style="margin-top:12px"><button class="btn btn-ghost btn-sm" id="refBtn">Деньги возвращены - выключить ссылку</button></div>`:''}
       <p class="note" style="margin-top:12px">${o.expired?'Срок действия ссылки закончился '+esc(tsDate(o.expires_at))+'.':'Ссылка работает до '+esc(tsDate(o.expires_at))+'.'} Тексты, время и адрес можно менять до праздника, ссылка у гостей не изменится.</p></div>`
     :`<div class="panel"><h2>Публикация</h2>
       <label class="field"><span>Адрес ссылки</span><div class="slug"><span>knocky.ru/</span><input class="inp" id="slug" value="${esc(o.slug||'')}" placeholder="anna-ilya" maxlength="40" autocomplete="off" spellcheck="false"></div></label>
@@ -220,6 +220,8 @@ async function invView(id){
   if($('#slugSave'))$('#slugSave').onclick=async()=>{if(!slugIn.value){slugEr.hidden=false;slugEr.textContent='Впишите адрес или опубликуйте - соберем его из имен';return;}if(await saveSlug())toast('Адрес сохранен');};
   if($('#pubBtn'))$('#pubBtn').onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;
     try{await api('/invitations/'+o.id+'/publish',{method:'POST'});toast('Опубликовано');invView(id);}catch(x){slugEr.hidden=false;slugEr.textContent=x.message;}};
+  if($('#refBtn'))$('#refBtn').onclick=async()=>{if(!confirm('Ссылка у гостей перестанет открываться, приглашение станет черновиком. Делайте это после возврата денег в Робокассе. Продолжить?'))return;
+    try{await api('/invitations/'+o.id+'/refunded',{method:'POST'});toast('Ссылка выключена');invView(id);}catch(x){toast(x.message);}};
   if($('#payBtn')){const pb=$('#payBtn');
     api('/invitations/'+o.id+'/price').then(pr=>{if(!pr.ready){pb.textContent='Прием оплаты откроется в ближайшие дни';pb.disabled=true;pb.setAttribute('aria-disabled','true');}else{pb.textContent=`Оплатить ${pr.total.toLocaleString('ru-RU')} ₽ и получить ссылку${pr.test?' (тест)':''}`;pb.removeAttribute('aria-disabled');}
       const box=$('#priceBox');if(box)box.innerHTML=`${pr.ready?'':'<p style="margin:0 0 8px;color:var(--muted,#6E5F68)">Приглашение сохранено. Вернитесь сюда, когда откроется оплата.</p>'}<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${i.price.toLocaleString('ru-RU')} ₽</td></tr>`).join('')}</tbody></table></div></details>`;}).catch(()=>{});
