@@ -1182,8 +1182,9 @@ def rk_check(oid: int, refunds: bool = False) -> str:
         if state in ("10", "60"):
             unpublish_refunded(oid, "state " + state)
             return "refunded"
-        if state != "100":
-            paylog(oid, f"paid order, opstate state {state}: {x[:300]}")
+        # what Robokassa says about a paid order (once a day): to learn how a refund shows up
+        if rate(f"opraw:{oid}", 1, 86400):
+            paylog(oid, f"paid order, opstate state {state}: " + re.sub(r"\s+", " ", x.split("?>", 1)[-1])[:900])
         return "paid"
     if state == "100":
         try:
@@ -1947,6 +1948,7 @@ def refund_sweep():
             for r in rows:
                 rk_check(r["id"], refunds=True)
                 time.sleep(1)
+            paylog(0, f"refund sweep: {len(rows)} paid orders checked")
         except Exception as e:
             print("refund sweep:", e, flush=True)
         time.sleep(900)
