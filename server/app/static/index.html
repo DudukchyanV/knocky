@@ -8,7 +8,7 @@
 <meta name="description" content="Личный кабинет Knocky: ваши приглашения, ответы гостей и ссылки.">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/fonts.css">
-<link rel="stylesheet" href="/assets/app.css?v=20261102g">
+<link rel="stylesheet" href="/assets/app.css?v=20261102h">
 <script>try{document.documentElement.dataset.theme=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]||localStorage.getItem('knocky-theme')||'light'}catch(e){}</script>
 </head>
 <body>
@@ -89,7 +89,7 @@ html{scrollbar-gutter:stable}
   /* menu */
   var btn=$('khMenuBtn'),menu=$('khMenu');
   function isOpen(){return menu.classList.contains('open');}
-  function setMenu(o){menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);btn.querySelector('span').textContent=o?'Закрыть':'Меню';}
+  function setMenu(o){menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);}
   btn.addEventListener('click',function(e){e.stopPropagation();setMenu(!isOpen());});
   menu.addEventListener('click',function(e){if(e.target.closest('a,button'))setMenu(false);});
   document.addEventListener('click',function(e){if(isOpen()&&!e.target.closest('#khMenu'))setMenu(false);});
@@ -109,6 +109,6 @@ html{scrollbar-gutter:stable}
   <span><a href="mailto:hello@knocky.ru">hello@knocky.ru</a> · <a href="https://knocky.ru" target="_blank" rel="noopener">knocky.ru</a></span>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=20261102g"></script>
+<script src="/assets/app.js?v=20261102h"></script>
 </body>
 </html>

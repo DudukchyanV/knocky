@@ -123,7 +123,7 @@ async function listView(admin){
   try{items=(await api('/invitations'+(admin?'?all=1':''))).items;}catch(x){app.innerHTML=`<div class="empty"><h2>Не получилось загрузить</h2><p>${esc(x.message)}</p><button class="btn btn-soft" onclick="location.reload()">Обновить</button></div>`;return;}
   const tabs=ME.admin?`<div class="tabs" role="tablist"><button role="tab" aria-selected="${!admin}" data-t="/">Мои</button><button role="tab" aria-selected="${!!admin}" data-t="/admin">Все приглашения</button></div>`:'';
   const head=`<div class="head"><div><h1>${admin?'Все приглашения':'Мои приглашения'}</h1>
-    <p>${admin?plural(items.length,'приглашение','приглашения','приглашений')+' на сервисе':'Черновики, опубликованные приглашения и ответы гостей.'}</p></div>${tabs}</div>`;
+    ${admin?'<p>'+plural(items.length,'приглашение','приглашения','приглашений')+' на сервисе</p>':''}</div>${tabs}</div>`;
   const newCard=`<a class="new" href="${SITE}/#templates"><b aria-hidden="true">+</b>Создать приглашение</a>`;
   if(!items.length&&!admin){
     app.innerHTML=head+`<div class="empty"><h2>Здесь пока пусто</h2><p>Выберите дизайн на knocky.ru, заполните данные и сохраните приглашение - оно появится здесь. Отсюда вы отправите ссылку гостям и будете видеть их ответы.</p><a class="btn btn-seal btn-xl" href="${SITE}/#templates">Выбрать дизайн</a></div>`;

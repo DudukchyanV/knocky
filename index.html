@@ -2206,7 +2206,7 @@ html{scrollbar-gutter:stable}
   /* menu */
   var btn=$('khMenuBtn'),menu=$('khMenu');
   function isOpen(){return menu.classList.contains('open');}
-  function setMenu(o){menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);btn.querySelector('span').textContent=o?'Закрыть':'Меню';}
+  function setMenu(o){menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);}
   btn.addEventListener('click',function(e){e.stopPropagation();setMenu(!isOpen());});
   menu.addEventListener('click',function(e){if(e.target.closest('a,button'))setMenu(false);});
   document.addEventListener('click',function(e){if(isOpen()&&!e.target.closest('#khMenu'))setMenu(false);});
