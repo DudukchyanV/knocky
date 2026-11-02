@@ -440,13 +440,15 @@ async def auth_request(req: Request):
     if email in ADMINS and not d.get("force_code") and load_secrets().get("admin_pw", {}).get(email):
         return JSONResponse({"password": True})
     ip = client_ip(req)
-    if not rate("ip:" + ip, 10, 3600) or not rate("mail:" + email, 5, 3600):
-        return err("Слишком много попыток. Попробуйте через час", 429)
+    # a code that was just sent is not a new attempt: check it before the limits
     with db() as c:
         r = c.execute("SELECT sent FROM codes WHERE email=?", (email,)).fetchone()
         if r and r["sent"] > now() - 50:
             return JSONResponse({"error": "Код уже отправлен. Новый можно запросить через минуту", "already": True,
                                  "wait": 50 - (now() - r["sent"])}, status_code=429)
+    # limits against mail spam: 10 codes an hour per address, 30 per network (several people at one Wi-Fi)
+    if not rate("mail2:" + email, 10, 3600) or not rate("ip2:" + ip, 30, 3600):
+        return err("Слишком много попыток. Попробуйте через 15 минут", 429)
     code = f"{secrets.randbelow(1_000_000):06d}"
     try:
         await asyncio.to_thread(send_mail, email, f"Код для входа в Knocky: {code}",
