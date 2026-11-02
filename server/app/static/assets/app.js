@@ -42,7 +42,10 @@ addEventListener('pageshow',()=>{let c;try{c=(document.cookie.match(/(?:^|; )kno
 themeBtn.setAttribute('aria-checked',curTheme()==='dark');
 themeBtn.onclick=()=>setTheme(curTheme()==='dark'?'light':'dark');
 $('#logoutBtn').onclick=async()=>{try{await api('/auth/logout',{method:'POST'})}catch(e){}ME=null;showWho();go('/',true);};
-function showWho(){$('#who').hidden=!ME;if(ME)$('#whoMail').textContent=ME.email;}
+function showWho(){$('#who').hidden=!ME;$('#whoMail').hidden=!ME;$('#whoMail').textContent=$('#meEmail').textContent=ME?ME.email:'';}
+(()=>{const btn=$('#menuBtn'),menu=$('#menu');const isOpen=()=>menu.classList.contains('open');const set=o=>{menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);btn.querySelector('span').textContent=o?'Закрыть':'Меню';};
+  btn.addEventListener('click',e=>{e.stopPropagation();set(!isOpen());});menu.addEventListener('click',e=>{if(e.target.closest('a,button'))set(false);});
+  document.addEventListener('click',e=>{if(isOpen()&&!e.target.closest('#menu'))set(false);});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()){set(false);btn.focus();}});})();
 
 /* ---------- login ---------- */
 function loginView(){

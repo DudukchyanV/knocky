@@ -8,7 +8,7 @@
 <meta name="description" content="Личный кабинет Knocky: ваши приглашения, ответы гостей и ссылки.">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/fonts.css">
-<link rel="stylesheet" href="/assets/app.css?v=20261102e">
+<link rel="stylesheet" href="/assets/app.css?v=20261102f">
 <script>try{document.documentElement.dataset.theme=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]||localStorage.getItem('knocky-theme')||'light'}catch(e){}</script>
 </head>
 <body>
@@ -22,9 +22,14 @@
         <svg class="moon" viewBox="0 0 24 24"><path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1Z" fill="currentColor"/></svg>
       </span>
     </button>
-    <div class="who" id="who" hidden>
-      <span id="whoMail"></span>
-      <button class="lnk" id="logoutBtn" type="button">Выйти</button>
+    <span class="hdr-mail" id="whoMail" hidden></span>
+    <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menu"><span>Меню</span><i aria-hidden="true"></i></button>
+    <div class="menu" id="menu" aria-hidden="true">
+      <nav class="menu-nav" aria-label="Разделы">
+        <a href="https://knocky.ru/#templates">Дизайны</a><a href="https://knocky.ru/#prices">Тарифы</a><a href="https://knocky.ru/#faq">Вопросы</a>
+      </nav>
+      <div class="menu-side"><a class="menu-row" href="https://knocky.ru/">Главная</a><a class="menu-row is-cur" href="/" aria-current="page">Кабинет</a><div class="me-row" id="who" hidden><span class="me-mail" id="meEmail"></span><button class="menu-row" id="logoutBtn" type="button">Выйти</button></div>
+      </div>
     </div>
   </div>
 </header>
@@ -34,6 +39,6 @@
   <span><a href="mailto:hello@knocky.ru">hello@knocky.ru</a> · <a href="https://knocky.ru" target="_blank" rel="noopener">knocky.ru</a></span>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/assets/app.js?v=20261102e"></script>
+<script src="/assets/app.js?v=20261102f"></script>
 </body>
 </html>
