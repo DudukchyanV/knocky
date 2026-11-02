@@ -35,17 +35,9 @@ document.addEventListener('click',e=>{const a=e.target.closest('a[data-go]');if(
 window.addEventListener('popstate',route);
 
 /* theme */
-const themeBtn=$('#themeBtn');
-function curTheme(){return document.documentElement.dataset.theme||'light';}
-function setTheme(t){document.documentElement.dataset.theme=t;themeBtn.setAttribute('aria-checked',t==='dark');try{localStorage.setItem('knocky-theme',t);document.cookie='knocky-theme='+t+';path=/;max-age=31536000;samesite=lax'+(/knocky\.ru$/.test(location.hostname)?';domain=knocky.ru':'')}catch(e){}}
-addEventListener('pageshow',()=>{let c;try{c=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]}catch(e){}if(c&&c!==curTheme()){setTheme(c);themeBtn.setAttribute('aria-checked',c==='dark');}});
-themeBtn.setAttribute('aria-checked',curTheme()==='dark');
-themeBtn.onclick=()=>setTheme(curTheme()==='dark'?'light':'dark');
-$('#logoutBtn').onclick=async()=>{try{await api('/auth/logout',{method:'POST'})}catch(e){}ME=null;showWho();go('/',true);};
-function showWho(){$('#who').hidden=!ME;$('#whoMail').hidden=!ME;$('#whoMail').textContent=$('#meEmail').textContent=ME?ME.email:'';}
-(()=>{const btn=$('#menuBtn'),menu=$('#menu');const isOpen=()=>menu.classList.contains('open');const set=o=>{menu.classList.toggle('open',o);menu.setAttribute('aria-hidden',!o);btn.setAttribute('aria-expanded',o);btn.querySelector('span').textContent=o?'Закрыть':'Меню';};
-  btn.addEventListener('click',e=>{e.stopPropagation();set(!isOpen());});menu.addEventListener('click',e=>{if(e.target.closest('a,button'))set(false);});
-  document.addEventListener('click',e=>{if(isOpen()&&!e.target.closest('#menu'))set(false);});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()){set(false);btn.focus();}});})();
+/* the shared header (theme, menu, email, Выйти) lives in index.html; here we only keep it in sync */
+function showWho(){if(window.KH)KH.setUser(ME?ME.email:null);}
+document.addEventListener('kh-logout',()=>{ME=null;go('/',true);});
 
 /* ---------- login ---------- */
 function loginView(){
