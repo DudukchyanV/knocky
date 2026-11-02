@@ -20,7 +20,7 @@
   document.addEventListener('click',function(e){if(isOpen()&&!e.target.closest('#khMenu'))setMenu(false);});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen()){setMenu(false);btn.focus();}});
   /* who is signed in */
-  function setUser(email){$('khMail').hidden=$('khMe').hidden=!email;$('khMail').textContent=$('khMeMail').textContent=email||'';
+  function setUser(email){$('khMail').hidden=$('khMe').hidden=!email;$('khMail').textContent=email||'';
     try{document.dispatchEvent(new CustomEvent('kh-user',{detail:email||null}));}catch(e){}}
   function loadUser(){fetch(API+'/me',{credentials:'include'}).then(function(r){return r.json();}).then(function(j){setUser(j&&j.user?j.user.email:null);}).catch(function(){setUser(null);});}
   $('khOut').addEventListener('click',function(){fetch(API+'/auth/logout',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:'{}'}).catch(function(){}).then(function(){setUser(null);try{document.dispatchEvent(new CustomEvent('kh-logout'));}catch(e){}});});
