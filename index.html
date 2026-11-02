@@ -2164,7 +2164,7 @@ html{scrollbar-gutter:stable}
 .kh-menu.open{transform:none;visibility:visible;transition:transform .35s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .kh-msec{display:flex;flex-direction:column;align-items:flex-end;min-width:140px}
 .kh-msec+.kh-msec{margin-top:14px;padding-top:14px;border-top:1px solid var(--kh-line)}
-.kh-msec[hidden]{display:none}
+.kh-msec[hidden],.kh-row[hidden]{display:none}
 .kh-row{display:block;padding:9px 0;border:0;background:none;color:var(--kh-ink);font:600 17px/1.3 'Manrope',system-ui,sans-serif;text-decoration:none;cursor:pointer}
 .kh-row[aria-current]{color:var(--kh-seal)}
 @media (hover:hover){.kh-tabs a:not([aria-current]):hover{background:color-mix(in srgb,var(--kh-ink) 10%,var(--kh-bg))}.kh-row:hover{color:var(--kh-seal)}}
@@ -2185,7 +2185,7 @@ html{scrollbar-gutter:stable}
       <a class="kh-row" data-k="home" href="https://knocky.ru/">Главная</a><a class="kh-row" href="https://knocky.ru/#templates">Дизайны</a><a class="kh-row" href="https://knocky.ru/#prices">Тарифы</a><a class="kh-row" href="https://knocky.ru/#faq">Вопросы</a>
     </nav>
     <div class="kh-msec"><a class="kh-row" data-k="cab" href="https://app.knocky.ru/">Кабинет</a></div>
-    <div class="kh-msec" id="khMe" hidden><button class="kh-row" id="khOut" type="button">Выйти</button></div>
+    <div class="kh-msec"><a class="kh-row" id="khIn" href="https://app.knocky.ru/">Войти</a><button class="kh-row" id="khOut" type="button" hidden>Выйти</button></div>
   </div>
 </header>
 <script id="kh-js">/* Knocky shared header: the same file on knocky.ru and app.knocky.ru (tools/inject_header.py) */
@@ -2212,7 +2212,7 @@ html{scrollbar-gutter:stable}
   document.addEventListener('click',function(e){if(isOpen()&&!e.target.closest('#khMenu'))setMenu(false);});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen()){setMenu(false);btn.focus();}});
   /* who is signed in */
-  function setUser(email){$('khMail').hidden=$('khMe').hidden=!email;$('khMail').textContent=email||'';
+  function setUser(email){$('khMail').hidden=$('khOut').hidden=!email;$('khIn').hidden=!!email;$('khMail').textContent=email||'';
     try{document.dispatchEvent(new CustomEvent('kh-user',{detail:email||null}));}catch(e){}}
   function loadUser(){fetch(API+'/me',{credentials:'include'}).then(function(r){return r.json();}).then(function(j){setUser(j&&j.user?j.user.email:null);}).catch(function(){setUser(null);});}
   $('khOut').addEventListener('click',function(){fetch(API+'/auth/logout',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:'{}'}).catch(function(){}).then(function(){setUser(null);try{document.dispatchEvent(new CustomEvent('kh-logout'));}catch(e){}});});
