@@ -638,6 +638,18 @@ async def admin_markpaid(req: Request):
     return JSONResponse({"ok": True, "order": oid, "invitation": o["inv_id"]})
 
 
+async def admin_refunded(req: Request):
+    """Owner's manual switch-off after a refund: /api/admin/refunded?t=<setup token>&oid=<order number>"""
+    if not setup_token_ok(req.query_params.get("t", "")):
+        return err("Только для администратора", 403)
+    try:
+        oid = int(req.query_params.get("oid", "0"))
+    except ValueError:
+        return err("Нет номера заказа")
+    unpublish_refunded(oid, "by the owner")
+    return JSONResponse({"ok": True, "order": oid})
+
+
 async def admin_paylog(req: Request):
     u = user_of(req)
     if not (is_admin(u) or setup_token_ok(req.query_params.get("t", ""))):
@@ -1106,15 +1118,30 @@ def paylog(oid, msg: str):
         pass
 
 
-def rk_check(oid: int) -> str:
-    """Ask Robokassa directly whether order <oid> is paid (OpStateExt). Publishes the invitation when it is.
+def unpublish_refunded(oid: int, why: str):
+    """The money went back to the client: the invitation link stops working (back to a draft)."""
+    with db() as c:
+        o = c.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()
+        if not o or o["status"] == "refunded":
+            return
+        c.execute("UPDATE orders SET status='refunded' WHERE id=?", (oid,))
+        still = c.execute("SELECT 1 FROM orders WHERE inv_id=? AND status='paid' AND id!=?", (o["inv_id"], oid)).fetchone()
+        if not still:
+            c.execute("UPDATE invitations SET status='draft', paid_via=NULL, expires_at=NULL, updated=? WHERE id=? AND paid_via LIKE 'robokassa%'",
+                      (now(), o["inv_id"]))
+    paylog(oid, "refunded: invitation unpublished (" + why + ")")
+
+
+def rk_check(oid: int, refunds: bool = False) -> str:
+    """Ask Robokassa directly about order <oid> (OpStateExt). Publishes the invitation when it is paid;
+    with refunds=True also notices a refund of a paid order and unpublishes it.
     A safety net for a Result URL that did not reach us."""
     import urllib.request, urllib.parse, xml.etree.ElementTree as ET
     s = load_secrets().get("robokassa") or {}
     with db() as c:
         o = c.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()
-    if not o or o["status"] == "paid":
-        return "paid" if o else "no order"
+    if not o or o["status"] == "refunded" or (o["status"] == "paid" and not refunds):
+        return o["status"] if o else "no order"
     p2 = s.get("test_p2") if o["test"] else s.get("p2")
     login = s.get("login")
     if not (login and p2):
@@ -1150,6 +1177,14 @@ def rk_check(oid: int) -> str:
     if res != "0":
         paylog(oid, f"opstate result {res}: {x[:300]}")
         return "error"
+    if o["status"] == "paid":
+        # 10 cancelled, 60 returned to the payer (Robokassa operation states)
+        if state in ("10", "60"):
+            unpublish_refunded(oid, "state " + state)
+            return "refunded"
+        if state != "100":
+            paylog(oid, f"paid order, opstate state {state}: {x[:300]}")
+        return "paid"
     if state == "100":
         try:
             if out_sum and round(float(out_sum)) != o["amount"]:
@@ -1878,6 +1913,7 @@ routes = [
     Route("/api/stats.csv", stats_csv),
     Route("/api/admin/paylog", admin_paylog),
     Route("/api/admin/markpaid", admin_markpaid),
+    Route("/api/admin/refunded", admin_refunded),
     Route("/api/invitations/{id}/preview", preview_get),
     Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
     Route("/api/invitations/{id}/price", inv_price),
@@ -1902,4 +1938,21 @@ routes = [
     Route("/inv/{id}", page_cabinet),
     Route("/admin", page_cabinet),
 ]
+def refund_sweep():
+    """Every 15 minutes: live orders paid in the last 60 days - were any of them refunded in Robokassa?"""
+    while True:
+        try:
+            with db() as c:
+                rows = c.execute("SELECT id FROM orders WHERE status='paid' AND test=0 AND paid_at>?", (now() - 60 * 86400,)).fetchall()
+            for r in rows:
+                rk_check(r["id"], refunds=True)
+                time.sleep(1)
+        except Exception as e:
+            print("refund sweep:", e, flush=True)
+        time.sleep(900)
+
+
+if not DEV:
+    threading.Thread(target=refund_sweep, daemon=True).start()
+
 app = Guard(Starlette(routes=routes))
