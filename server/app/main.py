@@ -616,6 +616,26 @@ async def inv_get(req: Request):
         return JSONResponse(inv_json(r, c))
 
 
+async def admin_markpaid(req: Request):
+    """Owner's manual confirmation: the money is in Robokassa but the notification did not reach us.
+    /api/admin/markpaid?t=<setup token>&oid=<order number>"""
+    if not setup_token_ok(req.query_params.get("t", "")):
+        return err("Только для администратора", 403)
+    try:
+        oid = int(req.query_params.get("oid", "0"))
+    except ValueError:
+        return err("Нет номера заказа")
+    with db() as c:
+        o = c.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()
+        if not o:
+            return err("Заказ не найден", 404)
+        if o["status"] != "paid":
+            c.execute("UPDATE orders SET status='paid', paid_at=? WHERE id=?", (now(), oid))
+            publish_paid(c, o["inv_id"], "robokassa-test" if o["test"] else "robokassa")
+    paylog(oid, "marked paid by the owner")
+    return JSONResponse({"ok": True, "order": oid, "invitation": o["inv_id"]})
+
+
 async def admin_paylog(req: Request):
     u = user_of(req)
     if not (is_admin(u) or setup_token_ok(req.query_params.get("t", ""))):
@@ -1855,6 +1875,7 @@ routes = [
     Route("/api/invitations/{id}/export.xlsx", inv_export),
     Route("/api/stats.csv", stats_csv),
     Route("/api/admin/paylog", admin_paylog),
+    Route("/api/admin/markpaid", admin_markpaid),
     Route("/api/invitations/{id}/preview", preview_get),
     Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
     Route("/api/invitations/{id}/price", inv_price),
