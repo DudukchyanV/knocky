@@ -616,9 +616,9 @@ async def inv_get(req: Request):
         return JSONResponse(inv_json(r, c))
 
 
-@need_user
 async def admin_paylog(req: Request):
-    if not is_admin(req.state.user):
+    u = user_of(req)
+    if not (is_admin(u) or setup_token_ok(req.query_params.get("t", ""))):
         return err("Только для администратора", 403)
     with db() as c:
         rows = c.execute("SELECT at, oid, msg FROM paylog ORDER BY at DESC LIMIT 50").fetchall()
