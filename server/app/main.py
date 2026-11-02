@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS wish(inv_id TEXT NOT NULL REFERENCES invitations(id) 
 CREATE TABLE IF NOT EXISTS hits(key TEXT, at INTEGER);
 CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, inv_id TEXT NOT NULL, user_id INTEGER, amount INTEGER NOT NULL,
   items TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new', test INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, paid_at INTEGER);
+CREATE TABLE IF NOT EXISTS paylog(at INTEGER, oid INTEGER, msg TEXT);
 CREATE INDEX IF NOT EXISTS inv_user ON invitations(user_id);
 CREATE INDEX IF NOT EXISTS rsvp_inv ON rsvp(inv_id);
 CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at);
@@ -606,7 +607,25 @@ async def inv_get(req: Request):
         r = own_inv(c, req, req.path_params["id"])
         if not r:
             return err("Приглашение не найдено", 404)
+        pending = r["status"] != "published"
+    # paid but the Result URL did not reach us: ask Robokassa directly
+    if pending and await asyncio.to_thread(check_pending, r["id"]):
+        pass
+    with db() as c:
+        r = own_inv(c, req, req.path_params["id"])
         return JSONResponse(inv_json(r, c))
+
+
+@need_user
+async def admin_paylog(req: Request):
+    if not is_admin(req.state.user):
+        return err("Только для администратора", 403)
+    with db() as c:
+        rows = c.execute("SELECT at, oid, msg FROM paylog ORDER BY at DESC LIMIT 50").fetchall()
+        orders = c.execute("SELECT id, inv_id, amount, status, test, created, paid_at FROM orders ORDER BY id DESC LIMIT 20").fetchall()
+    f = lambda t: dt.datetime.fromtimestamp(t, MSK).strftime("%d.%m %H:%M:%S") if t else ""
+    return JSONResponse({"log": [[f(x["at"]), x["oid"], x["msg"]] for x in rows],
+                         "orders": [{**dict(o), "created": f(o["created"]), "paid_at": f(o["paid_at"])} for o in orders]})
 
 
 @need_user
@@ -1053,9 +1072,83 @@ def publish_paid(c, inv_id: str, via: str):
               (slug, t, exp, via, t, r["id"]))
 
 
+def paylog(oid, msg: str):
+    try:
+        with db() as c:
+            c.execute("INSERT INTO paylog VALUES(?,?,?)", (now(), oid, str(msg)[:500]))
+    except Exception:
+        pass
+
+
+def rk_check(oid: int) -> str:
+    """Ask Robokassa directly whether order <oid> is paid (OpStateExt). Publishes the invitation when it is.
+    A safety net for a Result URL that did not reach us."""
+    import urllib.request, urllib.parse, xml.etree.ElementTree as ET
+    s = load_secrets().get("robokassa") or {}
+    with db() as c:
+        o = c.execute("SELECT * FROM orders WHERE id=?", (oid,)).fetchone()
+    if not o or o["status"] == "paid":
+        return "paid" if o else "no order"
+    p2 = s.get("test_p2") if o["test"] else s.get("p2")
+    login = s.get("login")
+    if not (login and p2):
+        return "no settings"
+    q = urllib.parse.urlencode({"MerchantLogin": login, "InvoiceID": oid, "Signature": rk_sign(login, oid, p2)})
+    try:
+        with urllib.request.urlopen("https://auth.robokassa.ru/Merchant/WebService/Service.asmx/OpStateExt?" + q, timeout=8) as r:
+            x = r.read().decode("utf-8", "replace")
+    except Exception as e:
+        paylog(oid, f"opstate error: {e}")
+        return "error"
+    try:
+        root = ET.fromstring(x)
+        val = lambda path: next((el.text for el in root.iter() if el.tag.endswith(path)), None)
+        res, state = None, None
+        for el in root.iter():
+            if el.tag.endswith("Result"):
+                res = next((ch.text for ch in el if ch.tag.endswith("Code")), res)
+            if el.tag.endswith("State"):
+                state = next((ch.text for ch in el if ch.tag.endswith("Code")), state)
+        out_sum = val("OutSum")
+    except Exception as e:
+        paylog(oid, f"opstate parse: {e}: {x[:200]}")
+        return "error"
+    if res != "0":
+        paylog(oid, f"opstate result {res}: {x[:300]}")
+        return "error"
+    if state == "100":
+        try:
+            if out_sum and round(float(out_sum)) != o["amount"]:
+                paylog(oid, f"opstate sum {out_sum} != {o['amount']}")
+                return "bad sum"
+        except Exception:
+            pass
+        with db() as c:
+            o2 = c.execute("SELECT status FROM orders WHERE id=?", (oid,)).fetchone()
+            if o2 and o2["status"] != "paid":
+                c.execute("UPDATE orders SET status='paid', paid_at=? WHERE id=?", (now(), oid))
+                publish_paid(c, o["inv_id"], "robokassa-test" if o["test"] else "robokassa")
+        paylog(oid, "paid (confirmed by OpState)")
+        return "paid"
+    return "state " + str(state)
+
+
+def check_pending(inv_id: str):
+    """Recent unpaid orders of this invitation: ask Robokassa about them (at most once a minute per order)."""
+    with db() as c:
+        rows = c.execute("SELECT id FROM orders WHERE inv_id=? AND status!='paid' AND created>? ORDER BY id DESC LIMIT 3",
+                         (inv_id, now() - 7 * 86400)).fetchall()
+    for r in rows:
+        if rate(f"opstate:{r['id']}", 1, 60):
+            if rk_check(r["id"]) == "paid":
+                return True
+    return False
+
+
 async def pay_result(req: Request):
     """Robokassa Result URL: confirms the payment (server to server). Answer OK<InvId>."""
     form = dict(await req.form()) if req.method == "POST" else dict(req.query_params)
+    paylog(form.get("InvId"), "result url called")
     try:
         oid = int(form.get("InvId", 0))
         out_sum = str(form.get("OutSum", ""))
@@ -1069,6 +1162,7 @@ async def pay_result(req: Request):
             return Response("bad order", status_code=400)
         p2 = s.get("test_p2") if o["test"] else s.get("p2")
         if not p2 or not hmac.compare_digest(rk_sign(out_sum, oid, p2), sig):
+            paylog(oid, "result url: bad signature (password #2 or hash algorithm in Robokassa settings)")
             return Response("bad sign", status_code=400)
         try:
             if round(float(out_sum)) != o["amount"]:
@@ -1090,6 +1184,8 @@ async def pay_back(req: Request):
         oid = 0
     with db() as c:
         o = c.execute("SELECT inv_id FROM orders WHERE id=?", (oid,)).fetchone()
+    if o and ok:
+        await asyncio.to_thread(rk_check, oid)
     target = f"/inv/{o['inv_id']}" if o else "/"
     return RedirectResponse(target + ("?paid=1" if ok else "?payfail=1"), status_code=302)
 
@@ -1746,6 +1842,7 @@ routes = [
     Route("/api/invitations/{id}/answers", inv_answers),
     Route("/api/invitations/{id}/export.xlsx", inv_export),
     Route("/api/stats.csv", stats_csv),
+    Route("/api/admin/paylog", admin_paylog),
     Route("/api/invitations/{id}/preview", preview_get),
     Route("/api/invitations/{id}/seating", inv_seating, methods=["PUT"]),
     Route("/api/invitations/{id}/price", inv_price),
