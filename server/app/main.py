@@ -624,7 +624,11 @@ async def admin_paylog(req: Request):
         rows = c.execute("SELECT at, oid, msg FROM paylog ORDER BY at DESC LIMIT 50").fetchall()
         orders = c.execute("SELECT id, inv_id, amount, status, test, created, paid_at FROM orders ORDER BY id DESC LIMIT 20").fetchall()
     f = lambda t: dt.datetime.fromtimestamp(t, MSK).strftime("%d.%m %H:%M:%S") if t else ""
-    return JSONResponse({"log": [[f(x["at"]), x["oid"], x["msg"]] for x in rows],
+    rk = load_secrets().get("robokassa") or {}
+    hint = lambda v: f"{v[0]}...{v[-1]}, {len(v)} знаков" if v else "нет"
+    return JSONResponse({"check": {"login": rk.get("login"), "mode": "test" if rk.get("test", True) else "live",
+                                   "p1": hint(rk.get("p1") or ""), "p2": hint(rk.get("p2") or "")},
+                         "log": [[f(x["at"]), x["oid"], x["msg"]] for x in rows],
                          "orders": [{**dict(o), "created": f(o["created"]), "paid_at": f(o["paid_at"])} for o in orders]})
 
 
