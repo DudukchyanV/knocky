@@ -945,7 +945,7 @@ async def stats_csv(req: Request):
         gs = c.execute(f"SELECT first_open FROM guests WHERE first_open IS NOT NULL AND {ok_inv}", adm).fetchall()
     paid = lambda r: r["paid_via"] in ("robokassa",)
     if t == "designs":
-        agg = {}
+        agg = {k: [0, 0, 0] for k in TPL_NAMES}  # every design listed, so the sheet is never empty
         for r in inv:
             a = agg.setdefault(r["tpl"], [0, 0, 0])
             a[0] += 1
@@ -985,8 +985,9 @@ async def stats_csv(req: Request):
     for r in gs:
         add(r["first_open"], 6)
     out = [["Дата", "Новые пользователи", "Сохранено приглашений", "Опубликовано", "Оплат", "Выручка, руб", "Ответов гостей", "Гостей открыли именную ссылку"]]
-    if cols:
-        d, end = min(cols), dt.datetime.now(MSK).date()
+    # every day since the site opened (28.10.2026), zeros included, so charts and DataLens always have rows
+    d, end = min(list(cols) + [dt.date(2026, 10, 28)]), dt.datetime.now(MSK).date()
+    if True:
         while d <= end:
             out.append([d.strftime("%Y-%m-%d")] + cols.get(d, [0] * 7))
             d += dt.timedelta(days=1)
