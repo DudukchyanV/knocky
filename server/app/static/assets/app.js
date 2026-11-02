@@ -36,8 +36,9 @@ window.addEventListener('popstate',route);
 
 /* theme */
 const themeBtn=$('#themeBtn');
-function curTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
-function setTheme(t){document.documentElement.dataset.theme=t;themeBtn.setAttribute('aria-checked',t==='dark');try{localStorage.setItem('knocky-theme',t)}catch(e){}}
+function curTheme(){return document.documentElement.dataset.theme||'light';}
+function setTheme(t){document.documentElement.dataset.theme=t;themeBtn.setAttribute('aria-checked',t==='dark');try{localStorage.setItem('knocky-theme',t);document.cookie='knocky-theme='+t+';path=/;max-age=31536000;samesite=lax'+(/knocky\.ru$/.test(location.hostname)?';domain=knocky.ru':'')}catch(e){}}
+addEventListener('pageshow',()=>{let c;try{c=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]}catch(e){}if(c&&c!==curTheme()){setTheme(c);themeBtn.setAttribute('aria-checked',c==='dark');}});
 themeBtn.setAttribute('aria-checked',curTheme()==='dark');
 themeBtn.onclick=()=>setTheme(curTheme()==='dark'?'light':'dark');
 $('#logoutBtn').onclick=async()=>{try{await api('/auth/logout',{method:'POST'})}catch(e){}ME=null;showWho();go('/',true);};

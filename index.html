@@ -744,11 +744,11 @@ header{position:relative;z-index:20;background:var(--bg)}
 @media (hover:hover){.menu-nav a:hover,.menu-row:hover{color:var(--seal)}}
 .menu-side{display:flex;flex-direction:column;align-items:flex-end;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);min-width:140px}
 .navtabs{display:flex;gap:2px;padding:3px;border-radius:999px;background:color-mix(in srgb,var(--ink) 8%,var(--bg));flex:none}
-.navtabs a{padding:7px 14px;border-radius:999px;font:600 14px var(--f-body);color:var(--ink);text-decoration:none;white-space:nowrap}
+.navtabs a{display:block;box-sizing:border-box;min-width:88px;text-align:center;padding:7px 14px;border-radius:999px;font:600 14px/20px var(--f-body);letter-spacing:0;color:var(--ink);text-decoration:none;white-space:nowrap}
 .navtabs a[aria-current]{background:var(--ink);color:var(--bg)}
 @media (hover:hover){.navtabs a:not([aria-current]):hover{background:color-mix(in srgb,var(--ink) 10%,var(--bg))}}
-@media (max-width:520px){.bar{gap:10px}.logo span{display:none}.menu-btn span{display:none}.navtabs a{padding:7px 11px;font-size:13px}}
-.menu-side .navtabs{margin-bottom:6px}.me-row{display:flex;flex-direction:column;align-items:flex-end;margin-top:6px}.me-row[hidden]{display:none}.me-mail{font-size:13px;color:var(--muted,#6b5f63);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){.bar{gap:10px}.logo span{display:none}.menu-btn span{display:none}.navtabs a{min-width:76px;padding:7px 10px;font-size:13px}}
+.menu-row.is-cur{color:var(--seal)}.me-row{display:flex;flex-direction:column;align-items:flex-end;margin-top:6px}.me-row[hidden]{display:none}.me-mail{font-size:13px;color:var(--muted,#6b5f63);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .me-bar{margin-top:8px;font-size:14px;color:var(--muted,#6b5f63);overflow-wrap:anywhere}.me-bar[hidden]{display:none}.me-bar b{color:var(--ink);font-weight:600}
 .menu-side .adm-pill{margin:6px 0}
 .menu .theme svg{width:16px;height:16px;flex:none}
@@ -2124,7 +2124,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
 </style>
 
 <script>
-(function(){var t='light';try{t=localStorage.getItem('knocky-theme')||'light'}catch(e){}document.documentElement.setAttribute('data-theme',t);})();
+(function(){var t='light';try{t=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]||localStorage.getItem('knocky-theme')||'light'}catch(e){}document.documentElement.setAttribute('data-theme',t);})();
 </script>
 <div class="sprog" aria-hidden="true"><i></i></div>
 <nav class="srail top" id="srail" aria-label="Разделы страницы"><div class="srail-t"><i></i></div></nav>
@@ -2137,7 +2137,7 @@ input:focus,select:focus{outline:none;border-color:var(--seal)}
       <nav class="menu-nav" aria-label="Разделы">
         <a href="#templates">Дизайны</a><a href="#prices">Тарифы</a><a href="#faq">Вопросы</a>
       </nav>
-      <div class="menu-side"><nav class="navtabs" aria-label="Разделы Knocky"><a href="https://knocky.ru/" aria-current="page">Главная</a><a href="https://app.knocky.ru/">Кабинет</a></nav><button class="menu-row" id="loginBtn" type="button" hidden>Войти</button><div class="me-row" id="meRow" hidden><span class="me-mail" id="meEmail"></span><button class="menu-row" id="logoutBtn" type="button">Выйти</button></div>
+      <div class="menu-side"><a class="menu-row is-cur" href="https://knocky.ru/" aria-current="page">Главная</a><a class="menu-row" href="https://app.knocky.ru/">Кабинет</a><button class="menu-row" id="loginBtn" type="button" hidden>Войти</button><div class="me-row" id="meRow" hidden><span class="me-mail" id="meEmail"></span><button class="menu-row" id="logoutBtn" type="button">Выйти</button></div>
         </div>
       </div>
     </div>
@@ -3361,7 +3361,8 @@ loadEdit();window.addEventListener('hashchange',loadEdit);
 
 /* theme */
 const root=document.documentElement,themeBtn=document.getElementById('themeBtn');
-function setTheme(t){root.setAttribute('data-theme',t);themeBtn.setAttribute('aria-checked',t==='dark'?'true':'false');try{localStorage.setItem('knocky-theme',t)}catch(e){}}
+function setTheme(t){root.setAttribute('data-theme',t);themeBtn.setAttribute('aria-checked',t==='dark'?'true':'false');try{localStorage.setItem('knocky-theme',t);document.cookie='knocky-theme='+t+';path=/;max-age=31536000;samesite=lax'+(/knocky\.ru$/.test(location.hostname)?';domain=knocky.ru':'')}catch(e){}}
+addEventListener('pageshow',()=>{let c;try{c=(document.cookie.match(/(?:^|; )knocky-theme=(dark|light)/)||[])[1]}catch(e){}if(c&&c!==root.getAttribute('data-theme'))setTheme(c);});
 setTheme(root.getAttribute('data-theme')==='dark'?'dark':'light');
 themeBtn.addEventListener('click',()=>setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'));
 
