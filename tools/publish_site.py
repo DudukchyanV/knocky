@@ -10,6 +10,7 @@ D = "Онлайн-приглашение на свадьбу: 60+ дизайно
 meta = (f'<meta name="description" content="{D}">\n'
         f'<meta property="og:title" content="{T}">\n<meta property="og:description" content="{D}">\n'
         '<meta property="og:url" content="https://knocky.ru/">\n<meta property="og:type" content="website">\n'
+        '<meta name="p:domain_verify" content="c4fb0101210578d0604e75b9951939f4">\n'  # Pinterest site claim, keep
         '<meta property="og:locale" content="ru_RU">\n<link rel="canonical" href="https://knocky.ru/">\n')
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="48x48">\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n'
          '<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
