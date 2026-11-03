@@ -1703,7 +1703,7 @@ def guest_page() -> str | None:
 
 
 SOON = """<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Knocky</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F3EEEE;color:#241B20;font:16px/1.5 system-ui,sans-serif;text-align:center;padding:24px}b{color:#C62828;font-size:22px}</style>
+<title>Knocky</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F3EEEE;color:#241B20;font:16px/1.5 system-ui,sans-serif;text-align:center;padding:24px}b{color:#C62828;font-size:22px}</style>
 <div><b>knocky</b><p>Приглашение скоро будет доступно.</p></div></html>"""
 
 
@@ -1744,7 +1744,7 @@ async def page_cabinet(req: Request):
 
 
 SETUP_FORM = """<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Knocky: настройка сервера</title><meta name="robots" content="noindex">
+<title>Knocky: настройка сервера</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"><meta name="robots" content="noindex">
 <style>body{margin:0;background:#F3EEEE;color:#241B20;font:16px/1.5 system-ui,-apple-system,sans-serif;padding:24px}
 .c{max-width:460px;margin:6vh auto;background:#fff;border-radius:16px;padding:28px}h1{font-size:22px;margin:0 0 6px}h2{font-size:17px;margin:26px 0 0}
 label{display:block;font-weight:600;margin:16px 0 6px}input{width:100%;box-sizing:border-box;font:inherit;padding:12px 14px;border:0;border-radius:12px;background:#F3EEEE}
