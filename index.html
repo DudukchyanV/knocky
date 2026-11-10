@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Knocky - приглашения на свадьбу по ссылке</title>
+<title>Приглашение на свадьбу онлайн по ссылке - 60+ дизайнов | Knocky</title>
 <meta name="description" content="Приглашение на свадьбу, которое приятно открыть. Таймер до праздника, местоположение, ответы гостей и многое другое - по одной ссылке. 60+ дизайнов">
-<meta property="og:title" content="Knocky - приглашения на свадьбу по ссылке">
+<meta property="og:title" content="Приглашение на свадьбу онлайн по ссылке - 60+ дизайнов | Knocky">
 <meta property="og:description" content="Приглашение на свадьбу, которое приятно открыть. Таймер до праздника, местоположение, ответы гостей и многое другое - по одной ссылке. 60+ дизайнов">
 <meta property="og:url" content="https://knocky.ru/">
 <meta property="og:type" content="website">
@@ -19,6 +19,9 @@
 <link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Knocky", "url": "https://knocky.ru/", "logo": "https://knocky.ru/icon-512.png", "sameAs": ["https://t.me/knocky1", "https://vk.ru/knocky_invite", "https://dzen.ru/knocky", "https://pinterest.com/knocky_invite/"]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Knocky", "url": "https://knocky.ru/", "applicationCategory": "LifestyleApplication", "operatingSystem": "Any", "description": "Приглашение на свадьбу, которое приятно открыть. Таймер до праздника, местоположение, ответы гостей и многое другое - по одной ссылке. 60+ дизайнов", "offers": {"@type": "AggregateOffer", "priceCurrency": "RUB", "lowPrice": "640", "highPrice": "1990"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Как сделать электронное приглашение на свадьбу?", "acceptedAnswer": {"@type": "Answer", "text": "Выберите дизайн, впишите имена, дату и адрес, включите нужные блоки и оплатите. После оплаты вы получите ссылку для гостей, а менять текст можно в любой момент в личном кабинете."}}, {"@type": "Question", "name": "Как отправить приглашение гостям?", "acceptedAnswer": {"@type": "Answer", "text": "Это обычная ссылка: ее можно отправить в Telegram, WhatsApp, ВКонтакте, по почте или SMS. Приглашение открывается в любом браузере, приложение гостям не нужно."}}, {"@type": "Question", "name": "Можно посмотреть приглашение до оплаты?", "acceptedAnswer": {"@type": "Answer", "text": "Да. Любой дизайн можно примерить со своими именами и датой прямо на сайте, без регистрации."}}, {"@type": "Question", "name": "Сколько стоит приглашение на свадьбу?", "acceptedAnswer": {"@type": "Answer", "text": "Тарифы от 640 ₽, а в конструкторе можно собрать свой набор блоков. Оплата один раз, без подписки."}}, {"@type": "Question", "name": "Как гости подтвердят присутствие?", "acceptedAnswer": {"@type": "Answer", "text": "Внизу приглашения есть анкета: имя, «приду / не смогу», сколько будет человек и пожелания по меню. Регистрироваться гостям не нужно."}}, {"@type": "Question", "name": "Можно поменять время или адрес после отправки?", "acceptedAnswer": {"@type": "Answer", "text": "Да. Вы правите страницу в кабинете, а ссылка у гостей остается той же. Рассылать приглашение заново не придется."}}, {"@type": "Question", "name": "Что такое именные приглашения?", "acceptedAnswer": {"@type": "Answer", "text": "У каждого гостя или семьи своя ссылка, и приглашение начинается с обращения: «Дорогие Ольга и Сергей!». Вы видите, кто открыл приглашение и кто еще не ответил."}}, {"@type": "Question", "name": "Сколько работает ссылка?", "acceptedAnswer": {"@type": "Answer", "text": "В основе 3 месяца с момента оплаты. Продлить до 12 месяцев можно блоком за 150 ₽, в тарифах «Оптимум» и «Все сразу» это уже входит."}}, {"@type": "Question", "name": "Как оплатить и можно ли вернуть деньги?", "acceptedAnswer": {"@type": "Answer", "text": "Картой «Мир», Visa, Mastercard или через СБП, разово, без подписки. Пока приглашение не опубликовано, вернем всю сумму. Подробно в документе «Оплата и возврат»."}}]}</script>
 
 <style>/* Leaflet 1.9.4, BSD-2-Clause */
 /* required styles */
@@ -991,6 +994,12 @@ section{padding-block:72px}
 .step::before{counter-increment:s;content:counter(s);font-family:var(--f-disp);font-size:28px;font-weight:600;color:var(--seal);display:block;margin-bottom:6px}
 .step h3{margin:0 0 6px;font-family:var(--f-disp);font-weight:500;font-size:17px;line-height:1.3}
 .step p{margin:0;color:var(--muted);font-size:15px}
+.feats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 28px}
+@media (max-width:860px){.feats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.feats{gap:18px 16px}.feat h3{font-size:16px}.feat p{font-size:14px}}
+.feat{border-top:2px solid var(--ink);padding-top:14px}
+.feat h3{margin:0 0 6px;font-family:var(--f-disp);font-weight:500;font-size:17px;line-height:1.3}
+.feat p{margin:0;color:var(--muted);font-size:15px}
 
 /* pricing */
 .plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
@@ -2245,7 +2254,7 @@ html{scrollbar-gutter:stable}
 <main id="top">
   <div class="wrap hero">
     <div>
-      <h1>Онлайн-приглашения</h1>
+      <h1>Приглашение на свадьбу по ссылке</h1>
       <p class="lead">Выберите дизайн, соберите нужные блоки и отправьте ссылку гостям. Они ответят в один клик, а кто придет - вы увидите в личном кабинете.</p>
       <div class="cta">
         <a class="btn btn-seal btn-xl" href="#templates">Выбрать приглашение</a>
@@ -2281,6 +2290,22 @@ html{scrollbar-gutter:stable}
     </div>
   </section>
 
+  <section id="inside">
+    <div class="wrap">
+      <div class="head"><div><h2>Что есть в приглашении</h2></div></div>
+      <div class="feats">
+        <div class="feat"><h3>Таймер до праздника</h3><p>Сколько дней осталось до свадьбы.</p></div>
+        <div class="feat"><h3>Место и маршрут</h3><p>Точка на карте и кнопки Яндекс Карт и 2ГИС.</p></div>
+        <div class="feat"><h3>Программа дня</h3><p>Сбор гостей, церемония, банкет.</p></div>
+        <div class="feat"><h3>Дресс-код</h3><p>Палитра цветов, чтобы гости не гадали.</p></div>
+        <div class="feat"><h3>Ответы гостей</h3><p>«Приду / не смогу», сколько человек и пожелания по меню.</p></div>
+        <div class="feat"><h3>Именные ссылки</h3><p>Обращение к каждому гостю по имени.</p></div>
+        <div class="feat"><h3>Рассадка</h3><p>Гость сразу видит свой стол.</p></div>
+        <div class="feat"><h3>Фото и вишлист</h3><p>Ваши снимки и подарки, которые гости бронируют.</p></div>
+      </div>
+    </div>
+  </section>
+
   <section id="prices">
     <div class="wrap">
       <div class="head"><div><h2>Тарифы</h2></div></div>
@@ -2299,6 +2324,10 @@ html{scrollbar-gutter:stable}
     <div class="wrap">
       <div class="head"><div><h2>Вопросы</h2></div></div>
       <div class="faq">
+        <details><summary>Как сделать электронное приглашение на свадьбу?</summary><p>Выберите дизайн, впишите имена, дату и адрес, включите нужные блоки и оплатите. После оплаты вы получите ссылку для гостей, а менять текст можно в любой момент в личном кабинете.</p></details>
+        <details><summary>Как отправить приглашение гостям?</summary><p>Это обычная ссылка: ее можно отправить в Telegram, WhatsApp, ВКонтакте, по почте или SMS. Приглашение открывается в любом браузере, приложение гостям не нужно.</p></details>
+        <details><summary>Можно посмотреть приглашение до оплаты?</summary><p>Да. Любой дизайн можно примерить со своими именами и датой прямо на сайте, без регистрации.</p></details>
+        <details><summary>Сколько стоит приглашение на свадьбу?</summary><p>Тарифы от 640 ₽, а в конструкторе можно собрать свой набор блоков. Оплата один раз, без подписки.</p></details>
         <details><summary>Как гости подтвердят присутствие?</summary><p>Внизу приглашения есть анкета: имя, «приду / не смогу», сколько будет человек и пожелания по меню. Регистрироваться гостям не нужно.</p></details>
         <details><summary>Можно поменять время или адрес после отправки?</summary><p>Да. Вы правите страницу в кабинете, а ссылка у гостей остается той же. Рассылать приглашение заново не придется.</p></details>
         <details><summary>Что такое именные приглашения?</summary><p>У каждого гостя или семьи своя ссылка, и приглашение начинается с обращения: «Дорогие Ольга и Сергей!». Вы видите, кто открыл приглашение и кто еще не ответил.</p></details>

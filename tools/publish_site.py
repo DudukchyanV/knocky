@@ -5,7 +5,7 @@ Usage: python3 tools/publish_site.py SRC.html index.html
 import re, sys
 src, out = sys.argv[1], sys.argv[2]
 h = open(src, encoding="utf-8").read()
-T = "Knocky - приглашения на свадьбу по ссылке"
+T = "Приглашение на свадьбу онлайн по ссылке - 60+ дизайнов | Knocky"
 D = "Приглашение на свадьбу, которое приятно открыть. Таймер до праздника, местоположение, ответы гостей и многое другое - по одной ссылке. 60+ дизайнов"
 meta = (f'<meta name="description" content="{D}">\n'
         f'<meta property="og:title" content="{T}">\n<meta property="og:description" content="{D}">\n'
@@ -20,5 +20,19 @@ ICONS = ('<link rel="icon" href="/favicon.ico" sizes="48x48">\n<link rel="icon" 
 h = re.sub(r'<link rel="icon" href="data:[^>]*>\n?', "", h, count=1)
 meta += ICONS
 h = re.sub(r"<title>.*?</title>", f"<title>{T}</title>\n" + meta, h, count=1, flags=re.S)
+# structured data for search engines: organization, service with prices, FAQ (built from the FAQ block)
+import json, html as _html
+def _txt(x): return _html.unescape(re.sub(r"<[^>]+>", "", x)).strip()
+faq = [{"@type": "Question", "name": _txt(q), "acceptedAnswer": {"@type": "Answer", "text": _txt(a)}}
+       for q, a in re.findall(r"<details><summary>(.*?)</summary><p>(.*?)</p></details>", h, re.S)]
+ld = [{"@context": "https://schema.org", "@type": "Organization", "name": "Knocky", "url": "https://knocky.ru/",
+       "logo": "https://knocky.ru/icon-512.png",
+       "sameAs": ["https://t.me/knocky1", "https://vk.ru/knocky_invite", "https://dzen.ru/knocky", "https://pinterest.com/knocky_invite/"]},
+      {"@context": "https://schema.org", "@type": "WebApplication", "name": "Knocky", "url": "https://knocky.ru/",
+       "applicationCategory": "LifestyleApplication", "operatingSystem": "Any", "description": D,
+       "offers": {"@type": "AggregateOffer", "priceCurrency": "RUB", "lowPrice": "640", "highPrice": "1990"}},
+      {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": faq}]
+_m = '<link rel="manifest" href="/site.webmanifest">\n'
+h = h.replace(_m, _m + "".join('<script type="application/ld+json">' + json.dumps(x, ensure_ascii=False) + "</script>\n" for x in ld), 1)
 open(out, "w", encoding="utf-8").write(h)
 print("published", out, len(h))
