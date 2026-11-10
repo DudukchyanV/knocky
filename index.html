@@ -2352,6 +2352,7 @@ html{scrollbar-gutter:stable}
         <h4>Сервис</h4>
         <ul>
           <li><a href="#templates">Дизайны</a></li>
+          <li><a href="/dizain/">Все дизайны с описанием</a></li>
           <li><a href="#how">Как это работает</a></li>
           <li><a href="#prices">Тарифы</a></li>
           <li><a href="#faq">Вопросы</a></li>
@@ -3404,6 +3405,8 @@ function openT(id,m){if(window.KH&&!editing())KH.goal('design_open');const nt=TP
   document.getElementById('done').hidden=true;drawPick();showStep(0);pv.scrollTop=0;
   if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b)openT(b.dataset.open);});
+/* knocky.ru/#dizain=<id> from design pages: open that design right away */
+(()=>{const m=(location.hash||'').match(/^#dizain=([\w-]+)$/);if(m&&TPL.some(t=>t.id===m[1])){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>openT(m[1]),200);}})();
 /* goal: the first change in the constructor (once per page) */
 (()=>{let done=false;const f=document.getElementById('orderForm');['input','change'].forEach(ev=>f.addEventListener(ev,()=>{if(!done&&window.KH&&!editing()){done=true;KH.goal('build_start');}},true));})();
 document.getElementById('closeBtn').onclick=()=>dlg.close();

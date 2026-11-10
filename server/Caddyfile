@@ -23,6 +23,10 @@ knocky.ru {
 	}
 	handle {
 		root * /opt/knocky/site
+		# design pages for search (static files), before invitation addresses
+		handle /dizain* {
+			file_server
+		}
 		@guest {
 			not file
 			path_regexp slug ^/([A-Za-z0-9][A-Za-z0-9-]{1,38}[A-Za-z0-9])/?$
