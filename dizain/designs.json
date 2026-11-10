@@ -9,7 +9,24 @@
    "Сумерки"
   ],
   "img": false,
-  "slug": "konvert"
+  "slug": "konvert",
+  "sw": [
+   [
+    "#7A1F2B",
+    "#C7A27C",
+    "#EEE6DB"
+   ],
+   [
+    "#56694F",
+    "#B8A57C",
+    "#E6EAE0"
+   ],
+   [
+    "#3B5577",
+    "#B9A27E",
+    "#E3E7EE"
+   ]
+  ]
  },
  {
   "id": "euca",
@@ -21,7 +38,24 @@
    "Ночная олива"
   ],
   "img": false,
-  "slug": "evkalipt"
+  "slug": "evkalipt",
+  "sw": [
+   [
+    "#5D7A6A",
+    "#A9BDB0",
+    "#F1F3EE"
+   ],
+   [
+    "#2F4D73",
+    "#9FB3C8",
+    "#F2F1EC"
+   ],
+   [
+    "#242C22",
+    "#B9A46A",
+    "#6F7F5E"
+   ]
+  ]
  },
  {
   "id": "arch",
@@ -33,7 +67,24 @@
    "Графит"
   ],
   "img": false,
-  "slug": "arka"
+  "slug": "arka",
+  "sw": [
+   [
+    "#8C6E52",
+    "#D9C3A5",
+    "#E9E5DE"
+   ],
+   [
+    "#2E5A64",
+    "#A9C6CB",
+    "#E2EAEB"
+   ],
+   [
+    "#2A2C2E",
+    "#C9B08E",
+    "#5B5E62"
+   ]
+  ]
  },
  {
   "id": "mag",
@@ -45,7 +96,24 @@
    "Ночной выпуск"
   ],
   "img": false,
-  "slug": "oblozhka"
+  "slug": "oblozhka",
+  "sw": [
+   [
+    "#B3261E",
+    "#151515",
+    "#FFFFFF"
+   ],
+   [
+    "#2340B0",
+    "#12182A",
+    "#F3F3F1"
+   ],
+   [
+    "#14161B",
+    "#E1C068",
+    "#F2EFE8"
+   ]
+  ]
  },
  {
   "id": "deco",
@@ -57,7 +125,24 @@
    "Сапфир"
   ],
   "img": false,
-  "slug": "ar-deko"
+  "slug": "ar-deko",
+  "sw": [
+   [
+    "#0E0E10",
+    "#C9A657",
+    "#EADDBA"
+   ],
+   [
+    "#0F2A24",
+    "#D1B26F",
+    "#ECE2C4"
+   ],
+   [
+    "#111C33",
+    "#CFB06A",
+    "#EAE1C8"
+   ]
+  ]
  },
  {
   "id": "stars",
@@ -69,7 +154,24 @@
    "Хвоя"
   ],
   "img": false,
-  "slug": "sozvezdie"
+  "slug": "sozvezdie",
+  "sw": [
+   [
+    "#0C1630",
+    "#E6D29A",
+    "#22335E"
+   ],
+   [
+    "#1D1430",
+    "#D8C29A",
+    "#3A2B57"
+   ],
+   [
+    "#0F201B",
+    "#D9CFA0",
+    "#21413A"
+   ]
+  ]
  },
  {
   "id": "wc",
@@ -81,7 +183,24 @@
    "Мята"
   ],
   "img": false,
-  "slug": "akvarel"
+  "slug": "akvarel",
+  "sw": [
+   [
+    "#C9BEDF",
+    "#BCD0E4",
+    "#6F5E93"
+   ],
+   [
+    "#F1C8A6",
+    "#E8DDB0",
+    "#B0663C"
+   ],
+   [
+    "#BEE0D2",
+    "#D9E8B9",
+    "#3E7A6A"
+   ]
+  ]
  },
  {
   "id": "lemon",
@@ -93,7 +212,24 @@
    "Оливковая роща"
   ],
   "img": false,
-  "slug": "limony"
+  "slug": "limony",
+  "sw": [
+   [
+    "#1F4E9C",
+    "#F2C53D",
+    "#FFFDF6"
+   ],
+   [
+    "#C4561E",
+    "#F0B43A",
+    "#4F7A3A"
+   ],
+   [
+    "#5F6E2E",
+    "#E8C547",
+    "#F7F6EE"
+   ]
+  ]
  },
  {
   "id": "poster",
@@ -105,7 +241,24 @@
    "Горчица"
   ],
   "img": false,
-  "slug": "plakat"
+  "slug": "plakat",
+  "sw": [
+   [
+    "#D2342A",
+    "#1A1A1A",
+    "#ECEAE5"
+   ],
+   [
+    "#2337C6",
+    "#121633",
+    "#E8EBF2"
+   ],
+   [
+    "#C2911A",
+    "#1E1C17",
+    "#F2EDDF"
+   ]
+  ]
  },
  {
   "id": "polar",
@@ -117,7 +270,24 @@
    "Сукно"
   ],
   "img": false,
-  "slug": "polaroid"
+  "slug": "polaroid",
+  "sw": [
+   [
+    "#D8C6A6",
+    "#2E2A25",
+    "#EFE3C9"
+   ],
+   [
+    "#3C5A7A",
+    "#2A2A2A",
+    "#E9E8E4"
+   ],
+   [
+    "#2E4A3D",
+    "#F1EEE6",
+    "#C9B98F"
+   ]
+  ]
  },
  {
   "id": "enso",
@@ -129,7 +299,24 @@
    "Глина"
   ],
   "img": false,
-  "slug": "tush"
+  "slug": "tush",
+  "sw": [
+   [
+    "#1C1C1C",
+    "#B0302A",
+    "#F4F2ED"
+   ],
+   [
+    "#22314F",
+    "#B0302A",
+    "#EDEFF2"
+   ],
+   [
+    "#4A3A2E",
+    "#9A3E24",
+    "#EEE7DE"
+   ]
+  ]
  },
  {
   "id": "mono",
@@ -141,7 +328,24 @@
    "Кость и черный"
   ],
   "img": false,
-  "slug": "monogramma"
+  "slug": "monogramma",
+  "sw": [
+   [
+    "#9C7B45",
+    "#E2D6C0",
+    "#2E2A24"
+   ],
+   [
+    "#3B111B",
+    "#DDBE86",
+    "#F1E4D2"
+   ],
+   [
+    "#151515",
+    "#E4E0D7",
+    "#F7F5F0"
+   ]
+  ]
  },
  {
   "id": "curtain",
@@ -153,7 +357,24 @@
    "Полночь"
   ],
   "img": false,
-  "slug": "zanaves"
+  "slug": "zanaves",
+  "sw": [
+   [
+    "#7B1622",
+    "#E0BE76",
+    "#1A1214"
+   ],
+   [
+    "#0F4A3A",
+    "#D9B970",
+    "#0D1714"
+   ],
+   [
+    "#22306A",
+    "#D5D9E4",
+    "#0E1020"
+   ]
+  ]
  },
  {
   "id": "snow",
@@ -165,7 +386,24 @@
    "Ночной лес"
   ],
   "img": false,
-  "slug": "sneg"
+  "slug": "sneg",
+  "sw": [
+   [
+    "#2E4C63",
+    "#CFDDE6",
+    "#FFFFFF"
+   ],
+   [
+    "#2F5443",
+    "#D7DFD3",
+    "#FFFFFF"
+   ],
+   [
+    "#1B2340",
+    "#E9EDF4",
+    "#2E3A68"
+   ]
+  ]
  },
  {
   "id": "glass",
@@ -177,7 +415,24 @@
    "Пастель"
   ],
   "img": false,
-  "slug": "vitrazh"
+  "slug": "vitrazh",
+  "sw": [
+   [
+    "#9B2335",
+    "#1F4E8C",
+    "#D9A441"
+   ],
+   [
+    "#2F5C8F",
+    "#C8A24A",
+    "#7A3B5E"
+   ],
+   [
+    "#7F9CB5",
+    "#E0C38C",
+    "#93A98A"
+   ]
+  ]
  },
  {
   "id": "lace",
@@ -189,7 +444,24 @@
    "Беж"
   ],
   "img": false,
-  "slug": "kruzhevo"
+  "slug": "kruzhevo",
+  "sw": [
+   [
+    "#C9D6E2",
+    "#FFFFFF",
+    "#3B5878"
+   ],
+   [
+    "#CBD5C4",
+    "#FBFBF7",
+    "#4F6446"
+   ],
+   [
+    "#E2D3C1",
+    "#FFFDF8",
+    "#7C5B3F"
+   ]
+  ]
  },
  {
   "id": "surf",
@@ -201,7 +473,24 @@
    "Шторм"
   ],
   "img": false,
-  "slug": "priboy"
+  "slug": "priboy",
+  "sw": [
+   [
+    "#2B6E8A",
+    "#CFE3EA",
+    "#F4EFE6"
+   ],
+   [
+    "#3A5A78",
+    "#F2D2B0",
+    "#F7F0E6"
+   ],
+   [
+    "#3E4A55",
+    "#C9CED3",
+    "#EDEEEE"
+   ]
+  ]
  },
  {
   "id": "mail",
@@ -213,7 +502,24 @@
    "Сепия"
   ],
   "img": false,
-  "slug": "aviapochta"
+  "slug": "aviapochta",
+  "sw": [
+   [
+    "#C1272D",
+    "#1F3F8F",
+    "#F4EFE4"
+   ],
+   [
+    "#2E6B4F",
+    "#C9A227",
+    "#F2EFE3"
+   ],
+   [
+    "#8A5A3B",
+    "#2F4858",
+    "#EFE6D6"
+   ]
+  ]
  },
  {
   "id": "meadow",
@@ -225,7 +531,24 @@
    "Осень"
   ],
   "img": false,
-  "slug": "lug"
+  "slug": "lug",
+  "sw": [
+   [
+    "#D2452F",
+    "#3C64B1",
+    "#6C8A3E"
+   ],
+   [
+    "#7D62A8",
+    "#E6C24A",
+    "#6B7F4A"
+   ],
+   [
+    "#C8682A",
+    "#E3B23C",
+    "#7A6A3A"
+   ]
+  ]
  },
  {
   "id": "route",
@@ -237,7 +560,24 @@
    "Сепия"
   ],
   "img": false,
-  "slug": "marshrut"
+  "slug": "marshrut",
+  "sw": [
+   [
+    "#2F6D5A",
+    "#D6D1C4",
+    "#26302A"
+   ],
+   [
+    "#1D3A6B",
+    "#F2C14E",
+    "#E8EEF6"
+   ],
+   [
+    "#8A3B2E",
+    "#D6C6A8",
+    "#3A2B20"
+   ]
+  ]
  },
  {
   "id": "paper",
@@ -249,7 +589,24 @@
    "Синева"
   ],
   "img": false,
-  "slug": "bumaga"
+  "slug": "bumaga",
+  "sw": [
+   [
+    "#E7B45C",
+    "#D98E4A",
+    "#8BA16E"
+   ],
+   [
+    "#6E9A86",
+    "#BFD8CB",
+    "#FFFFFF"
+   ],
+   [
+    "#5D7DB8",
+    "#9DB4D9",
+    "#A9B8A0"
+   ]
+  ]
  },
  {
   "id": "vinyl",
@@ -261,7 +618,24 @@
    "Олива"
   ],
   "img": false,
-  "slug": "vinil"
+  "slug": "vinil",
+  "sw": [
+   [
+    "#D9A62E",
+    "#1B1B1B",
+    "#F1ECE2"
+   ],
+   [
+    "#2B3FBF",
+    "#F2C14E",
+    "#14162B"
+   ],
+   [
+    "#6E7B3A",
+    "#E9DCC0",
+    "#1F2216"
+   ]
+  ]
  },
  {
   "id": "bow",
@@ -273,7 +647,24 @@
    "Шалфей"
   ],
   "img": false,
-  "slug": "bant"
+  "slug": "bant",
+  "sw": [
+   [
+    "#B3261E",
+    "#F5EFE6",
+    "#3A2A22"
+   ],
+   [
+    "#3B5A8C",
+    "#6E8A5A",
+    "#F4F2EC"
+   ],
+   [
+    "#6E8A5A",
+    "#F3F0E6",
+    "#2E3A28"
+   ]
+  ]
  },
  {
   "id": "poppy",
@@ -285,7 +676,24 @@
    "Желтые"
   ],
   "img": false,
-  "slug": "maki"
+  "slug": "maki",
+  "sw": [
+   [
+    "#C42B30",
+    "#E2643C",
+    "#6F8A4E"
+   ],
+   [
+    "#3E5FA8",
+    "#7C93C9",
+    "#6F8A4E"
+   ],
+   [
+    "#D99A1F",
+    "#EBC250",
+    "#6F8A4E"
+   ]
+  ]
  },
  {
   "id": "engrave",
@@ -297,7 +705,24 @@
    "Изумруд"
   ],
   "img": false,
-  "slug": "gravyura"
+  "slug": "gravyura",
+  "sw": [
+   [
+    "#5A4A3C",
+    "#D9CBB5",
+    "#EFE7DA"
+   ],
+   [
+    "#3C3F45",
+    "#D3D4D2",
+    "#EDEDEA"
+   ],
+   [
+    "#2F5444",
+    "#C9D6CB",
+    "#E9EDE6"
+   ]
+  ]
  },
  {
   "id": "delft",
@@ -309,7 +734,24 @@
    "Бордо"
   ],
   "img": false,
-  "slug": "gortenziya"
+  "slug": "gortenziya",
+  "sw": [
+   [
+    "#2448A0",
+    "#DCE4F5",
+    "#FBFBF8"
+   ],
+   [
+    "#2C6A52",
+    "#DCEBE3",
+    "#FAFBF8"
+   ],
+   [
+    "#7E2433",
+    "#F0DDD8",
+    "#FCFAF7"
+   ]
+  ]
  },
  {
   "id": "sketch",
@@ -321,7 +763,24 @@
    "Ночь"
   ],
   "img": false,
-  "slug": "eskiz"
+  "slug": "eskiz",
+  "sw": [
+   [
+    "#DDD8CC",
+    "#1C1B19",
+    "#C9C2B1"
+   ],
+   [
+    "#F2F0EA",
+    "#232220",
+    "#DEDAD0"
+   ],
+   [
+    "#1E1F22",
+    "#ECE8DF",
+    "#33353A"
+   ]
+  ]
  },
  {
   "id": "mille",
@@ -333,7 +792,24 @@
    "Голубой"
   ],
   "img": false,
-  "slug": "millefler"
+  "slug": "millefler",
+  "sw": [
+   [
+    "#C8483A",
+    "#4B6FB0",
+    "#5E8A4A"
+   ],
+   [
+    "#D9822B",
+    "#8A6BB0",
+    "#4F7A40"
+   ],
+   [
+    "#3F6FB5",
+    "#86A8D8",
+    "#6E8F6A"
+   ]
+  ]
  },
  {
   "id": "numbers",
@@ -345,7 +821,24 @@
    "Ночь"
   ],
   "img": false,
-  "slug": "tsifry"
+  "slug": "tsifry",
+  "sw": [
+   [
+    "#B9443A",
+    "#C9A35A",
+    "#F2EEE2"
+   ],
+   [
+    "#3E6B4A",
+    "#B8A06A",
+    "#EEF0EA"
+   ],
+   [
+    "#1B1E2A",
+    "#D2B26E",
+    "#EDE8DC"
+   ]
+  ]
  },
  {
   "id": "velvet",
@@ -357,7 +850,24 @@
    "Сапфир"
   ],
   "img": false,
-  "slug": "barhat"
+  "slug": "barhat",
+  "sw": [
+   [
+    "#3A1018",
+    "#D9B565",
+    "#6E7A3A"
+   ],
+   [
+    "#10302A",
+    "#D8B86A",
+    "#8C6A3A"
+   ],
+   [
+    "#16203F",
+    "#D4B26A",
+    "#5E7A5A"
+   ]
+  ]
  },
  {
   "id": "flourish",
@@ -369,7 +879,24 @@
    "Черный"
   ],
   "img": false,
-  "slug": "venzel"
+  "slug": "venzel",
+  "sw": [
+   [
+    "#5D7AA6",
+    "#DCE3EE",
+    "#F7F6F2"
+   ],
+   [
+    "#A8844A",
+    "#EDE2CC",
+    "#F6F1E7"
+   ],
+   [
+    "#2E2E2E",
+    "#E2E0DA",
+    "#F5F4F0"
+   ]
+  ]
  },
  {
   "id": "tuscany",
@@ -381,7 +908,24 @@
    "Утро"
   ],
   "img": false,
-  "slug": "toskana"
+  "slug": "toskana",
+  "sw": [
+   [
+    "#A8863F",
+    "#7E9A5C",
+    "#3E5A33"
+   ],
+   [
+    "#B0703A",
+    "#A3A05C",
+    "#4D5A33"
+   ],
+   [
+    "#6D8C9A",
+    "#93AE86",
+    "#3D5A44"
+   ]
+  ]
  },
  {
   "id": "supper",
@@ -393,7 +937,24 @@
    "Олива"
   ],
   "img": false,
-  "slug": "uzhin"
+  "slug": "uzhin",
+  "sw": [
+   [
+    "#3E5CA8",
+    "#2F7A4E",
+    "#E9A65A"
+   ],
+   [
+    "#B83A2E",
+    "#E3B05A",
+    "#F8F1E7"
+   ],
+   [
+    "#5E6E36",
+    "#9A6A3A",
+    "#D9B45A"
+   ]
+  ]
  },
  {
   "id": "villa",
@@ -405,7 +966,24 @@
    "Терракота"
   ],
   "img": true,
-  "slug": "villa"
+  "slug": "villa",
+  "sw": [
+   [
+    "#A87A2E",
+    "#6F7F3E",
+    "#F8F1E2"
+   ],
+   [
+    "#4E6236",
+    "#C49A4A",
+    "#F3F2E8"
+   ],
+   [
+    "#B0603E",
+    "#7E8A4A",
+    "#F8EFE6"
+   ]
+  ]
  },
  {
   "id": "estate",
@@ -417,7 +995,24 @@
    "Сливки"
   ],
   "img": true,
-  "slug": "usadba"
+  "slug": "usadba",
+  "sw": [
+   [
+    "#55784A",
+    "#A9C08E",
+    "#F5F7F1"
+   ],
+   [
+    "#3F6E78",
+    "#9DBFB7",
+    "#F2F5F4"
+   ],
+   [
+    "#8A7A4E",
+    "#C9C3A4",
+    "#F8F5EC"
+   ]
+  ]
  },
  {
   "id": "vine",
@@ -429,7 +1024,24 @@
    "Вино"
   ],
   "img": true,
-  "slug": "vinogradnik"
+  "slug": "vinogradnik",
+  "sw": [
+   [
+    "#B9652F",
+    "#6E7F3A",
+    "#F8F1E6"
+   ],
+   [
+    "#5E7334",
+    "#8E3A3A",
+    "#F3F4EA"
+   ],
+   [
+    "#7E2A33",
+    "#A6884A",
+    "#F6EFEC"
+   ]
+  ]
  },
  {
   "id": "terrace",
@@ -441,7 +1053,24 @@
    "Ночь"
   ],
   "img": true,
-  "slug": "terrasa"
+  "slug": "terrasa",
+  "sw": [
+   [
+    "#2F5C8E",
+    "#E6C27A",
+    "#F4F6F8"
+   ],
+   [
+    "#B08A4A",
+    "#6F8FB0",
+    "#F8F3E8"
+   ],
+   [
+    "#18263A",
+    "#E2C27E",
+    "#5C7FA8"
+   ]
+  ]
  },
  {
   "id": "garden",
@@ -453,7 +1082,24 @@
    "Изумруд"
   ],
   "img": true,
-  "slug": "tseremoniya"
+  "slug": "tseremoniya",
+  "sw": [
+   [
+    "#4E7040",
+    "#DCE6CF",
+    "#F5F7F0"
+   ],
+   [
+    "#6B6B5A",
+    "#E6E4D8",
+    "#FBFAF6"
+   ],
+   [
+    "#14302A",
+    "#CDB57A",
+    "#5E8A6E"
+   ]
+  ]
  },
  {
   "id": "winter",
@@ -465,7 +1111,24 @@
    "Ночь"
   ],
   "img": true,
-  "slug": "zimniy-les"
+  "slug": "zimniy-les",
+  "sw": [
+   [
+    "#3A5A8C",
+    "#C9D6E8",
+    "#F2F5F9"
+   ],
+   [
+    "#C0812E",
+    "#5A6E92",
+    "#F7F3EC"
+   ],
+   [
+    "#162238",
+    "#E3B866",
+    "#7F98C2"
+   ]
+  ]
  },
  {
   "id": "wpeony",
@@ -477,7 +1140,24 @@
    "Графит"
   ],
   "img": true,
-  "slug": "belye-piony"
+  "slug": "belye-piony",
+  "sw": [
+   [
+    "#52705C",
+    "#C9D8CB",
+    "#FBFBF7"
+   ],
+   [
+    "#9C8556",
+    "#E6DCC4",
+    "#FBF8F1"
+   ],
+   [
+    "#4A4A4A",
+    "#DADAD6",
+    "#FAFAF8"
+   ]
+  ]
  },
  {
   "id": "hydra",
@@ -489,7 +1169,24 @@
    "Белый"
   ],
   "img": true,
-  "slug": "gortenzii"
+  "slug": "gortenzii",
+  "sw": [
+   [
+    "#2E57A8",
+    "#D2DEF2",
+    "#FBFCFE"
+   ],
+   [
+    "#5B83B5",
+    "#DCE6F0",
+    "#F8FAFC"
+   ],
+   [
+    "#6E7486",
+    "#E4E6EC",
+    "#FDFDFB"
+   ]
+  ]
  },
  {
   "id": "autumn",
@@ -501,7 +1198,24 @@
    "Ягоды"
   ],
   "img": true,
-  "slug": "osen"
+  "slug": "osen",
+  "sw": [
+   [
+    "#B8552A",
+    "#EED8C2",
+    "#FCF8F3"
+   ],
+   [
+    "#A87F2E",
+    "#EADFC4",
+    "#FBF8F0"
+   ],
+   [
+    "#8E2E2A",
+    "#ECD6D2",
+    "#FBF6F4"
+   ]
+  ]
  },
  {
   "id": "pine",
@@ -513,7 +1227,24 @@
    "Снег"
   ],
   "img": true,
-  "slug": "zimniy-venok"
+  "slug": "zimniy-venok",
+  "sw": [
+   [
+    "#2F5A44",
+    "#D3E0D8",
+    "#FAFBF9"
+   ],
+   [
+    "#7A5636",
+    "#E6DACB",
+    "#FBF8F4"
+   ],
+   [
+    "#4E6178",
+    "#DDE3EA",
+    "#FBFCFD"
+   ]
+  ]
  },
  {
   "id": "burg",
@@ -525,7 +1256,24 @@
    "Сливки"
   ],
   "img": true,
-  "slug": "bordo"
+  "slug": "bordo",
+  "sw": [
+   [
+    "#7A1F2B",
+    "#EBD9DA",
+    "#FCFAF9"
+   ],
+   [
+    "#3E5E4E",
+    "#D7E2DA",
+    "#FAFBF9"
+   ],
+   [
+    "#8A3A34",
+    "#EBDFCF",
+    "#FBF8F2"
+   ]
+  ]
  },
  {
   "id": "lavender",
@@ -537,7 +1285,24 @@
    "Серый"
   ],
   "img": true,
-  "slug": "lavanda"
+  "slug": "lavanda",
+  "sw": [
+   [
+    "#6A5AA8",
+    "#E2DDF0",
+    "#FBFAFD"
+   ],
+   [
+    "#6E7E3E",
+    "#EDEAD6",
+    "#FCFBF6"
+   ],
+   [
+    "#5E5E6E",
+    "#E2E2E6",
+    "#FAFAFA"
+   ]
+  ]
  },
  {
   "id": "lemonb",
@@ -549,7 +1314,24 @@
    "Синий"
   ],
   "img": true,
-  "slug": "limonnaya-vetka"
+  "slug": "limonnaya-vetka",
+  "sw": [
+   [
+    "#C59A12",
+    "#F1E9C4",
+    "#FDFCF6"
+   ],
+   [
+    "#3F6B35",
+    "#DCE8D6",
+    "#FAFCF8"
+   ],
+   [
+    "#2F4F8E",
+    "#DDE4F2",
+    "#FAFBFD"
+   ]
+  ]
  },
  {
   "id": "lily",
@@ -561,7 +1343,24 @@
    "Шалфей"
   ],
   "img": true,
-  "slug": "landyshi"
+  "slug": "landyshi",
+  "sw": [
+   [
+    "#4C7A58",
+    "#D9E6DC",
+    "#FBFCFA"
+   ],
+   [
+    "#6B736C",
+    "#E5E8E4",
+    "#FDFDFB"
+   ],
+   [
+    "#7E9A70",
+    "#DEE6D8",
+    "#F8FAF6"
+   ]
+  ]
  },
  {
   "id": "olive",
@@ -573,7 +1372,24 @@
    "Песок"
   ],
   "img": true,
-  "slug": "olivy"
+  "slug": "olivy",
+  "sw": [
+   [
+    "#56643C",
+    "#DEE2D0",
+    "#FBFBF7"
+   ],
+   [
+    "#3A4250",
+    "#DCDEE2",
+    "#FAFAF8"
+   ],
+   [
+    "#8A7650",
+    "#E9E1CC",
+    "#FBF8F1"
+   ]
+  ]
  },
  {
   "id": "fcorner",
@@ -585,7 +1401,24 @@
    "Пудра"
   ],
   "img": true,
-  "slug": "ugolok"
+  "slug": "ugolok",
+  "sw": [
+   [
+    "#4F6E58",
+    "#D6E2D8",
+    "#FDFCF8"
+   ],
+   [
+    "#9A8458",
+    "#E8DFCA",
+    "#FCFAF4"
+   ],
+   [
+    "#8E6A66",
+    "#EEE2E0",
+    "#FCF9F8"
+   ]
+  ]
  },
  {
   "id": "farch",
@@ -597,7 +1430,24 @@
    "Графит"
   ],
   "img": true,
-  "slug": "tsvetochnaya-arka"
+  "slug": "tsvetochnaya-arka",
+  "sw": [
+   [
+    "#4F6E58",
+    "#D6E2D8",
+    "#FDFDFA"
+   ],
+   [
+    "#A08848",
+    "#E9E0C8",
+    "#FCFAF4"
+   ],
+   [
+    "#555555",
+    "#DEDEDB",
+    "#FCFCFB"
+   ]
+  ]
  },
  {
   "id": "garland",
@@ -609,7 +1459,24 @@
    "Синий"
   ],
   "img": true,
-  "slug": "girlyanda"
+  "slug": "girlyanda",
+  "sw": [
+   [
+    "#52705C",
+    "#D6E2D8",
+    "#FDFDFA"
+   ],
+   [
+    "#9A8458",
+    "#E8DFCA",
+    "#FCFAF4"
+   ],
+   [
+    "#3A5A8E",
+    "#DCE4F0",
+    "#FBFCFD"
+   ]
+  ]
  },
  {
   "id": "wheat",
@@ -621,7 +1488,24 @@
    "Василек"
   ],
   "img": true,
-  "slug": "maki-i-pshenitsa"
+  "slug": "maki-i-pshenitsa",
+  "sw": [
+   [
+    "#C23A26",
+    "#F0DCD2",
+    "#FDFCF8"
+   ],
+   [
+    "#A8862E",
+    "#EDE4C6",
+    "#FCFAF2"
+   ],
+   [
+    "#3756A0",
+    "#DCE3F2",
+    "#FBFCFD"
+   ]
+  ]
  },
  {
   "id": "field",
@@ -633,7 +1517,24 @@
    "Василек"
   ],
   "img": true,
-  "slug": "polevye-tsvety"
+  "slug": "polevye-tsvety",
+  "sw": [
+   [
+    "#4E7A34",
+    "#DCE8D0",
+    "#FDFDF8"
+   ],
+   [
+    "#C4961C",
+    "#F0E6C2",
+    "#FDFBF2"
+   ],
+   [
+    "#3E62B0",
+    "#DCE4F2",
+    "#FBFCFD"
+   ]
+  ]
  },
  {
   "id": "damask",
@@ -645,7 +1546,24 @@
    "Бордо"
   ],
   "img": true,
-  "slug": "damask"
+  "slug": "damask",
+  "sw": [
+   [
+    "#1E1E1E",
+    "#E2E2E2",
+    "#FFFFFF"
+   ],
+   [
+    "#8A7650",
+    "#E9E1CC",
+    "#FBF8F1"
+   ],
+   [
+    "#7A1F2B",
+    "#EBD9DA",
+    "#FCF9F8"
+   ]
+  ]
  },
  {
   "id": "sprig",
@@ -657,7 +1575,24 @@
    "Беж"
   ],
   "img": true,
-  "slug": "vetochki"
+  "slug": "vetochki",
+  "sw": [
+   [
+    "#3A3A3A",
+    "#E4E4E4",
+    "#FFFFFF"
+   ],
+   [
+    "#56704A",
+    "#DDE6D6",
+    "#FAFBF7"
+   ],
+   [
+    "#7E6E52",
+    "#E9E2D4",
+    "#FBF8F2"
+   ]
+  ]
  },
  {
   "id": "lemonp",
@@ -669,7 +1604,24 @@
    "Синий"
   ],
   "img": true,
-  "slug": "limonnyy-uzor"
+  "slug": "limonnyy-uzor",
+  "sw": [
+   [
+    "#B88A0E",
+    "#F2E7C0",
+    "#FFFFFF"
+   ],
+   [
+    "#3F6B35",
+    "#DCE8D6",
+    "#FFFFFF"
+   ],
+   [
+    "#2F4F8E",
+    "#DDE4F2",
+    "#FFFFFF"
+   ]
+  ]
  },
  {
   "id": "azul",
@@ -681,7 +1633,24 @@
    "Белый"
   ],
   "img": true,
-  "slug": "azulezhu"
+  "slug": "azulezhu",
+  "sw": [
+   [
+    "#1E3C9A",
+    "#DCE3F5",
+    "#FFFFFF"
+   ],
+   [
+    "#3D63B0",
+    "#E0E8F5",
+    "#F8FAFD"
+   ],
+   [
+    "#3A4256",
+    "#E4E6EC",
+    "#FFFFFF"
+   ]
+  ]
  },
  {
   "id": "eucap",
@@ -693,7 +1662,24 @@
    "Беж"
   ],
   "img": true,
-  "slug": "listya-evkalipta"
+  "slug": "listya-evkalipta",
+  "sw": [
+   [
+    "#4E7A66",
+    "#D9E8E0",
+    "#FFFFFF"
+   ],
+   [
+    "#5E9A86",
+    "#DCEEE7",
+    "#FAFCFB"
+   ],
+   [
+    "#7E7A5E",
+    "#E8E4D6",
+    "#FBF9F4"
+   ]
+  ]
  },
  {
   "id": "emerald",
@@ -705,7 +1691,24 @@
    "Серебро"
   ],
   "img": true,
-  "slug": "izumrud"
+  "slug": "izumrud",
+  "sw": [
+   [
+    "#0F2A24",
+    "#D8B66A",
+    "#7A1F2B"
+   ],
+   [
+    "#0F2A24",
+    "#E9D7B0",
+    "#7A1F2B"
+   ],
+   [
+    "#0F2A24",
+    "#C9CFCB",
+    "#7A1F2B"
+   ]
+  ]
  },
  {
   "id": "silk",
@@ -717,7 +1720,24 @@
    "Жемчуг"
   ],
   "img": true,
-  "slug": "shelk"
+  "slug": "shelk",
+  "sw": [
+   [
+    "#2E0E16",
+    "#D9B46E",
+    "#F5E9DA"
+   ],
+   [
+    "#2E0E16",
+    "#E2B49A",
+    "#F7ECE6"
+   ],
+   [
+    "#2E0E16",
+    "#E8E2D6",
+    "#F4F1EC"
+   ]
+  ]
  },
  {
   "id": "seal",
@@ -729,7 +1749,24 @@
    "Лен"
   ],
   "img": true,
-  "slug": "surguch"
+  "slug": "surguch",
+  "sw": [
+   [
+    "#8E1F24",
+    "#E6DCCB",
+    "#F7F2E8"
+   ],
+   [
+    "#8E1F24",
+    "#E8E4DE",
+    "#FCFBF8"
+   ],
+   [
+    "#7A2A22",
+    "#DED4C2",
+    "#EFE8DC"
+   ]
+  ]
  },
  {
   "id": "doves",
@@ -741,7 +1778,24 @@
    "Олива"
   ],
   "img": true,
-  "slug": "golubi"
+  "slug": "golubi",
+  "sw": [
+   [
+    "#262420",
+    "#E6DFD0",
+    "#FBF8F1"
+   ],
+   [
+    "#222222",
+    "#E6E6E6",
+    "#FFFFFF"
+   ],
+   [
+    "#5A6440",
+    "#E0E2D2",
+    "#FAFAF5"
+   ]
+  ]
  },
  {
   "id": "rings",
@@ -753,7 +1807,24 @@
    "Серый"
   ],
   "img": true,
-  "slug": "koltsa"
+  "slug": "koltsa",
+  "sw": [
+   [
+    "#202020",
+    "#E6E6E6",
+    "#FFFFFF"
+   ],
+   [
+    "#8A7650",
+    "#E9E1CC",
+    "#FBF8F1"
+   ],
+   [
+    "#5A5A66",
+    "#E0E0E2",
+    "#F6F6F4"
+   ]
+  ]
  },
  {
   "id": "banquet",
@@ -765,7 +1836,24 @@
    "Зелень"
   ],
   "img": true,
-  "slug": "banket"
+  "slug": "banket",
+  "sw": [
+   [
+    "#202020",
+    "#E6E6E6",
+    "#FFFFFF"
+   ],
+   [
+    "#6A5A3E",
+    "#E9E1CC",
+    "#FBF8F1"
+   ],
+   [
+    "#3E5E4E",
+    "#DCE4DE",
+    "#FAFBF8"
+   ]
+  ]
  },
  {
   "id": "roses",
@@ -777,6 +1865,23 @@
    "Бордо"
   ],
   "img": true,
-  "slug": "rozy"
+  "slug": "rozy",
+  "sw": [
+   [
+    "#3A322A",
+    "#E4DACA",
+    "#F6F0E4"
+   ],
+   [
+    "#333333",
+    "#E6E4E0",
+    "#FDFCF9"
+   ],
+   [
+    "#6E1E28",
+    "#E9DAD6",
+    "#F8F2EC"
+   ]
+  ]
  }
 ]
