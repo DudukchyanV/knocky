@@ -6,7 +6,7 @@ import re, sys
 src, out = sys.argv[1], sys.argv[2]
 h = open(src, encoding="utf-8").read()
 T = "Knocky - приглашения на свадьбу по ссылке"
-D = "Онлайн-приглашение на свадьбу: 60+ дизайнов, программа дня, карта, ответы гостей, именные ссылки и рассадка. Оплата один раз, без подписки."
+D = "Приглашение на свадьбу, которое приятно открыть. Таймер до праздника, местоположение, ответы гостей и многое другое - по одной ссылке. 60+ дизайнов"
 meta = (f'<meta name="description" content="{D}">\n'
         f'<meta property="og:title" content="{T}">\n<meta property="og:description" content="{D}">\n'
         '<meta property="og:url" content="https://knocky.ru/">\n<meta property="og:type" content="website">\n'
