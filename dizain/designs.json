@@ -8,7 +8,8 @@
    "Шалфей",
    "Сумерки"
   ],
-  "img": false
+  "img": false,
+  "slug": "konvert"
  },
  {
   "id": "euca",
@@ -19,7 +20,8 @@
    "Синие чернила",
    "Ночная олива"
   ],
-  "img": false
+  "img": false,
+  "slug": "evkalipt"
  },
  {
   "id": "arch",
@@ -30,7 +32,8 @@
    "Море",
    "Графит"
   ],
-  "img": false
+  "img": false,
+  "slug": "arka"
  },
  {
   "id": "mag",
@@ -41,7 +44,8 @@
    "Кобальт",
    "Ночной выпуск"
   ],
-  "img": false
+  "img": false,
+  "slug": "oblozhka"
  },
  {
   "id": "deco",
@@ -52,7 +56,8 @@
    "Изумруд",
    "Сапфир"
   ],
-  "img": false
+  "img": false,
+  "slug": "ar-deko"
  },
  {
   "id": "stars",
@@ -63,7 +68,8 @@
    "Слива",
    "Хвоя"
   ],
-  "img": false
+  "img": false,
+  "slug": "sozvezdie"
  },
  {
   "id": "wc",
@@ -74,7 +80,8 @@
    "Персик",
    "Мята"
   ],
-  "img": false
+  "img": false,
+  "slug": "akvarel"
  },
  {
   "id": "lemon",
@@ -85,7 +92,8 @@
    "Сицилия",
    "Оливковая роща"
   ],
-  "img": false
+  "img": false,
+  "slug": "limony"
  },
  {
   "id": "poster",
@@ -96,7 +104,8 @@
    "Ультрамарин",
    "Горчица"
   ],
-  "img": false
+  "img": false,
+  "slug": "plakat"
  },
  {
   "id": "polar",
@@ -107,7 +116,8 @@
    "Белый стол",
    "Сукно"
   ],
-  "img": false
+  "img": false,
+  "slug": "polaroid"
  },
  {
   "id": "enso",
@@ -118,7 +128,8 @@
    "Индиго",
    "Глина"
   ],
-  "img": false
+  "img": false,
+  "slug": "tush"
  },
  {
   "id": "mono",
@@ -129,7 +140,8 @@
    "Бархат",
    "Кость и черный"
   ],
-  "img": false
+  "img": false,
+  "slug": "monogramma"
  },
  {
   "id": "curtain",
@@ -140,7 +152,8 @@
    "Изумруд",
    "Полночь"
   ],
-  "img": false
+  "img": false,
+  "slug": "zanaves"
  },
  {
   "id": "snow",
@@ -151,7 +164,8 @@
    "Хвоя",
    "Ночной лес"
   ],
-  "img": false
+  "img": false,
+  "slug": "sneg"
  },
  {
   "id": "glass",
@@ -162,7 +176,8 @@
    "Сумерки",
    "Пастель"
   ],
-  "img": false
+  "img": false,
+  "slug": "vitrazh"
  },
  {
   "id": "lace",
@@ -173,7 +188,8 @@
    "Шалфей",
    "Беж"
   ],
-  "img": false
+  "img": false,
+  "slug": "kruzhevo"
  },
  {
   "id": "surf",
@@ -184,7 +200,8 @@
    "Закат",
    "Шторм"
   ],
-  "img": false
+  "img": false,
+  "slug": "priboy"
  },
  {
   "id": "mail",
@@ -195,7 +212,8 @@
    "Зеленая почта",
    "Сепия"
   ],
-  "img": false
+  "img": false,
+  "slug": "aviapochta"
  },
  {
   "id": "meadow",
@@ -206,7 +224,8 @@
    "Лаванда",
    "Осень"
   ],
-  "img": false
+  "img": false,
+  "slug": "lug"
  },
  {
   "id": "route",
@@ -217,7 +236,8 @@
    "Синька",
    "Сепия"
   ],
-  "img": false
+  "img": false,
+  "slug": "marshrut"
  },
  {
   "id": "paper",
@@ -228,7 +248,8 @@
    "Мята",
    "Синева"
   ],
-  "img": false
+  "img": false,
+  "slug": "bumaga"
  },
  {
   "id": "vinyl",
@@ -239,7 +260,8 @@
    "Ультрамарин",
    "Олива"
   ],
-  "img": false
+  "img": false,
+  "slug": "vinil"
  },
  {
   "id": "bow",
@@ -250,7 +272,8 @@
    "Синие чернила",
    "Шалфей"
   ],
-  "img": false
+  "img": false,
+  "slug": "bant"
  },
  {
   "id": "poppy",
@@ -261,7 +284,8 @@
    "Васильки",
    "Желтые"
   ],
-  "img": false
+  "img": false,
+  "slug": "maki"
  },
  {
   "id": "engrave",
@@ -272,7 +296,8 @@
    "Графит",
    "Изумруд"
   ],
-  "img": false
+  "img": false,
+  "slug": "gravyura"
  },
  {
   "id": "delft",
@@ -283,7 +308,8 @@
    "Изумруд",
    "Бордо"
   ],
-  "img": false
+  "img": false,
+  "slug": "gortenziya"
  },
  {
   "id": "sketch",
@@ -294,7 +320,8 @@
    "Бумага",
    "Ночь"
   ],
-  "img": false
+  "img": false,
+  "slug": "eskiz"
  },
  {
   "id": "mille",
@@ -305,7 +332,8 @@
    "Сад",
    "Голубой"
   ],
-  "img": false
+  "img": false,
+  "slug": "millefler"
  },
  {
   "id": "numbers",
@@ -316,7 +344,8 @@
    "Хвоя",
    "Ночь"
   ],
-  "img": false
+  "img": false,
+  "slug": "tsifry"
  },
  {
   "id": "velvet",
@@ -327,7 +356,8 @@
    "Изумруд",
    "Сапфир"
   ],
-  "img": false
+  "img": false,
+  "slug": "barhat"
  },
  {
   "id": "flourish",
@@ -338,7 +368,8 @@
    "Золото",
    "Черный"
   ],
-  "img": false
+  "img": false,
+  "slug": "venzel"
  },
  {
   "id": "tuscany",
@@ -349,7 +380,8 @@
    "Закат",
    "Утро"
   ],
-  "img": false
+  "img": false,
+  "slug": "toskana"
  },
  {
   "id": "supper",
@@ -360,7 +392,8 @@
    "Красный",
    "Олива"
   ],
-  "img": false
+  "img": false,
+  "slug": "uzhin"
  },
  {
   "id": "villa",
@@ -371,7 +404,8 @@
    "Кипарис",
    "Терракота"
   ],
-  "img": true
+  "img": true,
+  "slug": "villa"
  },
  {
   "id": "estate",
@@ -382,7 +416,8 @@
    "Пруд",
    "Сливки"
   ],
-  "img": true
+  "img": true,
+  "slug": "usadba"
  },
  {
   "id": "vine",
@@ -393,7 +428,8 @@
    "Лоза",
    "Вино"
   ],
-  "img": true
+  "img": true,
+  "slug": "vinogradnik"
  },
  {
   "id": "terrace",
@@ -404,7 +440,8 @@
    "Песок",
    "Ночь"
   ],
-  "img": true
+  "img": true,
+  "slug": "terrasa"
  },
  {
   "id": "garden",
@@ -415,7 +452,8 @@
    "Белый",
    "Изумруд"
   ],
-  "img": true
+  "img": true,
+  "slug": "tseremoniya"
  },
  {
   "id": "winter",
@@ -426,7 +464,8 @@
    "Огонек",
    "Ночь"
   ],
-  "img": true
+  "img": true,
+  "slug": "zimniy-les"
  },
  {
   "id": "wpeony",
@@ -437,7 +476,8 @@
    "Шампань",
    "Графит"
   ],
-  "img": true
+  "img": true,
+  "slug": "belye-piony"
  },
  {
   "id": "hydra",
@@ -448,7 +488,8 @@
    "Небо",
    "Белый"
   ],
-  "img": true
+  "img": true,
+  "slug": "gortenzii"
  },
  {
   "id": "autumn",
@@ -459,7 +500,8 @@
    "Пшеница",
    "Ягоды"
   ],
-  "img": true
+  "img": true,
+  "slug": "osen"
  },
  {
   "id": "pine",
@@ -470,7 +512,8 @@
    "Шишки",
    "Снег"
   ],
-  "img": true
+  "img": true,
+  "slug": "zimniy-venok"
  },
  {
   "id": "burg",
@@ -481,7 +524,8 @@
    "Хвоя",
    "Сливки"
   ],
-  "img": true
+  "img": true,
+  "slug": "bordo"
  },
  {
   "id": "lavender",
@@ -492,7 +536,8 @@
    "Ромашка",
    "Серый"
   ],
-  "img": true
+  "img": true,
+  "slug": "lavanda"
  },
  {
   "id": "lemonb",
@@ -503,7 +548,8 @@
    "Листья",
    "Синий"
   ],
-  "img": true
+  "img": true,
+  "slug": "limonnaya-vetka"
  },
  {
   "id": "lily",
@@ -514,7 +560,8 @@
    "Белый",
    "Шалфей"
   ],
-  "img": true
+  "img": true,
+  "slug": "landyshi"
  },
  {
   "id": "olive",
@@ -525,7 +572,8 @@
    "Маслина",
    "Песок"
   ],
-  "img": true
+  "img": true,
+  "slug": "olivy"
  },
  {
   "id": "fcorner",
@@ -536,7 +584,8 @@
    "Шампань",
    "Пудра"
   ],
-  "img": true
+  "img": true,
+  "slug": "ugolok"
  },
  {
   "id": "farch",
@@ -547,7 +596,8 @@
    "Золото",
    "Графит"
   ],
-  "img": true
+  "img": true,
+  "slug": "tsvetochnaya-arka"
  },
  {
   "id": "garland",
@@ -558,7 +608,8 @@
    "Шампань",
    "Синий"
   ],
-  "img": true
+  "img": true,
+  "slug": "girlyanda"
  },
  {
   "id": "wheat",
@@ -569,7 +620,8 @@
    "Пшеница",
    "Василек"
   ],
-  "img": true
+  "img": true,
+  "slug": "maki-i-pshenitsa"
  },
  {
   "id": "field",
@@ -580,7 +632,8 @@
    "Солнце",
    "Василек"
   ],
-  "img": true
+  "img": true,
+  "slug": "polevye-tsvety"
  },
  {
   "id": "damask",
@@ -591,7 +644,8 @@
    "Сливки",
    "Бордо"
   ],
-  "img": true
+  "img": true,
+  "slug": "damask"
  },
  {
   "id": "sprig",
@@ -602,7 +656,8 @@
    "Шалфей",
    "Беж"
   ],
-  "img": true
+  "img": true,
+  "slug": "vetochki"
  },
  {
   "id": "lemonp",
@@ -613,7 +668,8 @@
    "Листья",
    "Синий"
   ],
-  "img": true
+  "img": true,
+  "slug": "limonnyy-uzor"
  },
  {
   "id": "azul",
@@ -624,7 +680,8 @@
    "Небо",
    "Белый"
   ],
-  "img": true
+  "img": true,
+  "slug": "azulezhu"
  },
  {
   "id": "eucap",
@@ -635,7 +692,8 @@
    "Мята",
    "Беж"
   ],
-  "img": true
+  "img": true,
+  "slug": "listya-evkalipta"
  },
  {
   "id": "emerald",
@@ -646,7 +704,8 @@
    "Шампань",
    "Серебро"
   ],
-  "img": true
+  "img": true,
+  "slug": "izumrud"
  },
  {
   "id": "silk",
@@ -657,7 +716,8 @@
    "Розовое золото",
    "Жемчуг"
   ],
-  "img": true
+  "img": true,
+  "slug": "shelk"
  },
  {
   "id": "seal",
@@ -668,7 +728,8 @@
    "Белый",
    "Лен"
   ],
-  "img": true
+  "img": true,
+  "slug": "surguch"
  },
  {
   "id": "doves",
@@ -679,7 +740,8 @@
    "Белый",
    "Олива"
   ],
-  "img": true
+  "img": true,
+  "slug": "golubi"
  },
  {
   "id": "rings",
@@ -690,7 +752,8 @@
    "Сливки",
    "Серый"
   ],
-  "img": true
+  "img": true,
+  "slug": "koltsa"
  },
  {
   "id": "banquet",
@@ -701,7 +764,8 @@
    "Сливки",
    "Зелень"
   ],
-  "img": true
+  "img": true,
+  "slug": "banket"
  },
  {
   "id": "roses",
@@ -712,6 +776,7 @@
    "Белый",
    "Бордо"
   ],
-  "img": true
+  "img": true,
+  "slug": "rozy"
  }
 ]
