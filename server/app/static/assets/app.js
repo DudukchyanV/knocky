@@ -28,6 +28,9 @@ async function api(path,opt={}){
   let j={};try{j=await r.json()}catch(e){}
   if(!r.ok){const e=new Error(j.error||'Нет связи с сервером. Попробуйте еще раз');e.status=r.status;e.data=j;throw e;}
   return j;}
+/* promo code: from a knocky.ru/?promo=CODE link (cookie on .knocky.ru) or typed in the cabinet */
+function promoSaved(){const m=document.cookie.match(/(?:^|; )kn_promo=([^;]*)/);return m?decodeURIComponent(m[1]):'';}
+function promoSave(v){document.cookie='kn_promo='+encodeURIComponent(v||'')+';domain=knocky.ru;path=/;max-age='+(v?2592000:0)+';SameSite=Lax;Secure';}
 function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600);}
 async function copy(t){try{await navigator.clipboard.writeText(t);toast('Ссылка скопирована');}catch(e){prompt('Скопируйте ссылку',t);}}
 function go(p,replace){history[replace?'replaceState':'pushState']({},'',p);route();if(!replace&&window.KH)KH.hit(location.href);}
@@ -121,7 +124,7 @@ async function listView(admin){
   app.innerHTML='<div class="spin" aria-label="Загрузка"></div>';
   let items=[];
   try{items=(await api('/invitations'+(admin?'?all=1':''))).items;}catch(x){app.innerHTML=`<div class="empty"><h2>Не получилось загрузить</h2><p>${esc(x.message)}</p><button class="btn btn-soft" onclick="location.reload()">Обновить</button></div>`;return;}
-  const tabs=ME.admin?`<div class="tabs" role="tablist"><button role="tab" aria-selected="${!admin}" data-t="/">Мои</button><button role="tab" aria-selected="${!!admin}" data-t="/admin">Все приглашения</button></div>`:'';
+  const tabs=ME.admin?`<div class="tabs" role="tablist"><button role="tab" aria-selected="${!admin}" data-t="/">Мои</button><button role="tab" aria-selected="${!!admin}" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="false" data-t="/promos">Промокоды</button></div>`:'';
   const head=`<div class="head"><div><h1>${admin?'Все приглашения':'Мои приглашения'}</h1>
     ${admin?'<p>'+plural(items.length,'приглашение','приглашения','приглашений')+' на сервисе</p>':''}</div>${tabs}</div>`;
   const newCard=`<a class="new" href="${SITE}/#templates"><b aria-hidden="true">+</b>Создать приглашение</a>`;
@@ -155,6 +158,8 @@ async function invView(id){
       <label class="field"><span>Адрес ссылки</span><div class="slug"><span>knocky.ru/</span><input class="inp" id="slug" value="${esc(o.slug||'')}" placeholder="anna-ilya" maxlength="40" autocomplete="off" spellcheck="false"></div></label>
       <p class="note" style="margin-top:8px">Латинские буквы, цифры и дефис. Если оставить пустым, адрес соберем из имен.</p>
       <p class="err" id="slugEr" hidden></p>
+      <div class="promo" style="margin-top:14px"><input class="inp" id="promoIn" placeholder="Промокод" maxlength="30" autocomplete="off" spellcheck="false" aria-label="Промокод"><button class="btn btn-soft" id="promoBtn">Применить</button></div>
+      <p class="err" id="promoEr" hidden></p>
       <div class="acts" style="margin-top:14px"><button class="btn btn-seal" aria-disabled="true" id="payBtn">Оплатить и получить ссылку</button>${ME.admin?`<button class="btn btn-soft" id="pubBtn">Опубликовать без оплаты</button>`:''}<button class="btn btn-soft" id="slugSave">Сохранить адрес</button></div>
       <div id="priceBox" style="margin-top:12px"></div>
       <p class="note" style="margin-top:8px">Оплата картой или через СБП в Робокассе. Чек придет на почту. Ссылка появится здесь сразу после оплаты.</p>
@@ -222,11 +227,26 @@ async function invView(id){
     try{await api('/invitations/'+o.id+'/publish',{method:'POST'});toast('Опубликовано');invView(id);}catch(x){slugEr.hidden=false;slugEr.textContent=x.message;}};
   if($('#refBtn'))$('#refBtn').onclick=async()=>{if(!confirm('Ссылка у гостей перестанет открываться, приглашение станет черновиком. Делайте это после возврата денег в Робокассе. Продолжить?'))return;
     try{await api('/invitations/'+o.id+'/refunded',{method:'POST'});toast('Ссылка выключена');invView(id);}catch(x){toast(x.message);}};
-  if($('#payBtn')){const pb=$('#payBtn');
-    api('/invitations/'+o.id+'/price').then(pr=>{if(!pr.ready){pb.textContent='Прием оплаты откроется в ближайшие дни';pb.disabled=true;pb.setAttribute('aria-disabled','true');}else{pb.textContent=`Оплатить ${pr.total.toLocaleString('ru-RU')} ₽ и получить ссылку${pr.test?' (тест)':''}`;pb.removeAttribute('aria-disabled');}
-      const box=$('#priceBox');if(box)box.innerHTML=`${pr.ready?'':'<p style="margin:0 0 8px;color:var(--muted,#6E5F68)">Приглашение сохранено. Вернитесь сюда, когда откроется оплата.</p>'}<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${i.price.toLocaleString('ru-RU')} ₽</td></tr>`).join('')}</tbody></table></div></details>`;}).catch(()=>{});
+  if($('#payBtn')){const pb=$('#payBtn'),pIn=$('#promoIn'),pEr=$('#promoEr');let promo=null;
+    const rub=n=>n.toLocaleString('ru-RU')+' ₽';
+    const loadPrice=code=>api('/invitations/'+o.id+'/price'+(code?'?promo='+encodeURIComponent(code):'')).then(pr=>{
+      promo=pr.promo;pEr.hidden=!pr.promo_error;pEr.textContent=pr.promo_error||'';
+      if(pr.promo_error)promoSave('');
+      const free=promo&&promo.free,fin=promo?promo.final:pr.total;
+      if(free){pb.textContent='Опубликовать бесплатно';pb.disabled=false;pb.removeAttribute('aria-disabled');}
+      else if(!pr.ready){pb.textContent='Прием оплаты откроется в ближайшие дни';pb.disabled=true;pb.setAttribute('aria-disabled','true');}
+      else{pb.textContent=`Оплатить ${rub(fin)} и получить ссылку${pr.test?' (тест)':''}`;pb.disabled=false;pb.removeAttribute('aria-disabled');}
+      const box=$('#priceBox');if(!box)return;
+      box.innerHTML=(promo?`<p class="promo-ok">Промокод <b>${esc(promo.code)}</b> (${esc(promo.label)}): <s>${rub(pr.total)}</s> → <b>${rub(fin)}</b></p>`:'')
+        +(pr.ready||free?'':'<p style="margin:0 0 8px;color:var(--muted,#6E5F68)">Приглашение сохранено. Вернитесь сюда, когда откроется оплата.</p>')
+        +`<details><summary>Из чего складывается цена</summary><div class="tbl"><table><tbody>${pr.items.map(i=>`<tr><td>${esc(i.name)}</td><td class="nowrap" style="text-align:right">${rub(i.price)}</td></tr>`).join('')}${promo?`<tr><td>Промокод ${esc(promo.code)}</td><td class="nowrap" style="text-align:right">-${rub(promo.discount)}</td></tr><tr><td><b>Итого</b></td><td class="nowrap" style="text-align:right"><b>${rub(fin)}</b></td></tr>`:''}</tbody></table></div></details>`;}).catch(()=>{});
+    pIn.value=promoSaved();loadPrice(pIn.value);
+    $('#promoBtn').onclick=()=>{const v=pIn.value.trim();promoSave(v);if(!v){pEr.hidden=true;}loadPrice(v);};
+    pIn.onkeydown=e=>{if(e.key==='Enter')$('#promoBtn').click();};
     pb.onclick=async()=>{if(slugIn.value&&slugIn.value!==(o.slug||'')&&!(await saveSlug()))return;pb.disabled=true;
-      try{if(window.KH)KH.goal('pay_click');const j=await api('/invitations/'+o.id+'/pay',{method:'POST'});location.href=j.url;setTimeout(()=>{pb.disabled=false;},4000);}catch(x){pb.disabled=false;slugEr.hidden=false;slugEr.textContent=x.message;}};
+      try{if(window.KH)KH.goal('pay_click');const j=await api('/invitations/'+o.id+'/pay',{method:'POST',body:JSON.stringify({promo:promo?promo.code:''})});
+        if(j.free){promoSave('');toast('Опубликовано по промокоду');invView(id);return;}
+        location.href=j.url;setTimeout(()=>{pb.disabled=false;},4000);}catch(x){pb.disabled=false;slugEr.hidden=false;slugEr.textContent=x.message;}};
     addEventListener('pageshow',()=>{if(pb.getAttribute('aria-disabled')!=='true')pb.disabled=false;});}
   const qs=new URLSearchParams(location.search);
   if(qs.get('paid')){if(window.KH)KH.goal('paid');history.replaceState({},'',location.pathname);if(!pub){toast('Оплата прошла. Публикуем приглашение…');setTimeout(()=>invView(id),4000);}else toast('Оплата прошла, приглашение опубликовано');}
@@ -242,6 +262,43 @@ function ask(title,text,ok){return new Promise(res=>{const d=document.createElem
   d.querySelectorAll('button').forEach(b=>b.onclick=()=>d.close(b.value));d.showModal();d.querySelector('[value=no]').focus();});}
 
 /* ---------- router ---------- */
+async function promoView(){
+  document.title='Промокоды - Кабинет Knocky';
+  const rub=n=>(n||0).toLocaleString('ru-RU')+' ₽';
+  const tabs=`<div class="tabs" role="tablist"><button role="tab" aria-selected="false" data-t="/">Мои</button><button role="tab" aria-selected="false" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="true" data-t="/promos">Промокоды</button></div>`;
+  const draw=list=>{
+    app.innerHTML=`<div class="head"><div><h1>Промокоды</h1><p>Скидка при оплате в кабинете. Ссылка с кодом подставит его сама.</p></div>${tabs}</div>
+    <div class="panel"><h2>Новый промокод</h2>
+      <div class="pform">
+        <label class="field"><span>Код</span><input class="inp" id="pc" placeholder="SVADBA10" maxlength="30" autocomplete="off" spellcheck="false"></label>
+        <label class="field"><span>Скидка</span><div class="row2"><input class="inp" id="pv" type="number" min="1" placeholder="10"><select class="inp" id="pk"><option value="pct">%</option><option value="rub">₽</option></select></div></label>
+        <label class="field"><span>Сколько раз можно применить</span><input class="inp" id="pm" type="number" min="1" placeholder="без лимита"></label>
+        <label class="field"><span>Действует до</span><input class="inp" id="pe" type="date"></label>
+        <label class="field"><span>Партнер</span><input class="inp" id="pp" placeholder="необязательно, например «Ведущая Маша»" maxlength="80"></label>
+        <label class="field"><span>Партнеру, % от оплат</span><input class="inp" id="ppp" type="number" min="0" max="100" placeholder="0"></label>
+        <label class="field pwide"><span>Заметка</span><input class="inp" id="pn" placeholder="для себя: откуда код, кому дали" maxlength="200"></label>
+      </div>
+      <p class="note" style="margin-top:8px">100% - приглашение публикуется бесплатно. Один клиент может применить код один раз. Тот же код можно сохранить повторно, чтобы изменить условия.</p>
+      <p class="err" id="per" hidden></p>
+      <div class="acts" style="margin-top:12px"><button class="btn btn-seal" id="psave">Сохранить промокод</button></div></div>
+    <div class="panel"><h2>Все промокоды</h2>${list.length?`<div class="tbl"><table><thead><tr><th>Код</th><th>Скидка</th><th>Применили</th><th>До</th><th>Партнер</th><th>Оплачено</th><th>Партнеру</th><th></th></tr></thead><tbody>
+      ${list.map(p=>`<tr${p.active?'':' class="off"'}><td><b>${esc(p.code)}</b>${p.note?`<div class="note">${esc(p.note)}</div>`:''}<div><button class="linkbtn" data-copy="${esc(p.code)}">Скопировать ссылку</button></div></td>
+        <td class="nowrap">${p.kind==='pct'?p.value+'%':rub(p.value)}</td><td class="nowrap">${p.uses}${p.max_uses?' из '+p.max_uses:''}</td><td class="nowrap">${p.expires?esc(p.expires.split('-').reverse().join('.')):'-'}</td>
+        <td>${p.partner?esc(p.partner)+(p.partner_pct?' · '+p.partner_pct+'%':''):'-'}</td><td class="nowrap">${rub(p.revenue)}${p.discount?`<div class="note">скидки ${rub(p.discount)}</div>`:''}</td><td class="nowrap">${p.partner_pct?rub(p.partner_due):'-'}</td>
+        <td class="nowrap"><button class="btn btn-ghost btn-sm" data-edit="${esc(p.code)}">Изменить</button> <button class="btn btn-ghost btn-sm" data-tog="${esc(p.code)}" data-on="${p.active?0:1}">${p.active?'Выключить':'Включить'}</button></td></tr>`).join('')}
+      </tbody></table></div>`:'<p class="note">Промокодов пока нет</p>'}</div>`;
+    app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));
+    $('#psave').onclick=async()=>{const er=$('#per');er.hidden=true;
+      try{const j=await api('/admin/promos',{method:'POST',body:JSON.stringify({code:$('#pc').value,kind:$('#pk').value,value:$('#pv').value,max_uses:$('#pm').value,expires:$('#pe').value,partner:$('#pp').value,partner_pct:$('#ppp').value,note:$('#pn').value})});toast('Промокод сохранен');draw(j.promos);}
+      catch(x){er.hidden=false;er.textContent=x.message;}};
+    app.querySelectorAll('[data-tog]').forEach(b=>b.onclick=async()=>{try{const j=await api('/admin/promos',{method:'POST',body:JSON.stringify({code:b.dataset.tog,active:b.dataset.on==='1'})});draw(j.promos);}catch(x){toast(x.message);}});
+    app.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const p=list.find(x=>x.code===b.dataset.edit);
+      $('#pc').value=p.code;$('#pv').value=p.value;$('#pk').value=p.kind;$('#pm').value=p.max_uses||'';$('#pe').value=p.expires||'';$('#pp').value=p.partner||'';$('#ppp').value=p.partner_pct||'';$('#pn').value=p.note||'';
+      window.scrollTo({top:0,behavior:'smooth'});$('#pc').focus();});
+    app.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const u=SITE+'/?promo='+encodeURIComponent(b.dataset.copy);
+      try{await navigator.clipboard.writeText(u);toast('Скопировано: '+u);}catch(e){prompt('Ссылка с промокодом',u);}});};
+  app.innerHTML='<div class="spin" aria-label="Загрузка"></div>';
+  try{draw((await api('/admin/promos')).promos);}catch(x){app.innerHTML=`<div class="empty"><h2>Не получилось загрузить</h2><p>${esc(x.message)}</p></div>`;}}
 async function route(){
   window.scrollTo(0,0);
   if(ME===null){try{const j=await api('/me');ME=j.user||false;}catch(e){ME=false;}showWho();}
@@ -252,5 +309,6 @@ async function route(){
   let m;
   if((m=p.match(/^\/inv\/([\w-]+)/)))return invView(m[1]);
   if(p==='/admin'&&ME.admin)return listView(true);
+  if(p==='/promos'&&ME.admin)return promoView();
   return listView(false);}
 fetch('/assets/designs.json').then(r=>r.json()).then(d=>{DESIGNS=d;}).catch(()=>{}).finally(route);

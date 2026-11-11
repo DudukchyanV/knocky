@@ -998,6 +998,7 @@ section{padding-block:72px}
 @media (max-width:860px){.feats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:480px){.feats{gap:18px 16px}.feat h3{font-size:16px}.feat p{font-size:14px}}
 .feat{border-top:2px solid var(--ink);padding-top:14px}
+.promo-note{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:700;font-size:15px;box-shadow:0 10px 30px rgba(0,0,0,.2);max-width:calc(100% - 32px);text-align:center}
 .feat h3{margin:0 0 6px;font-family:var(--f-disp);font-weight:500;font-size:17px;line-height:1.3}
 .feat p{margin:0;color:var(--muted);font-size:15px}
 
@@ -3405,6 +3406,11 @@ function openT(id,m){if(window.KH&&!editing())KH.goal('design_open');const nt=TP
   document.getElementById('done').hidden=true;drawPick();showStep(0);pv.scrollTop=0;
   if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(b)openT(b.dataset.open);});
+/* knocky.ru/?promo=CODE: keep the code for the cabinet (cookie on .knocky.ru, 30 days) and say so */
+(()=>{const q=new URLSearchParams(location.search),c=(q.get('promo')||'').trim().toUpperCase().slice(0,30);if(!/^[A-Z0-9А-ЯЁ_-]{3,30}$/.test(c))return;
+document.cookie='kn_promo='+encodeURIComponent(c)+';domain=knocky.ru;path=/;max-age=2592000;SameSite=Lax;Secure';q.delete('promo');
+history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);
+const n=document.createElement('div');n.className='promo-note';n.setAttribute('role','status');n.textContent='Промокод '+c+' применится при оплате';document.body.appendChild(n);setTimeout(()=>n.remove(),6000);})();
 /* knocky.ru/#dizain=<id> from design pages: open that design right away */
 (()=>{const m=(location.hash||'').match(/^#dizain=([\w-]+)$/);if(m&&TPL.some(t=>t.id===m[1])){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>openT(m[1]),200);}})();
 /* goal: the first change in the constructor (once per page) */
@@ -3497,7 +3503,7 @@ document.getElementById('cookieSettings').onclick=()=>{ck.hidden=false;document.
 
 /* legal documents */
 const SELLER_NAME='Индивидуальный предприниматель Дарбинян Элла Вардазаровна';
-const OGRNIP='324774600657694', INN='502718452113', LMAIL='hello@knocky.ru', LSITE='knocky.ru', DOC_DATE='17.10.2026';
+const OGRNIP='324774600657694', INN='502718452113', LMAIL='hello@knocky.ru', LSITE='knocky.ru', DOC_DATE='11.11.2026';
 const LMAILTO=`<a href="mailto:${LMAIL}">${LMAIL}</a>`;
 const SELLER=`${SELLER_NAME} (ОГРНИП ${OGRNIP}${INN?', ИНН '+INN:''})`;
 const REQS=`<ul><li>${SELLER_NAME}</li><li>ОГРНИП: ${OGRNIP}</li>${INN?`<li>ИНН: ${INN}</li>`:''}<li>Город: Москва</li><li>Сайт: ${LSITE}</li><li>Телефон: <a href="tel:+79258735718">+7 925 873-57-18</a></li><li>Email: ${LMAILTO}</li><li>Поддержка: ежедневно с 10:00 до 20:00 по московскому времени</li></ul>`;
@@ -3514,6 +3520,7 @@ offer:{t:'Публичная оферта на оказание услуг',b:`
 <p>3.1. Стоимость указана на Сайте в рублях на момент оформления заказа и складывается из стоимости основы и выбранных Блоков. Цена тарифа равна сумме входящих в него Блоков. В Блок «Именные ссылки» входит 100 именных ссылок; дополнительные ссылки приобретаются пакетами по 100 по цене, указанной на Сайте. Блок «Рассадка» доступен только вместе с Блоком «Именные ссылки». В Блок «Печатная версия» переносится только часть Приглашения: обложка, дата, адрес, программа и дресс-код; остальные Блоки доступны Гостю по QR-коду. Дополнительные дни праздника добавляются бесплатно; дресс-код для них бесплатный, карта для дополнительного дня оплачивается отдельно по цене, указанной на Сайте.</p>
 <p>3.2. Оплата 100% вперед банковской картой («Мир», Visa, Mastercard) или через СБП. Платежи принимает платежный сервис Robokassa (ООО «Робокасса»); данные карты Исполнитель не получает и не хранит.</p>
 <p>3.3. Кассовый чек по 54-ФЗ направляется на email Заказчика.</p>
+<p>3.4. Исполнитель может выдавать промокоды на скидку. Промокод вводится в личном кабинете перед оплатой; каждый промокод Заказчик может применить один раз. Размер скидки, срок действия и число применений определяются при выдаче промокода. Если скидка равна стоимости заказа, Приглашение публикуется без оплаты. Промокод не обменивается на деньги.</p>
 <h3>4. Порядок оказания услуг</h3>
 <p>4.1. После оплаты Приглашение публикуется, ссылка на него приходит на email Заказчика и отображается в личном кабинете.</p>
 <p>4.2. Срок доступа к Приглашению - 3 месяца с момента оплаты, а при выборе Блока «Ссылка на 12 месяцев» или тарифа, который его включает, - 12 месяцев. По окончании срока Приглашение перестает открываться.</p>

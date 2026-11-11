@@ -2064,6 +2064,7 @@ routes = [
     Route("/", page_cabinet),
     Route("/inv/{id}", page_cabinet),
     Route("/admin", page_cabinet),
+    Route("/promos", page_cabinet),
 ]
 def refund_sweep():
     """Every 15 minutes: live orders paid in the last 60 days - were any of them refunded in Robokassa?"""

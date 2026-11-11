@@ -217,3 +217,12 @@ button,a,input,select,textarea,label,summary{touch-action:manipulation}
 .menu-btn span{min-width:4.4em;text-align:right}.menu-btn{line-height:20px}
 @media (max-width:520px){.menu-btn span{display:none}}
 .top{position:relative;backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+
+/* promo codes */
+.promo{display:flex;gap:8px;max-width:420px}.promo .inp{text-transform:uppercase}
+.promo-ok{margin:0 0 8px;font-size:15px}.promo-ok s{color:var(--muted)}
+.pform{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.pform .pwide{grid-column:1/-1}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) 80px;gap:8px}
+tr.off td{opacity:.5}
+@media (max-width:760px){.pform{grid-template-columns:1fr}}
+.linkbtn{border:0;background:none;padding:0;margin-top:4px;text-align:left;white-space:nowrap;color:var(--seal);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
