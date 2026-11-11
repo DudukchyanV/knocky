@@ -27,7 +27,6 @@ def phone(im, shot, px, py, sh, tap=None):
     return sw
 def footer(d, n, total):
     d.text((70 * S, H - 66 * S), "knocky.ru", font=F_SM, fill=RED)
-    d.text((W - 70 * S, H - 66 * S), f"{n} / {total}", font=F_SM, fill=MUT, anchor="ra")
 def step(n, title, sub, shot, tap):
     im = Image.new("RGB", (W, H), BG); d = ImageDraw.Draw(im)
     x, y = 70 * S, 72 * S
