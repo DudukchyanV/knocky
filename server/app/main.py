@@ -87,6 +87,8 @@ CREATE TABLE IF NOT EXISTS hits(key TEXT, at INTEGER);
 CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, inv_id TEXT NOT NULL, user_id INTEGER, amount INTEGER NOT NULL,
   items TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new', test INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, paid_at INTEGER);
 CREATE TABLE IF NOT EXISTS paylog(at INTEGER, oid INTEGER, msg TEXT);
+CREATE TABLE IF NOT EXISTS promos(code TEXT PRIMARY KEY, kind TEXT NOT NULL, value INTEGER NOT NULL, max_uses INTEGER, expires INTEGER,
+  active INTEGER NOT NULL DEFAULT 1, partner TEXT, partner_pct INTEGER NOT NULL DEFAULT 0, note TEXT, created INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS inv_user ON invitations(user_id);
 CREATE INDEX IF NOT EXISTS rsvp_inv ON rsvp(inv_id);
 CREATE INDEX IF NOT EXISTS hits_key ON hits(key, at);
@@ -101,6 +103,12 @@ def init_db():
         # several days: which days the guest will come to (JSON list of day numbers, 0 = first)
         if "days" not in {r[1] for r in c.execute("PRAGMA table_info(rsvp)")}:
             c.execute("ALTER TABLE rsvp ADD COLUMN days TEXT")
+        # promo codes: which code the order used and the price before the discount
+        cols = {r[1] for r in c.execute("PRAGMA table_info(orders)")}
+        if "promo" not in cols:
+            c.execute("ALTER TABLE orders ADD COLUMN promo TEXT")
+        if "full_amount" not in cols:
+            c.execute("ALTER TABLE orders ADD COLUMN full_amount INTEGER")
 
 
 def load_secrets() -> dict:
@@ -667,6 +675,53 @@ async def admin_refunded(req: Request):
     return JSONResponse({"ok": True, "order": oid})
 
 
+@need_user
+async def admin_promos(req: Request):
+    """Admin: list of promo codes with how they were used; POST creates or changes one."""
+    if not is_admin(req.state.user):
+        return err("Только для администратора", 403)
+    with db() as c:
+        if req.method == "POST":
+            b = await body(req)
+            code = promo_norm(b.get("code"))
+            if not PROMO_RE.fullmatch(code):
+                raise ValueError("Код: от 3 до 30 символов, буквы, цифры, - и _")
+            old = c.execute("SELECT * FROM promos WHERE code=?", (code,)).fetchone()
+            if "active" in b and "value" not in b:
+                # switch a code on or off
+                if not old:
+                    raise ValueError("Такого промокода нет")
+                c.execute("UPDATE promos SET active=? WHERE code=?", (1 if b["active"] else 0, code))
+            else:
+                kind = "rub" if b.get("kind") == "rub" else "pct"
+                value = int(b.get("value") or 0)
+                if kind == "pct" and not 1 <= value <= 100:
+                    raise ValueError("Скидка в процентах: от 1 до 100")
+                if kind == "rub" and not 1 <= value <= 100000:
+                    raise ValueError("Скидка в рублях: от 1 ₽")
+                mx = int(b["max_uses"]) if str(b.get("max_uses") or "").strip() else None
+                exp = None
+                if b.get("expires"):
+                    exp = int(dt.datetime.strptime(str(b["expires"]), "%Y-%m-%d").replace(tzinfo=MSK).timestamp()) + 86399
+                pp = int(b.get("partner_pct") or 0)
+                if not 0 <= pp <= 100:
+                    raise ValueError("Процент партнеру: от 0 до 100")
+                vals = (kind, value, mx, exp, str(b.get("partner") or "")[:80].strip() or None, pp, str(b.get("note") or "")[:200].strip() or None)
+                if old:
+                    c.execute("UPDATE promos SET kind=?, value=?, max_uses=?, expires=?, partner=?, partner_pct=?, note=? WHERE code=?", vals + (code,))
+                else:
+                    c.execute("INSERT INTO promos(kind,value,max_uses,expires,partner,partner_pct,note,code,created,active) VALUES(?,?,?,?,?,?,?,?,?,1)",
+                              vals + (code, now()))
+        rows = c.execute("SELECT * FROM promos ORDER BY created DESC").fetchall()
+        out = []
+        for p in rows:
+            st = c.execute(f"SELECT COUNT(*) n, COALESCE(SUM(amount),0) s, COALESCE(SUM(full_amount-amount),0) d FROM orders "
+                           f"WHERE promo=? AND status IN {USED} AND test=0", (p["code"],)).fetchone()
+            out.append({**dict(p), "expires": dt.datetime.fromtimestamp(p["expires"], MSK).strftime("%Y-%m-%d") if p["expires"] else "",
+                        "uses": st["n"], "revenue": st["s"], "discount": st["d"], "partner_due": st["s"] * p["partner_pct"] // 100})
+    return JSONResponse({"promos": out})
+
+
 async def admin_paylog(req: Request):
     u = user_of(req)
     if not (is_admin(u) or setup_token_ok(req.query_params.get("t", ""))):
@@ -1057,6 +1112,38 @@ def price_of(d: dict) -> tuple[int, list]:
     return sum(x for _, x in items), items
 
 
+# ---------------------------------------------------------------- promo codes
+# A code gives a discount in % or in rubles (100% or more than the price = free). Used = orders paid with it (or published free).
+# One client uses one code once. Partner: who brought the code and their % of the money paid with it (paid out by hand).
+PROMO_RE = re.compile(r"[A-Z0-9А-Я_-]{3,30}")
+USED = "('paid','free')"
+
+
+def promo_norm(code) -> str:
+    return str(code or "").strip().upper().replace("Ё", "Е")
+
+
+def promo_apply(c, code: str, uid, total: int):
+    """-> (final price, info for the client). Raises ValueError with a message the client sees."""
+    code = promo_norm(code)
+    if not code:
+        return total, None
+    p = c.execute("SELECT * FROM promos WHERE code=?", (code,)).fetchone()
+    if not p or not p["active"]:
+        raise ValueError("Такого промокода нет")
+    if p["expires"] and p["expires"] < now():
+        raise ValueError("Срок действия промокода закончился")
+    used = c.execute(f"SELECT COUNT(*) FROM orders WHERE promo=? AND status IN {USED}", (code,)).fetchone()[0]
+    if p["max_uses"] and used >= p["max_uses"]:
+        raise ValueError("Промокод уже использован максимальное число раз")
+    if uid and c.execute(f"SELECT 1 FROM orders WHERE promo=? AND user_id=? AND status IN {USED}", (code, uid)).fetchone():
+        raise ValueError("Вы уже использовали этот промокод")
+    off = total * p["value"] // 100 if p["kind"] == "pct" else p["value"]
+    final = max(0, total - min(off, total))
+    label = f"-{p['value']}%" if p["kind"] == "pct" else f"-{p['value']} ₽"
+    return final, {"code": code, "label": label, "discount": total - final, "final": final, "free": final == 0}
+
+
 def rk_conf() -> dict | None:
     s = load_secrets().get("robokassa") or {}
     test = bool(s.get("test", True))
@@ -1077,11 +1164,17 @@ async def inv_price(req: Request):
         if not r:
             return err("Приглашение не найдено", 404)
         total, items = price_of(json.loads(r["data"]))
+        promo, promo_err = None, None
+        if req.query_params.get("promo"):
+            try:
+                _, promo = promo_apply(c, req.query_params["promo"], req.state.user["id"], total)
+            except ValueError as e:
+                promo_err = str(e)
     conf = rk_conf()
     # while Robokassa is in test mode only admins can pay (a test payment would publish for free)
     ready = conf is not None and (not conf["test"] or is_admin(req.state.user))
     return JSONResponse({"total": total, "items": [{"name": n, "price": p} for n, p in items], "ready": ready,
-                         "test": bool(conf and conf["test"])})
+                         "test": bool(conf and conf["test"]), "promo": promo, "promo_error": promo_err})
 
 
 @need_user
@@ -1090,8 +1183,10 @@ async def inv_pay(req: Request):
     from urllib.parse import quote, urlencode
     conf = rk_conf()
     u = req.state.user
-    if not conf or (conf["test"] and not is_admin(u)):
-        return err("Прием оплаты откроется в ближайшие дни. Приглашение сохранено в кабинете", 503)
+    try:
+        b = await body(req)
+    except Exception:
+        b = {}
     with db() as c:
         r = own_inv(c, req, req.path_params["id"])
         if not r:
@@ -1099,9 +1194,20 @@ async def inv_pay(req: Request):
         if r["status"] == "published" and not (r["expires_at"] and r["expires_at"] < now()):
             return err("Приглашение уже опубликовано")
         d = json.loads(r["data"])
-        total, items = price_of(d)
-        cur = c.execute("INSERT INTO orders(inv_id,user_id,amount,items,test,created) VALUES(?,?,?,?,?,?)",
-                        (r["id"], u["id"], total, json.dumps(items, ensure_ascii=False), 1 if conf["test"] else 0, now()))
+        full, items = price_of(d)
+        total, promo = promo_apply(c, b.get("promo"), u["id"], full)
+        code = promo["code"] if promo else None
+        if promo and promo["free"]:
+            # 100% code: publish right away, no payment
+            cur = c.execute("INSERT INTO orders(inv_id,user_id,amount,items,status,test,created,paid_at,promo,full_amount) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                            (r["id"], u["id"], 0, json.dumps(items, ensure_ascii=False), "free", 0, now(), now(), code, full))
+            publish_paid(c, r["id"], "promo")
+            paylog(cur.lastrowid, f"published free with promo {code}")
+            return JSONResponse({"free": True, "order": cur.lastrowid})
+        if not conf or (conf["test"] and not is_admin(u)):
+            return err("Прием оплаты откроется в ближайшие дни. Приглашение сохранено в кабинете", 503)
+        cur = c.execute("INSERT INTO orders(inv_id,user_id,amount,items,test,created,promo,full_amount) VALUES(?,?,?,?,?,?,?,?)",
+                        (r["id"], u["id"], total, json.dumps(items, ensure_ascii=False), 1 if conf["test"] else 0, now(), code, full))
         oid = cur.lastrowid
     out_sum = f"{total}.00"
     receipt = json.dumps({"sno": conf["sno"], "items": [{"name": "Онлайн-приглашение Knocky: " + inv_title(d)[:80], "quantity": 1, "sum": total,
@@ -1931,6 +2037,7 @@ routes = [
     Route("/api/invitations/{id}/export.xlsx", inv_export),
     Route("/api/stats.csv", stats_csv),
     Route("/api/admin/paylog", admin_paylog),
+    Route("/api/admin/promos", admin_promos, methods=["GET", "POST"]),
     Route("/api/admin/markpaid", admin_markpaid),
     Route("/api/admin/refunded", admin_refunded),
     Route("/api/invitations/{id}/refunded", inv_refunded, methods=["POST"]),
