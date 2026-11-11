@@ -42,12 +42,15 @@ def caption(im, n, title, sub, a=1.0):
     d.text((x, y + 108 + (40 if len(lines) > 1 else 0)), sub, font=F_S, fill=MUT + (int(255 * a),))
     im.paste(lay, (0, 0), lay)
 def tapmark(im, x, y, k):
-    # k 0..1: ring grows and fades
+    # translucent wave: a soft red disc that grows and fades, a second wave behind it, a dot at the finger
     lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
-    r = 34 + 40 * k; al = int(200 * (1 - k) ** 0.8)
-    d.ellipse((x - 30, y - 30, x + 30, y + 30), fill=RED + (int(150 * (1 - k)),))
-    d.ellipse((x - r, y - r, x + r, y + r), outline=RED + (al,), width=8)
-    im.paste(lay, (0, 0), lay)
+    e = 1 - (1 - k) ** 2
+    for lag, a0 in ((0.0, 1.0), (0.3, 0.7)):
+        if e <= lag: continue
+        kk = (e - lag) / (1 - lag); r = 30 + 95 * kk; f = (1 - kk) * a0
+        d.ellipse((x - r, y - r, x + r, y + r), fill=RED + (int(95 * f),), outline=(255, 255, 255, int(230 * f)), width=6)
+    d.ellipse((x - 24, y - 24, x + 24, y + 24), fill=RED + (int(200 * (1 - k) ** 0.7),), outline=(255, 255, 255, int(255 * (1 - k))), width=4)
+    lay = lay.filter(ImageFilter.GaussianBlur(1.5)); im.paste(lay, (0, 0), lay)
 def scene_frames(n, folder, sid, title, sub):
     man = [m for m in json.load(open(f"{V}/{folder}/manifest.json")) if m["scene"] == sid]
     base = phone_base(); i = 0
@@ -56,8 +59,8 @@ def scene_frames(n, folder, sid, title, sub):
         for k in range(m["hold"]):
             im = base.copy(); im.paste(shot, (PX, PY), MASK)
             caption(im, n, title, sub, min(1.0, (i + 1) / 8))
-            if m["tap"] and k < 7:
-                tapmark(im, PX + m["tap"]["x"] * SW / 390, PY + m["tap"]["y"] * SH / 844, k / 7)
+            if m["tap"]:
+                tapmark(im, PX + m["tap"]["x"] * SW / 390, PY + m["tap"]["y"] * SH / 844, k / max(1, m["hold"] - 1))
             i += 1
             yield im
 def card(lines_big, small, frames, seal=True):
