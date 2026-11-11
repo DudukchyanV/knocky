@@ -5,13 +5,15 @@ await p.evaluate(()=>{document.querySelectorAll('[class*=cookie],#cookie').forEa
 R.scene('s1');await R.shot(18);
 const ty=await p.evaluate(()=>document.getElementById('templates').getBoundingClientRect().top+scrollY-10);
 await R.scroll('scrollTo(0,v)',0,ty,36);await R.hold(10);
-const card=await p.$('#grid [data-open="wpeony"]');await card.scrollIntoViewIfNeeded();await p.waitForTimeout(300);await R.shot(8);
-await R.tap('#grid [data-open="wpeony"]',4);await p.waitForTimeout(800);await R.shot(22);
+const gx=await p.evaluate(()=>{const g=document.getElementById('grid');const sc=[g,g.parentElement,g.parentElement.parentElement].find(e=>e.scrollWidth>e.clientWidth+10);window.__gs=sc;const c=g.querySelector('[data-open="glass"]').closest('.card')||g.querySelector('[data-open="glass"]');
+ return {from:sc.scrollLeft,to:c.getBoundingClientRect().left-sc.getBoundingClientRect().left+sc.scrollLeft-16}});
+await R.scroll('window.__gs.scrollLeft=v',gx.from,gx.to,34);await R.hold(8);
+await R.tap('#grid [data-open="glass"]',4);await p.waitForTimeout(800);await R.shot(22);
 // 2. colors and blocks
 R.scene('s2');const DS='document.querySelector("dialog[open]").scrollTop=v';
-const palY=await p.evaluate(()=>{const d=document.querySelector('dialog[open]');const el=[...d.querySelectorAll('button')].find(x=>x.textContent.trim()==='Шампань');return el.getBoundingClientRect().top+d.scrollTop-260});
+const palY=await p.evaluate(()=>{const d=document.querySelector('dialog[open]');const el=[...d.querySelectorAll('button')].find(x=>x.textContent.trim()==='Сумерки');return el.getBoundingClientRect().top+d.scrollTop-260});
 await R.scroll(DS,0,palY,24);await R.hold(6);
-const champ=await p.evaluateHandle(()=>[...document.querySelectorAll('dialog[open] button')].find(x=>x.textContent.trim()==='Шампань'));
+const champ=await p.evaluateHandle(()=>[...document.querySelectorAll('dialog[open] button')].find(x=>x.textContent.trim()==='Сумерки'));
 await R.tap(champ,6);
 await R.scroll(DS,palY,0,20);await R.hold(16);
 const blkY=await p.evaluate(()=>{const d=document.querySelector('dialog[open]');const el=d.querySelector('#blk-rsvp');return el.getBoundingClientRect().top+d.scrollTop-420});
@@ -33,7 +35,7 @@ await R.scroll(DS,fy,0,22);await R.hold(26);
 fs.writeFileSync(D+'/payload.json',JSON.stringify(await p.evaluate(()=>orderPayload())));
 // 5. guest view (filmed here, used after the cabinet)
 R.scene('s5');
-await p.evaluate(()=>{const d=document.querySelector('dialog[open]');if(d)d.close();location.hash='#invite-wpeony'});await p.waitForTimeout(1400);await R.shot(20);
+await p.evaluate(()=>{const d=document.querySelector('dialog[open]');if(d)d.close();location.hash='#invite-glass'});await p.waitForTimeout(1400);await R.shot(20);
 const H=await p.evaluate(()=>document.documentElement.scrollHeight-innerHeight);
 const rsvp=await p.evaluate(()=>{const b=[...document.querySelectorAll('#inviteView button')].find(x=>x.textContent.trim()==='Приду');return b?b.getBoundingClientRect().top+scrollY-500:0});
 await R.scroll('scrollTo(0,v)',0,Math.min(rsvp*0.5,H),40);await R.hold(8);
