@@ -2,7 +2,7 @@ const {open}=require('./env.js');const {rec}=require('./rec.js');const fs=requir
 (async()=>{const {b,p}=await open('https://knocky.ru/');const D=process.argv[2];const R=rec(p,D);
 await p.evaluate(()=>{document.querySelectorAll('[class*=cookie],#cookie').forEach(e=>e.remove())});
 // 1. design
-await p.addStyleTag({content:'.grid{scroll-snap-type:none!important;scroll-behavior:auto!important}html{scroll-behavior:auto!important}'});
+await p.addStyleTag({content:'.sprog{display:none!important}.grid{scroll-snap-type:none!important;scroll-behavior:auto!important}html{scroll-behavior:auto!important}'});
 // load every lazy picture before filming, so nothing pops in while scrolling
 await p.evaluate(async()=>{document.querySelectorAll('img[loading=lazy]').forEach(i=>i.loading='eager');const g=document.getElementById('grid');for(let x=0;x<=g.scrollWidth;x+=300){g.scrollLeft=x;await new Promise(r=>setTimeout(r,60));}g.scrollLeft=0;});
 await p.evaluate(()=>{for(let i=1;i<100000;i++)clearInterval(i);});
