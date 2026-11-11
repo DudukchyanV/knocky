@@ -1,68 +1,71 @@
+# Guide slides 1080x1350 drawn at 2x (2160x2700) from 3x PNG screenshots, saved as high-quality JPEG
 import json, os, sys
 from PIL import Image, ImageDraw, ImageFilter
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import compose as C
-V = C.V; W, H = 1080, 1350
+V = C.V; S = 2; W, H = 1080 * S, 1350 * S
 BG, INK, MUT, RED = C.BG, C.INK, C.MUT, C.RED
-F_T, F_S, F_N, F_BIG = C.font("Unbounded", 54, 600), C.font("Manrope", 34, 600), C.font("Unbounded", 38, 700), C.font("Unbounded", 76, 600)
-F_SM = C.font("Manrope", 28, 700)
-SH = 1000; SW = round(780 * SH / 1688); BZ = 13
-def phone(im, shot, px, py, tap=None):
-    sh = Image.new("L", (W, H), 0); d = ImageDraw.Draw(sh)
-    d.rounded_rectangle((px - BZ + 8, py - BZ + 30, px + SW + BZ - 8, py + SH + BZ + 24), 56, fill=90)
-    im.paste((150, 130, 135), (0, 0), sh.filter(ImageFilter.GaussianBlur(32)))
-    d = ImageDraw.Draw(im); d.rounded_rectangle((px - BZ, py - BZ, px + SW + BZ, py + SH + BZ), 54, fill=(18, 16, 17))
-    s = Image.open(shot).convert("RGB").resize((SW, SH), Image.LANCZOS)
-    mask = Image.new("L", (SW, SH), 0); ImageDraw.Draw(mask).rounded_rectangle((0, 0, SW - 1, SH - 1), 42, fill=255)
+F = lambda n, sz, w: C.font(n, sz * S, w)
+F_T, F_S, F_N, F_SM = F("Unbounded", 54, 600), F("Manrope", 34, 600), F("Unbounded", 38, 700), F("Manrope", 28, 700)
+BZ = 13 * S
+def phone(im, shot, px, py, sh, tap=None):
+    sw = round(1170 * sh / 2532)
+    shad = Image.new("L", (W, H), 0); d = ImageDraw.Draw(shad)
+    d.rounded_rectangle((px - BZ + 8 * S, py - BZ + 30 * S, px + sw + BZ - 8 * S, py + sh + BZ + 24 * S), 56 * S, fill=90)
+    im.paste((150, 130, 135), (0, 0), shad.filter(ImageFilter.GaussianBlur(32 * S)))
+    d = ImageDraw.Draw(im); d.rounded_rectangle((px - BZ, py - BZ, px + sw + BZ, py + sh + BZ), 54 * S, fill=(18, 16, 17))
+    s = Image.open(shot).convert("RGB").resize((sw, sh), Image.LANCZOS)
+    mask = Image.new("L", (sw, sh), 0); ImageDraw.Draw(mask).rounded_rectangle((0, 0, sw - 1, sh - 1), 42 * S, fill=255)
     im.paste(s, (px, py), mask)
     if tap:
-        x, y = px + tap["x"] * SW / 390, py + tap["y"] * SH / 844
+        x, y = px + tap["x"] * sw / 390, py + tap["y"] * sh / 844
         lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dd = ImageDraw.Draw(lay)
         for r, a in ((70, 70), (46, 120)):
-            dd.ellipse((x - r, y - r, x + r, y + r), fill=RED + (a // 2,), outline=(255, 255, 255, 200), width=5)
-        dd.ellipse((x - 19, y - 19, x + 19, y + 19), fill=RED + (220,), outline=(255, 255, 255, 255), width=4)
-        lay = lay.filter(ImageFilter.GaussianBlur(1.2)); im.paste(lay, (0, 0), lay)
+            r *= S; dd.ellipse((x - r, y - r, x + r, y + r), fill=RED + (a // 2,), outline=(255, 255, 255, 200), width=5 * S)
+        r = 19 * S; dd.ellipse((x - r, y - r, x + r, y + r), fill=RED + (220,), outline=(255, 255, 255, 255), width=4 * S)
+        lay = lay.filter(ImageFilter.GaussianBlur(1.2 * S)); im.paste(lay, (0, 0), lay)
+    return sw
 def footer(d, n, total):
-    d.text((70, H - 66), "knocky.ru", font=F_SM, fill=RED)
-    d.text((W - 70, H - 66), f"{n} / {total}", font=F_SM, fill=MUT, anchor="ra")
-def step(n, title, sub, shot, tap, total):
+    d.text((70 * S, H - 66 * S), "knocky.ru", font=F_SM, fill=RED)
+    d.text((W - 70 * S, H - 66 * S), f"{n} / {total}", font=F_SM, fill=MUT, anchor="ra")
+def step(n, title, sub, shot, tap):
     im = Image.new("RGB", (W, H), BG); d = ImageDraw.Draw(im)
-    x, y = 70, 72
-    d.ellipse((x, y, x + 72, y + 72), fill=RED); d.text((x + 36, y + 38), str(n), font=F_N, fill="white", anchor="mm")
-    lines = C.wrap(d, title, F_T, W - 2 * 70 - 96)
-    for i, l in enumerate(lines): d.text((x + 96, y + 6 + i * 68 - (30 if len(lines) > 1 else 0)), l, font=F_T, fill=INK)
-    d.text((x, y + 100 + (34 if len(lines) > 1 else 0)), sub, font=F_S, fill=MUT)
-    phone(im, shot, (W - SW) // 2, 262 + (20 if len(lines) > 1 else 0), tap)
+    x, y = 70 * S, 72 * S
+    d.ellipse((x, y, x + 72 * S, y + 72 * S), fill=RED); d.text((x + 36 * S, y + 38 * S), str(n), font=F_N, fill="white", anchor="mm")
+    lines = C.wrap(d, title, F_T, W - 2 * x - 96 * S)
+    for i, l in enumerate(lines): d.text((x + 96 * S, y + 6 * S + i * 68 * S - (30 * S if len(lines) > 1 else 0)), l, font=F_T, fill=INK)
+    d.text((x, y + 100 * S + (34 * S if len(lines) > 1 else 0)), sub, font=F_S, fill=MUT)
+    sh = 1000 * S; sw = round(1170 * sh / 2532)
+    phone(im, shot, (W - sw) // 2, 262 * S + (20 * S if len(lines) > 1 else 0), sh, tap)
     return im
-def cover(shot, total):
+def cover(shot):
     im = Image.new("RGB", (W, H), BG); d = ImageDraw.Draw(im)
-    fb = C.font("Unbounded", 55, 600)
-    d.text((70, 80), "Приглашение на свадьбу", font=fb, fill=INK)
-    d.text((70, 158), "по ссылке", font=fb, fill=INK)
-    d.text((70, 258), "Как сделать за 6 шагов", font=C.font("Manrope", 40, 700), fill=RED)
-    d.text((W - 70, 262), "Листайте →", font=F_S, fill=MUT, anchor="ra")
-    global SH, SW
-    sh0, sw0 = SH, SW; SH = 900; SW = round(780 * SH / 1688)
-    phone(im, shot, (W - SW) // 2, 362); SH, SW = sh0, sw0
-    footer(d, 1, total); return im
-def end(total):
+    fb = F("Unbounded", 55, 600)
+    d.text((70 * S, 80 * S), "Приглашение на свадьбу", font=fb, fill=INK)
+    d.text((70 * S, 158 * S), "по ссылке", font=fb, fill=INK)
+    d.text((70 * S, 258 * S), "Как сделать за 6 шагов", font=F("Manrope", 40, 700), fill=RED)
+    d.text((W - 70 * S, 262 * S), "Листайте →", font=F_S, fill=MUT, anchor="ra")
+    sh = 900 * S; sw = round(1170 * sh / 2532); phone(im, shot, (W - sw) // 2, 362 * S, sh)
+    return im
+def end():
     im = Image.new("RGB", (W, H), BG); d = ImageDraw.Draw(im)
-    s = Image.open(f"{V}/seal.png").convert("RGBA").resize((150, 150), Image.LANCZOS); im.paste(s, ((W - 150) // 2, 380), s)
-    d.text((W // 2, 590), "knocky.ru", font=F_BIG, fill=INK, anchor="ma")
-    for i, l in enumerate(["65 дизайнов · от 640 ₽", "Оплата один раз, без подписки", "Примерить можно бесплатно"]):
-        d.text((W // 2, 720 + i * 52), l, font=F_S, fill=MUT, anchor="ma")
-    footer(d, total, total); return im
-m1 = {x["f"]: x for x in json.load(open(f"{V}/f1/manifest.json"))}; m2 = {x["f"]: x for x in json.load(open(f"{V}/f2/manifest.json"))}
-STEPS = [("Выберите дизайн", "65 вариантов, у каждого 3 палитры", "f1", "00092.jpg"),
-         ("Цвета и блоки", "Таймер, карта, программа, анкета", "f1", "00185.jpg"),
-         ("Детали праздника", "Имена, дата, место, программа, дресс-код", "f1", "00232.jpg"),
-         ("Ссылка для гостей", "Отправьте в любой мессенджер", "f2", "00027.jpg"),
-         ("Гости открывают и отвечают", "В один клик, без регистрации", "f1", "00350.jpg"),
-         ("Ответы в кабинете", "Кто придет и сколько человек", "f2", "ans.jpg")]
+    s = Image.open(f"{V}/seal.png").convert("RGBA").resize((150 * S, 150 * S), Image.LANCZOS); im.paste(s, ((W - 150 * S) // 2, 380 * S), s)
+    d.text((W // 2, 590 * S), "knocky.ru", font=F("Unbounded", 76, 600), fill=INK, anchor="ma")
+    for i, l in enumerate(["Дизайны на любой вкус · от 640 ₽", "Оплата один раз, без подписки", "Примерить можно бесплатно"]):
+        d.text((W // 2, (720 + i * 52) * S), l, font=F_S, fill=MUT, anchor="ma")
+    return im
+m1 = {x["f"]: x for x in json.load(open(f"{V}/f1hq/manifest.json"))}
+STEPS = [("Выберите дизайн", "На любой вкус, у каждого 3 палитры", "f1hq", "00092.png"),
+         ("Цвета и блоки", "Таймер, карта, программа, анкета", "f1hq", "00185.png"),
+         ("Детали праздника", "Имена, дата, место, программа, дресс-код", "f1hq", "00232.png"),
+         ("Ссылка для гостей", "Отправьте в любой мессенджер", "f2hq", "00027.png"),
+         ("Гости открывают и отвечают", "В один клик, без регистрации", "f1hq", "00350.png"),
+         ("Ответы в кабинете", "Кто придет и сколько человек", "f2hq", "ans.png")]
 out = sys.argv[1]; os.makedirs(out, exist_ok=True); total = len(STEPS) + 2
-cover(f"{V}/f1/00255.jpg", total).save(f"{out}/01.jpg", quality=92)
+def save(im, n):
+    footer(ImageDraw.Draw(im), n, total); im.save(f"{out}/{n:02d}.jpg", quality=95, subsampling=0, optimize=True)
+save(cover(f"{V}/f1hq/00255.png"), 1)
 for i, (t, s, fo, f) in enumerate(STEPS, 1):
-    im = step(i, t, s, f"{V}/{fo}/{f}", (m1 if fo == "f1" else m2).get(f, {}).get("tap"), total)
-    footer(ImageDraw.Draw(im), i + 1, total); im.save(f"{out}/{i + 1:02d}.jpg", quality=92)
-end(total).save(f"{out}/{total:02d}.jpg", quality=92)
-print("ok", total)
+    save(step(i, t, s, f"{V}/{fo}/{f}", m1.get(f, {}).get("tap") if fo == "f1hq" else None), i + 1)
+save(end(), total)
+print("ok", total, W, H)

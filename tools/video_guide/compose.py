@@ -6,12 +6,12 @@ BG, INK, MUT, RED = (243, 238, 238), (36, 27, 32), (111, 96, 104), (198, 40, 40)
 def font(n, size, w):
     f = ImageFont.truetype(f"{V}/{n}-VF.ttf", size); f.set_variation_by_axes([w]); return f
 F_T, F_S, F_N, F_B, F_BIG = font("Unbounded", 58, 600), font("Manrope", 36, 600), font("Unbounded", 40, 700), font("Manrope", 30, 700), font("Unbounded", 84, 600)
-SCENES = [("f1", "s1", "Выберите дизайн", "65 вариантов, у каждого 3 палитры"),
-          ("f1", "s2", "Цвета и блоки", "Таймер, карта, программа, анкета"),
-          ("f1", "s3", "Детали праздника", "Имена, дата, место, программа, дресс-код"),
-          ("f2", "s4", "Ссылка для гостей", "Отправьте в любой мессенджер"),
-          ("f1", "s5", "Гости открывают и отвечают", "В один клик, без регистрации"),
-          ("f2", "s6", "Ответы в кабинете", "Кто придет и сколько человек")]
+SCENES = [("f1hq", "s1", "Выберите дизайн", "На любой вкус, у каждого 3 палитры"),
+          ("f1hq", "s2", "Цвета и блоки", "Таймер, карта, программа, анкета"),
+          ("f1hq", "s3", "Детали праздника", "Имена, дата, место, программа, дресс-код"),
+          ("f2hq", "s4", "Ссылка для гостей", "Отправьте в любой мессенджер"),
+          ("f1hq", "s5", "Гости открывают и отвечают", "В один клик, без регистрации"),
+          ("f2hq", "s6", "Ответы в кабинете", "Кто придет и сколько человек")]
 # phone geometry
 SH = 1390; SW = round(780 * SH / 1688); BZ = 16
 PX, PY = (W - SW) // 2, 430
@@ -80,14 +80,14 @@ def card(lines_big, small, frames, seal=True):
 def encode(frames, out):
     tmp = out + ".part.mp4"
     p = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-                          "-c:v", "libx264", "-crf", "18", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-r", str(FPS), tmp], stdin=subprocess.PIPE)
+                          "-c:v", "libx264", "-crf", "16", "-preset", "veryfast", "-pix_fmt", "yuv420p", "-r", str(FPS), tmp], stdin=subprocess.PIPE)
     n = 0
     for im in frames: p.stdin.write(im.tobytes()); n += 1
     p.stdin.close()
     if p.wait() == 0: os.replace(tmp, out)
     return n
 INTRO = (["Приглашение", "на свадьбу", "по ссылке"], ["Как сделать за 6 шагов"], 66)
-OUTRO = (["knocky.ru"], ["65 дизайнов · от 640 ₽", "Оплата один раз, без подписки"], 84)
+OUTRO = (["knocky.ru"], ["Дизайны на любой вкус · от 640 ₽", "Оплата один раз, без подписки"], 84)
 if __name__ == "__main__":
     mode = sys.argv[1]
     os.makedirs(f"{V}/out", exist_ok=True)

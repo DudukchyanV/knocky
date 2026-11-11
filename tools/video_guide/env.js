@@ -1,6 +1,6 @@
 // shared: mobile page with knocky.ru served from the repo
 const {chromium}=require('playwright');const fs=require('fs');const R='/home/claude/knocky';
-async function open(url,opts={}){const b=await chromium.launch({args:['--lang=ru-RU'],env:{...process.env,LANG:'ru_RU.UTF-8',LANGUAGE:'ru'}});const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,locale:'ru-RU'});
+async function open(url,opts={}){const b=await chromium.launch({args:['--lang=ru-RU'],env:{...process.env,LANG:'ru_RU.UTF-8',LANGUAGE:'ru'}});const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:+(process.env.DSF||2),isMobile:true,hasTouch:true,locale:'ru-RU'});
 await ctx.addInitScript(()=>{try{localStorage.setItem('kn_cookie','all');localStorage.setItem('ck','all')}catch(e){}});
 await ctx.route('https://knocky.ru/**',r=>{let u=new URL(r.request().url()).pathname;let f;
  if(u.startsWith('/assets/'))f=R+'/server/app/static'+u;else if(u==='/'||u==='/index.html')f=R+'/index.html';else f=R+u+(u.endsWith('/')?'index.html':'');

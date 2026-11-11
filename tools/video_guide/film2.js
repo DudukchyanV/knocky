@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');const fs=require('fs');const {rec}=require('./rec.js');const R0='/home/claude/knocky';
 (async()=>{const T=process.argv[2],D=process.argv[3];
 const b=await chromium.launch({args:['--lang=ru-RU'],env:{...process.env,LANG:'ru_RU.UTF-8',LANGUAGE:'ru'}});
-const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true,locale:'ru-RU'});
+const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:+(process.env.DSF||2),isMobile:true,hasTouch:true,locale:'ru-RU'});
 await ctx.addCookies([{name:'kn',value:fs.readFileSync(T+'/tok','utf8'),domain:'127.0.0.1',path:'/'}]);
 await ctx.route('https://fonts.googleapis.com/**',r=>r.fulfill({contentType:'text/css',body:fs.readFileSync(R0+'/server/app/static/assets/fonts.css','utf8').replaceAll("url('/assets/","url('http://127.0.0.1:8765/assets/")}));
 await ctx.route(/fonts\.gstatic|mc\.yandex|knocky\.ru/,r=>r.abort().catch(()=>{}));
