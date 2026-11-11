@@ -1912,21 +1912,8 @@ def setup_token_ok(t: str) -> bool:
     return bool(t) and SETUP_HASH != "SETUP_HASH_PLACEHOLDER" and hmac.compare_digest(sha(t), SETUP_HASH)
 
 
-async def page_setup(req: Request):
-    if req.method == "GET":
-        t = req.query_params.get("t", "")
-        if not setup_token_ok(t):
-            return HTMLResponse("Ссылка недействительна", status_code=404)
-        return HTMLResponse(setup_form(t, ""), headers={"Cache-Control": "no-store"})
-    if not rate("setup:" + client_ip(req), 10, 3600):
-        return HTMLResponse("Слишком много попыток", status_code=429)
-    form = dict(await req.form())
-    t = str(form.get("t", ""))
-    if not setup_token_ok(t):
-        return HTMLResponse("Ссылка недействительна", status_code=404)
-    s = load_secrets()
-    s["render_key"] = hashlib.sha256(("knocky-render:" + t).encode()).hexdigest()
-    s["stats_key"] = hashlib.sha256(("knocky-stats:" + t).encode()).hexdigest()[:32]
+async def apply_settings(form: dict, s: dict) -> list:
+    """Settings from the setup page or the cabinet «Настройки» tab: admin password, mail, Robokassa. Saves them; -> messages."""
     msgs = []
     ae, ap = str(form.get("admin_email") or "").strip().lower(), str(form.get("admin_pw") or "")
     if ap:
@@ -1967,10 +1954,53 @@ async def page_setup(req: Request):
                      ("test_p2" if rk.get("test", True) else "p2", "пароля #2" + (" (тестового)" if rk.get("test", True) else ""))) if not rk.get(k)) + ". Оплата пока выключена.")))
     save_secrets(s)
     _GUEST["html"] = None
+    return msgs
+
+
+async def page_setup(req: Request):
+    if req.method == "GET":
+        t = req.query_params.get("t", "")
+        if not setup_token_ok(t):
+            return HTMLResponse("Ссылка недействительна", status_code=404)
+        return HTMLResponse(setup_form(t, ""), headers={"Cache-Control": "no-store"})
+    if not rate("setup:" + client_ip(req), 10, 3600):
+        return HTMLResponse("Слишком много попыток", status_code=429)
+    form = dict(await req.form())
+    t = str(form.get("t", ""))
+    if not setup_token_ok(t):
+        return HTMLResponse("Ссылка недействительна", status_code=404)
+    s = load_secrets()
+    s["render_key"] = hashlib.sha256(("knocky-render:" + t).encode()).hexdigest()
+    s["stats_key"] = hashlib.sha256(("knocky-stats:" + t).encode()).hexdigest()[:32]
+    msgs = await apply_settings(form, s)
     if not msgs:
         msgs.append(("ok", "Сохранено."))
     msg = "".join(f'<div class="m"{" style=\"background:#FBE6E6\"" if k == "bad" else ""}>{m}</div>' for k, m in msgs)
     return HTMLResponse(setup_form(t, msg), headers={"Cache-Control": "no-store"})
+
+
+def settings_state() -> dict:
+    s = load_secrets()
+    rk = s.get("robokassa") or {}
+    return {"mail": bool(s.get("smtp_password")), "mail_login": s.get("smtp_login") or MAIL_FROM,
+            "admin_pw": sorted((s.get("admin_pw") or {}).keys()), "admins": sorted(ADMINS),
+            "rk": {"login": rk.get("login") or "", "p1": bool(rk.get("p1")), "p2": bool(rk.get("p2")), "test_p1": bool(rk.get("test_p1")),
+                   "test_p2": bool(rk.get("test_p2")), "test": rk.get("test", True), "sno": rk.get("sno") or "usn_income", "ready": rk_conf_from(rk)}}
+
+
+@need_user
+async def admin_settings(req: Request):
+    """Admin: the setup page as a cabinet tab. Secrets are only written, never sent back."""
+    if not is_admin(req.state.user):
+        return err("Только для администратора", 403)
+    if req.method == "GET":
+        return JSONResponse(settings_state())
+    if not rate("settings:" + str(req.state.user["id"]), 20, 3600):
+        return err("Слишком много попыток, попробуйте через час", 429)
+    b = await body(req)
+    msgs = await apply_settings({k: str(v) for k, v in b.items() if v is not None}, load_secrets())
+    return JSONResponse({"msgs": [{"ok": k == "ok", "text": re.sub(r"<[^>]+>", "", m)} for k, m in msgs] or [{"ok": True, "text": "Сохранено."}],
+                         "state": settings_state()})
 
 
 async def health(req: Request):
@@ -2038,6 +2068,7 @@ routes = [
     Route("/api/stats.csv", stats_csv),
     Route("/api/admin/paylog", admin_paylog),
     Route("/api/admin/promos", admin_promos, methods=["GET", "POST"]),
+    Route("/api/admin/settings", admin_settings, methods=["GET", "POST"]),
     Route("/api/admin/markpaid", admin_markpaid),
     Route("/api/admin/refunded", admin_refunded),
     Route("/api/invitations/{id}/refunded", inv_refunded, methods=["POST"]),
@@ -2065,6 +2096,7 @@ routes = [
     Route("/inv/{id}", page_cabinet),
     Route("/admin", page_cabinet),
     Route("/promos", page_cabinet),
+    Route("/settings", page_cabinet),
 ]
 def refund_sweep():
     """Every 15 minutes: live orders paid in the last 60 days - were any of them refunded in Robokassa?"""

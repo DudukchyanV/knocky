@@ -124,7 +124,7 @@ async function listView(admin){
   app.innerHTML='<div class="spin" aria-label="Загрузка"></div>';
   let items=[];
   try{items=(await api('/invitations'+(admin?'?all=1':''))).items;}catch(x){app.innerHTML=`<div class="empty"><h2>Не получилось загрузить</h2><p>${esc(x.message)}</p><button class="btn btn-soft" onclick="location.reload()">Обновить</button></div>`;return;}
-  const tabs=ME.admin?`<div class="tabs" role="tablist"><button role="tab" aria-selected="${!admin}" data-t="/">Мои</button><button role="tab" aria-selected="${!!admin}" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="false" data-t="/promos">Промокоды</button></div>`:'';
+  const tabs=ME.admin?`<div class="tabs" role="tablist"><button role="tab" aria-selected="${!admin}" data-t="/">Мои</button><button role="tab" aria-selected="${!!admin}" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="false" data-t="/promos">Промокоды</button><button role="tab" aria-selected="false" data-t="/settings">Настройки</button></div>`:'';
   const head=`<div class="head"><div><h1>${admin?'Все приглашения':'Мои приглашения'}</h1>
     ${admin?'<p>'+plural(items.length,'приглашение','приглашения','приглашений')+' на сервисе</p>':''}</div>${tabs}</div>`;
   const newCard=`<a class="new" href="${SITE}/#templates"><b aria-hidden="true">+</b>Создать приглашение</a>`;
@@ -265,9 +265,9 @@ function ask(title,text,ok){return new Promise(res=>{const d=document.createElem
 async function promoView(){
   document.title='Промокоды - Кабинет Knocky';
   const rub=n=>(n||0).toLocaleString('ru-RU')+' ₽';
-  const tabs=`<div class="tabs" role="tablist"><button role="tab" aria-selected="false" data-t="/">Мои</button><button role="tab" aria-selected="false" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="true" data-t="/promos">Промокоды</button></div>`;
+  const tabs=`<div class="tabs" role="tablist"><button role="tab" aria-selected="false" data-t="/">Мои</button><button role="tab" aria-selected="false" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="true" data-t="/promos">Промокоды</button><button role="tab" aria-selected="false" data-t="/settings">Настройки</button></div>`;
   const draw=list=>{
-    app.innerHTML=`<div class="head"><div><h1>Промокоды</h1><p>Скидка при оплате в кабинете. Ссылка с кодом подставит его сама.</p></div>${tabs}</div>
+    app.innerHTML=`<div class="head"><div><h1>Промокоды</h1><p>Скидка при оплате в кабинете. Ссылка с кодом подставит его сама.</p></div>${tabs}</div><div class="stack">
     <div class="panel"><h2>Новый промокод</h2>
       <div class="pform">
         <label class="field"><span>Код</span><input class="inp" id="pc" placeholder="SVADBA10" maxlength="30" autocomplete="off" spellcheck="false"></label>
@@ -286,7 +286,7 @@ async function promoView(){
         <td class="nowrap">${p.kind==='pct'?p.value+'%':rub(p.value)}</td><td class="nowrap">${p.uses}${p.max_uses?' из '+p.max_uses:''}</td><td class="nowrap">${p.expires?esc(p.expires.split('-').reverse().join('.')):'-'}</td>
         <td>${p.partner?esc(p.partner)+(p.partner_pct?' · '+p.partner_pct+'%':''):'-'}</td><td class="nowrap">${rub(p.revenue)}${p.discount?`<div class="note">скидки ${rub(p.discount)}</div>`:''}</td><td class="nowrap">${p.partner_pct?rub(p.partner_due):'-'}</td>
         <td class="nowrap"><button class="btn btn-ghost btn-sm" data-edit="${esc(p.code)}">Изменить</button> <button class="btn btn-ghost btn-sm" data-tog="${esc(p.code)}" data-on="${p.active?0:1}">${p.active?'Выключить':'Включить'}</button></td></tr>`).join('')}
-      </tbody></table></div>`:'<p class="note">Промокодов пока нет</p>'}</div>`;
+      </tbody></table></div>`:'<p class="note">Промокодов пока нет</p>'}</div></div>`;
     app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));
     $('#psave').onclick=async()=>{const er=$('#per');er.hidden=true;
       try{const j=await api('/admin/promos',{method:'POST',body:JSON.stringify({code:$('#pc').value,kind:$('#pk').value,value:$('#pv').value,max_uses:$('#pm').value,expires:$('#pe').value,partner:$('#pp').value,partner_pct:$('#ppp').value,note:$('#pn').value})});toast('Промокод сохранен');draw(j.promos);}
@@ -299,6 +299,45 @@ async function promoView(){
       try{await navigator.clipboard.writeText(u);toast('Скопировано: '+u);}catch(e){prompt('Ссылка с промокодом',u);}});};
   app.innerHTML='<div class="spin" aria-label="Загрузка"></div>';
   try{draw((await api('/admin/promos')).promos);}catch(x){app.innerHTML=`<div class="empty"><h2>Не получилось загрузить</h2><p>${esc(x.message)}</p></div>`;}}
+async function settingsView(){
+  document.title='Настройки - Кабинет Knocky';
+  const tabs=`<div class="tabs" role="tablist"><button role="tab" aria-selected="false" data-t="/">Мои</button><button role="tab" aria-selected="false" data-t="/admin">Все приглашения</button><button role="tab" aria-selected="false" data-t="/promos">Промокоды</button><button role="tab" aria-selected="true" data-t="/settings">Настройки</button></div>`;
+  const yes=(b,t='есть')=>b?`<b class="ok">${t}</b>`:'<b class="no">нет</b>';
+  const pw=(id,lbl)=>`<label class="field"><span>${lbl}</span><input class="inp" id="${id}" type="password" autocomplete="new-password" data-lpignore="true"></label>`;
+  const draw=(st,msgs)=>{const rk=st.rk;
+    app.innerHTML=`<div class="head"><div><h1>Настройки</h1><p>Пароли сохраняются только на сервере, обратно их не показываем. Пустые поля ничего не меняют.</p></div>${tabs}</div><div class="stack">
+    ${msgs&&msgs.length?`<div class="panel smsg">${msgs.map(m=>`<p class="${m.ok?'s-ok':'s-bad'}">${esc(m.text)}</p>`).join('')}</div>`:''}
+    <div class="panel"><h2>Оплата: Робокасса</h2>
+      <p class="note">Сейчас: ${rk.ready?(rk.test?'<b class="ok">работают тестовые оплаты</b> (клиенты платить пока не могут)':'<b class="ok">оплата работает</b>'):'<b class="no">оплата выключена</b>'}, режим ${rk.test?'тестовый':'<b>боевой</b>'}. Пароль #1: ${yes(rk.p1)}, #2: ${yes(rk.p2)}; тестовый #1: ${yes(rk.test_p1)}, #2: ${yes(rk.test_p2)}.</p>
+      <p class="note" style="margin-top:6px">Пароли берутся в Робокассе: Мои магазины - Knocky - Технические настройки.</p>
+      <div class="pform" style="margin-top:14px">
+        <label class="field"><span>Идентификатор магазина</span><input class="inp" id="rl" value="${esc(rk.login)}" autocomplete="off" data-lpignore="true"></label>
+        ${pw('r1','Пароль #1')}${pw('r2','Пароль #2')}${pw('t1','Тестовый пароль #1')}${pw('t2','Тестовый пароль #2')}
+        <label class="field"><span>Налоги ИП (для чеков)</span><select class="inp" id="sno"><option value="usn_income"${rk.sno==='usn_income'?' selected':''}>УСН доходы</option><option value="usn_income_outcome"${rk.sno==='usn_income_outcome'?' selected':''}>УСН доходы минус расходы</option></select></label>
+        <label class="field"><span>Режим оплаты</span><select class="inp" id="mode"><option value="test"${rk.test?' selected':''}>Тестовый: деньги не списываются</option><option value="live"${rk.test?'':' selected'}>Боевой: настоящие оплаты</option></select></label>
+      </div></div>
+    <div class="panel"><h2>Почта для писем с кодом</h2>
+      <p class="note">Сейчас: ${st.mail?'<b class="ok">работает</b>, письма уходят с '+esc(st.mail_login):'<b class="no">не настроена</b>'}.</p>
+      <div class="pform" style="margin-top:14px">
+        <label class="field"><span>Почта отправителя</span><input class="inp" id="ml" value="${esc(st.mail_login)}"></label>
+        ${pw('mp','Пароль приложения Яндекса')}
+        <label class="field"><span>Куда отправить проверочное письмо</span><input class="inp" id="mt" value="${esc(ME.email)}"></label>
+      </div></div>
+    <div class="panel"><h2>Вход администратора по паролю</h2>
+      <p class="note">Пароль задан для: ${st.admin_pw.length?esc(st.admin_pw.join(', ')):'никого'}.</p>
+      <div class="pform" style="margin-top:14px">
+        <label class="field"><span>Почта администратора</span><select class="inp" id="ae">${st.admins.map(a=>`<option${a===ME.email?' selected':''}>${esc(a)}</option>`).join('')}</select></label>
+        <label class="field"><span>Новый пароль</span><input class="inp" id="ap" type="password" autocomplete="new-password" minlength="8" placeholder="не короче 8 символов"></label>
+      </div></div>
+    <div class="acts" style="margin:4px 0 24px"><button class="btn btn-seal" id="ssave">Сохранить</button></div></div>`;
+    app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));
+    $('#ssave').onclick=async()=>{const b=$('#ssave');b.disabled=true;
+      if($('#mode').value==='live'&&rk.test&&!confirm('Включить боевой режим? После этого клиенты будут платить по-настоящему.')){b.disabled=false;return;}
+      const v=id=>$('#'+id).value;
+      try{const j=await api('/admin/settings',{method:'POST',body:JSON.stringify({rk_login:v('rl'),rk_p1:v('r1'),rk_p2:v('r2'),rk_t1:v('t1'),rk_t2:v('t2'),rk_sno:v('sno'),rk_mode:v('mode'),login:v('ml'),pw:v('mp'),to:v('mt'),admin_email:v('ae'),admin_pw:v('ap')})});
+        draw(j.state,j.msgs);window.scrollTo(0,0);}catch(x){b.disabled=false;toast(x.message);}};};
+  app.innerHTML='<div class="spin" aria-label="Загрузка"></div>';
+  try{draw(await api('/admin/settings'));}catch(x){app.innerHTML=`<div class="empty"><h2>Не получилось загрузить</h2><p>${esc(x.message)}</p></div>`;}}
 async function route(){
   window.scrollTo(0,0);
   if(ME===null){try{const j=await api('/me');ME=j.user||false;}catch(e){ME=false;}showWho();}
@@ -310,5 +349,6 @@ async function route(){
   if((m=p.match(/^\/inv\/([\w-]+)/)))return invView(m[1]);
   if(p==='/admin'&&ME.admin)return listView(true);
   if(p==='/promos'&&ME.admin)return promoView();
+  if(p==='/settings'&&ME.admin)return settingsView();
   return listView(false);}
 fetch('/assets/designs.json').then(r=>r.json()).then(d=>{DESIGNS=d;}).catch(()=>{}).finally(route);

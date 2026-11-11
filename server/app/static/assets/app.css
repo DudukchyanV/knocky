@@ -226,3 +226,8 @@ button,a,input,select,textarea,label,summary{touch-action:manipulation}
 tr.off td{opacity:.5}
 @media (max-width:760px){.pform{grid-template-columns:1fr}}
 .linkbtn{border:0;background:none;padding:0;margin-top:4px;text-align:left;white-space:nowrap;color:var(--seal);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+
+/* settings */
+b.ok{color:#2E7D4F}b.no{color:var(--seal)}
+.smsg p{margin:0 0 6px}.smsg p:last-child{margin:0}.s-ok{color:#2E7D4F}.s-bad{color:var(--seal)}
+.stack{display:grid;gap:16px}.stack>.panel{margin:0}
