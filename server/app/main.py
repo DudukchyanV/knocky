@@ -48,7 +48,7 @@ RENDER_SIZES = {"og": (1200, 630)}
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,30}$")
 TR = dict(zip("абвгдеежзийклмнопрстуфхцчшщъыьэюя",
               ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sch","","y","","e","yu","ya"]))
-RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print", "og", "render", "pay", "dizain"}
+RESERVED = {"api", "i", "p", "m", "setup", "status", "login", "admin", "static", "assets", "new", "invite", "app", "www", "print", "og", "render", "pay", "dizain", "priglashenie"}
 
 
 # ---------------------------------------------------------------- storage

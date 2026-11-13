@@ -73,7 +73,7 @@ def page(title, desc, canon, body, ld, img=None):
 {HEADER}
 <main>{body}</main>
 <footer class="foot"><div class="wrap"><span>© Knocky - приглашения на свадьбу по ссылке</span>
-<span><a href="/">Главная</a> · <a href="/dizain/">Все дизайны</a> · <a href="/#prices">Тарифы</a> · <a href="/#faq">Вопросы</a></span></div></footer>
+<span><a href="/">Главная</a> · <a href="/dizain/">Все дизайны</a> · <a href="/priglashenie/elektronnoe-priglashenie/">Электронное приглашение</a> · <a href="/priglashenie/sajt-priglashenie/">Сайт-приглашение</a> · <a href="/priglashenie/otvety-gostej/">Ответы гостей</a> · <a href="/#prices">Тарифы</a> · <a href="/#faq">Вопросы</a></span></div></footer>
 </body></html>
 """
 
@@ -129,9 +129,10 @@ def catalog():
                 "Дизайны онлайн-приглашений на свадьбу на любой вкус: классика, цветы, акварель, минимализм. У каждого 3 палитры, примерка со своими именами бесплатно.",
                 "https://knocky.ru/dizain/", body, ld)
 
-only = sys.argv[1] if len(sys.argv) > 1 else None
-for x in D:
-    if only and x["slug"] != only: continue
-    p = R / "dizain" / x["slug"]; p.mkdir(exist_ok=True); (p / "index.html").write_text(design_page(x))
-if not only: (R / "dizain/index.html").write_text(catalog())
-print("design pages:", 1 if only else len(D), "+ catalog" if not only else "")
+if __name__ == "__main__":
+    only = sys.argv[1] if len(sys.argv) > 1 else None
+    for x in D:
+        if only and x["slug"] != only: continue
+        p = R / "dizain" / x["slug"]; p.mkdir(exist_ok=True); (p / "index.html").write_text(design_page(x))
+    if not only: (R / "dizain/index.html").write_text(catalog())
+    print("design pages:", 1 if only else len(D), "+ catalog" if not only else "")

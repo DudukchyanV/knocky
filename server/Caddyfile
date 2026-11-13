@@ -27,6 +27,10 @@ knocky.ru {
 		handle /dizain* {
 			file_server
 		}
+		# pages for search queries (static files)
+		handle /priglashenie* {
+			file_server
+		}
 		@guest {
 			not file
 			path_regexp slug ^/([A-Za-z0-9][A-Za-z0-9-]{1,38}[A-Za-z0-9])/?$
