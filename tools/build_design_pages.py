@@ -53,6 +53,7 @@ h1,h2{font-family:var(--f-disp);font-weight:600;letter-spacing:-.03em;margin:0;t
 @media (max-width:860px){.d-top{grid-template-columns:1fr;gap:28px}.d-pic{max-width:420px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}
 @media (max-width:480px){.wrap{padding:0 16px}.btn{width:100%}.d-pic{max-width:none}}
 """
+PINS = {"tuscany": "/pins/toskana.jpg"}
 INC = ["Таймер до праздника", "Место и маршрут", "Программа дня", "Дресс-код", "Ответы гостей", "Именные ссылки", "Рассадка", "Фото и вишлист"]
 
 def page(title, desc, canon, body, ld, img=None):
@@ -115,6 +116,9 @@ def design_page(x):
 </div></section>
 <section class="more"><h2>Похожие дизайны</h2><div class="cards">{"".join(card(y) for y in pick)}</div></section>
 </div>"""
+    pin = PINS.get(x["id"])
+    if pin:  # Pinterest image (knocky.ru/pins/): og:image, so "save from site" in Pinterest finds it on this page
+        return page(title, meta, canon, body, ld, pin)
     return page(title, meta, canon, body, ld, f'/dizain/img/{x["id"]}.webp')
 
 def catalog():
