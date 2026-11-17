@@ -15,7 +15,8 @@ meta = (f'<meta name="description" content="{D}">\n'
         '<meta property="og:locale" content="ru_RU">\n<link rel="canonical" href="https://knocky.ru/">\n')
 ICONS = ('<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n<link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16 32x32 48x48">\n'
          '<link rel="icon" href="/favicon-120.png" type="image/png" sizes="120x120">\n<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">\n<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
-         '<link rel="manifest" href="/site.webmanifest">\n')
+         '<meta name="theme-color" content="#F3EEEE">\n<link rel="manifest" href="/site.webmanifest">\n')
+# theme-color: light, so Yandex Browser doesn't paint the active tab red and hide the red icon
 # real icon files instead of the inline one: search engines (Google) only show an icon that has its own URL
 h = re.sub(r'<link rel="icon" href="data:[^>]*>\n?', "", h, count=1)
 meta += ICONS
