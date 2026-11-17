@@ -27,6 +27,11 @@ knocky.ru {
 		handle /dizain* {
 			file_server
 		}
+		# social media images (pins, Dzen articles): other sites may fetch them
+		handle /pins* {
+			header Access-Control-Allow-Origin *
+			file_server
+		}
 		# pages for search queries (static files)
 		handle /priglashenie* {
 			file_server
